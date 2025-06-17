@@ -1,0 +1,75 @@
+:root {
+    --primary-color: var(--p-primary-color);
+    --primary-contrast-color: var(--p-primary-contrast-color);
+    --text-color: var(--p-text-color);
+    --text-color-secondary: var(--p-text-muted-color);
+    --surface-border: var(--p-content-border-color);
+    --surface-card: var(--p-content-background);
+    --surface-hover: var(--p-content-hover-background);
+    --surface-overlay: var(--p-overlay-popover-background);
+    --transition-duration: var(--p-transition-duration);
+    --maskbg: var(--p-mask-background);
+    --content-border-radius: var(--p-content-border-radius);
+    --layout-section-transition-duration: 0.2s;
+    --element-transition-duration: var(--p-transition-duration);
+    --focus-ring-width: var(--p-focus-ring-width);
+    --focus-ring-style: var(--p-focus-ring-style);
+    --focus-ring-color: var(--p-focus-ring-color);
+    --focus-ring-offset: var(--p-focus-ring-offset);
+    --focus-ring-shadow: var(--p-focus-ring-shadow);
+
+    /* Màu gradient */
+    --gradient-start: #f59e0b;
+    --gradient-end: #ea580c;
+    --gradient-hover-start: #d97706;
+    --gradient-hover-end: #c2410c;
+    --gradient-active-start: #b45309;
+    --gradient-active-end: #9a3412;
+}
+
+/* Áp dụng CSS cho theme gradient */
+body[data-primary="gradient-blue-indigo"] {
+    /* Sử dụng màu primary là màu bắt đầu của gradient */
+    --primary-color: var(--gradient-start);
+
+    /* Gradient cho topbar */
+    .layout-topbar {
+        background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+    }
+
+    /* Reset transform và các thuộc tính gây hiệu ứng to ra */
+    .p-button,
+    .p-button:hover,
+    .p-button:active {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Gradient cho các button primary */
+    .p-button.p-component:not(.p-button-outlined):not(.p-button-text):not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger) {
+        background: var(--gradient-start);
+        background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
+        background-size: 100% 100% !important;
+        background-position: 0 0 !important;
+        transition: background-color 0.2s !important;
+        border: none !important;
+    }
+
+    /* Gradient cho hover */
+    .p-button.p-component:not(.p-button-outlined):not(.p-button-text):not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger):hover {
+        background: var(--gradient-hover-start);
+        background: linear-gradient(to right, var(--gradient-hover-start), var(--gradient-hover-end));
+        background-size: 100% 100% !important;
+        background-position: 0 0 !important;
+        border: none !important;
+    }
+
+    /* Gradient cho active */
+    .p-button.p-component:not(.p-button-outlined):not(.p-button-text):not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-help):not(.p-button-danger):active {
+        background: var(--gradient-active-start);
+        background: linear-gradient(to right, var(--gradient-active-start), var(--gradient-active-end));
+        background-size: 100% 100% !important;
+        background-position: 0 0 !important;
+        border: none !important;
+    }
+}
