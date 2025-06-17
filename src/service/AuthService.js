@@ -10,7 +10,7 @@ export default class AuthService {
             }
             const data = response.data;
             localStorage.setItem('auth_token', data.access);
-            // localStorage.setItem('auth_user', JSON.stringify(data.user));
+            localStorage.setItem('auth_user_id', JSON.stringify(data.user_id));
             return data;
         } catch (error) {
             throw error;

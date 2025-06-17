@@ -121,7 +121,7 @@
           <div class="relative flex-1">
             <input
               class="w-full pl-5 pr-12 py-4 bg-gray-50 hover:bg-white focus:bg-white rounded-full border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all duration-200 text-base"
-              placeholder="Nhập câu hỏi của bạn tại đây..." v-model="message" />
+              placeholder="Nhập câu hỏi của bạn tại đây..." v-model="user_question" />
             <button type="button" @click=""
               class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
               <i class="pi pi-paperclip text-lg"></i>
@@ -129,7 +129,7 @@
           </div>
           <button type="submit"
             class="p-4 w-1/12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"
-            :disabled="!message.length" :class="{ 'opacity-50': !message.length }">
+            :disabled="!user_question.length" :class="{ 'opacity-50': !user_question.length }">
             <i class="pi pi-send text-lg"></i>
           </button>
         </form>
@@ -140,26 +140,32 @@
       </div>
 
     </div>
-    <div class="card rounded-xl col-span-2 w-full flex flex-col gap-3 ">
-      <strong>Lịch sử trò chuyện</strong>
-      <span>Không tìm thấy lịch sử</span>
-    </div>
+    <HistoryChat></HistoryChat>
   </div>
 
 </template>
 
 <script setup>
+import { useToast } from "primevue";
+import { computed, getCurrentInstance } from "vue";
 
+const toast = useToast();
+const { proxy } = getCurrentInstance();
 import SkeletonLoading from "@/components/SkeletonLoading.vue";
-import Dropdown from 'primevue/dropdown';
+import HistoryChat from "@/components/HistoryChat.vue";
 import axios from "axios";
 import { marked } from 'marked';
-import { nextTick, onBeforeMount, ref } from "vue";
+import { nextTick, onBeforeMount, onMounted, ref } from "vue";
+import http from "@/service/http";
+import { useAuthStore } from "@/stores/useAuth";
 const CardBox = ref([]);
 const scrollPanel = ref(null);
 const loading = ref(false);
 const loadingType = ref("chat");
-
+const store = useAuthStore()
+onMounted(() => {
+  console.log();
+})
 const carouselResponsiveOptions = [
   {
     breakpoint: '1024px',
@@ -180,26 +186,19 @@ const carouselResponsiveOptions = [
 const selectedCollection = ref([])
 const Collections = ref([])
 
-const messages = ref([
-  // {
-  //   role: "assistant",
-  //   content:
-  //     "Xin chào Quý khách! Trợ lý ảo FOXAI BOT rất sẵn lòng hỗ trợ Quý khách, hi vọng Quý khách sẽ có những trải nghiệm tuyệt vời. Quý khách vui lòng chia sẻ nhu cầu cần tư vấn.",
-  // },
-]);
-const message = ref("");
+const messages = ref([]);
+const user_question = ref("");
 
 onBeforeMount(() => {
   getCard()
+  fetchCollections()
 })
 
-const selectSuggestion = (text) => {
-  message.value = text;
-};
+
 
 const submitChat = async (e) => {
   e.preventDefault();
-  if (!message.value.trim()) return;
+  if (!user_question.value.trim()) return;
 
   loading.value = true;
   // Hiển thị loading ngay lập tức
@@ -208,20 +207,20 @@ const submitChat = async (e) => {
   // Push user message
   messages.value.push({
     role: "user",
-    content: message.value,
+    content: user_question.value,
   });
 
   const data = {
-    user_id: "user_123",
-    message: message.value,
+    user_id: store.getUser,
+    user_question: user_question.value,
     messages: messages.value,
   };
 
-  message.value = "";
+  user_question.value = "";
   scrollToBottom();
 
   try {
-    const response = await axios.post("http://foxai.la:5880/chat/", data);
+    const response = await http.post("/fastapi/chat/", data);
     const answerRaw = response.data.final_answer || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
 
     // Khi có dữ liệu trả về, tắt loading
@@ -257,7 +256,7 @@ const submitChat = async (e) => {
 
 const getCard = async () => {
   try {
-    const res = await axios.get('http://160.30.252.28:5880/cards');
+    const res = await http.get('/fastapi/cards/');
     CardBox.value = res.data.items;
   } catch (error) {
     console.error("Không thể tải cards:", error);
@@ -281,19 +280,19 @@ const getValueMessage = async (item) => {
   });
 
   const data = {
-    user_id: "user_123",
-    message: item,
+    user_id: store.getUser,
+    user_question: item,
     messages: messages.value,
   };
 
-  message.value = "";
+  user_question.value = "";
   scrollToBottom();
   loading.value = true;
   // Chọn kiểu loading khác nhau
   loadingType.value = "skeleton"; // Có thể là: "typing", "chat", "pulse", "skeleton"
 
   try {
-    const response = await axios.post("http://foxai.la:5880/chat/", data);
+    const response = await http.post("/fastapi/chat/", data);
     const answerRaw = response.data.final_answer || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
 
     // Khi có dữ liệu trả về, tắt loading
@@ -325,7 +324,29 @@ const getValueMessage = async (item) => {
     scrollToBottom();
     loading.value = false;
   }
-}
+};
+const fetchCollections = async () => {
+  try {
+    const res = await http.get(`/fastapi/col/?user_id=${store.getUser}`)
+    Collections.value = res.data.collections
+  } catch (error) {
+    console.log(error);
+  }
+};
+const onselect = async () => {
+  let data = {
+    user_id: store.getUser,
+    selected_names: selectedCollection.value,
+  }
+  try {
+    const res = await http.post(`/fastapi/select/`, data)
+    if (res.data) {
+      proxy.$notify('S', 'Cập nhật Collections thành công!', toast)
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
 </script>
 
 <style scoped>

@@ -1,7 +1,8 @@
 <template>
     <Button label="Mở ca vận hành" severity="primary" @click="localShow = true" v-if="!form.id" size="small" />
     <Button label="Đóng ca vận hành" severity="danger" @click="openCloseCa" v-else size="small" />
-    <Dialog v-model:visible="localShow" modal :style="{ minWidth: '30vw', maxWidth: '90vw' }" :closable="false" @hide="onDialogHide">
+    <Dialog v-model:visible="localShow" modal :style="{ minWidth: '30vw', maxWidth: '90vw' }" :closable="false"
+        @hide="onDialogHide">
         <div class="relative">
             <div class="sticky top-0 z-[5] bg-white flex justify-between items-center">
                 <div>
@@ -17,18 +18,22 @@
                         <div class="flex">
                             <div class="w-1/2 pr-[10px]">
                                 <label for="">Tên nhân viên ca</label>
-                                <InputText size="small" v-model="form.creator" placeholder="Nhân viên ca" class="w-full mt-1" readonly :invalid="messages.creator" />
+                                <InputText size="small" v-model="form.creator" placeholder="Nhân viên ca"
+                                    class="w-full mt-1" readonly :invalid="messages.creator" />
                                 <small class="text-red-500" v-if="messages.creator">{{ messages.creator }}</small>
                             </div>
                             <div class="w-1/2">
                                 <label for="">Thời gian</label>
-                                <InputText size="small" readonly :placeholder="format.dateTime(form.createdDate)" class="w-full mt-1 mb-3" :invalid="messages.createdDate" />
-                                <small class="text-red-500" v-if="messages.createdDate">{{ messages.createdDate }}</small>
+                                <InputText size="small" readonly :placeholder="format.dateTime(form.createdDate)"
+                                    class="w-full mt-1 mb-3" :invalid="messages.createdDate" />
+                                <small class="text-red-500" v-if="messages.createdDate">{{ messages.createdDate
+                                    }}</small>
                             </div>
                         </div>
                         <div v-if="form.id === 0">
                             <label for="">Ghi chú</label>
-                            <InputText size="small" v-model="form.note" placeholder="Ghi chú" class="w-full mt-1" :invalid="messages.note" />
+                            <InputText size="small" v-model="form.note" placeholder="Ghi chú" class="w-full mt-1"
+                                :invalid="messages.note" />
                             <small class="text-red-500" v-if="messages.note">{{ messages.note }}</small>
                         </div>
 
@@ -37,17 +42,10 @@
                                 <InputIcon icon="pi pi-search" />
                                 <IconField>
                                     <InputIcon class="pi pi-search" />
-                                    <AutoComplete
-                                        id="assetCode"
-                                        class="customerAuto w-full"
-                                        size="large"
-                                        option-label="assetCode"
-                                        v-model="keySearch"
-                                        :suggestions="optionSearch"
-                                        placeholder="Nhập mã tài sản, tên hoặc serial..."
-                                        @complete="searchAsset"
-                                        @item-select="setModel"
-                                    >
+                                    <AutoComplete id="assetCode" class="customerAuto w-full" size="large"
+                                        option-label="assetCode" v-model="keySearch" :suggestions="optionSearch"
+                                        placeholder="Nhập mã tài sản, tên hoặc serial..." @complete="searchAsset"
+                                        @item-select="setModel">
                                         <template #empty>
                                             <div class="p-4 text-center text-gray-500">
                                                 <i class="pi pi-search mb-2 text-2xl opacity-50"></i>
@@ -55,7 +53,8 @@
                                             </div>
                                         </template>
                                         <template #option="{ option }">
-                                            <div class="flex items-center gap-3 p-3 border-b border-gray-200 hover:bg-gray-50 w-full">
+                                            <div
+                                                class="flex items-center gap-3 p-3 border-b border-gray-200 hover:bg-gray-50 w-full">
                                                 <i class="pi pi-hashtag text-primary"></i>
                                                 <div>
                                                     <div class="font-medium">{{ option.assetSerial }}</div>
@@ -66,11 +65,14 @@
                                     </AutoComplete>
                                 </IconField>
                             </IconField>
-                            <small class="text-red-500" v-if="messages.deviceOperationLines">{{ messages.deviceOperationLines }}</small>
+                            <small class="text-red-500" v-if="messages.deviceOperationLines">{{
+                                messages.deviceOperationLines }}</small>
                         </div>
                     </div>
-                    <Accordion :value="tab" multiple class="border border-b-0 mt-[16px]" v-if="form.deviceOperationLines.length > 0">
-                        <AccordionPanel v-for="(item, indexItem) in form.deviceOperationLines" :key="indexItem" :value="indexItem">
+                    <Accordion :value="tab" multiple class="border border-b-0 mt-[16px]"
+                        v-if="form.deviceOperationLines.length > 0">
+                        <AccordionPanel v-for="(item, indexItem) in form.deviceOperationLines" :key="indexItem"
+                            :value="indexItem">
                             <AccordionHeader>
                                 <div class="flex items-center gap-[12px] w-[65vw]">
                                     <Badge severity="primary" class="p-[4px] text-[16px]">
@@ -78,14 +80,19 @@
                                     </Badge>
                                     <div class="text-[15px] text-gray-900">
                                         <div>
-                                            <span class="font-normal"> Tên thiết bị:</span> <span class="font-bold">{{ item.assetSerial }}</span>
+                                            <span class="font-normal"> Tên thiết bị:</span> <span class="font-bold">{{
+                                                item.assetSerial
+                                                }}</span>
                                         </div>
                                         <div>
-                                            <span class="font-normal"> Tên tài sản:</span> <span class="font-bold">{{ item.assetName }}</span>
+                                            <span class="font-normal"> Tên tài sản:</span> <span class="font-bold">{{
+                                                item.assetName
+                                                }}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <Button icon="pi pi-times" text severity="danger" @click="form.deviceOperationLines.splice(indexItem, 1)" />
+                                <Button icon="pi pi-times" text severity="danger"
+                                    @click="form.deviceOperationLines.splice(indexItem, 1)" />
                             </AccordionHeader>
                             <AccordionContent>
                                 <Divider />
@@ -93,17 +100,20 @@
                                     <div class="col-span-7">
                                         <div class="mb-[15px]">
                                             <label for="">Mã tài sản</label>
-                                            <InputText size="small" v-model="item.assetCode" placeholder="Mã tài sản" class="w-full" readonly />
+                                            <InputText size="small" v-model="item.assetCode" placeholder="Mã tài sản"
+                                                class="w-full" readonly />
                                         </div>
                                         <div class="mb-[15px]">
                                             <label for="">Tên tài sản</label>
 
-                                            <InputText size="small" v-model="item.assetName" placeholder="Tên tài sản" class="w-full" readonly />
+                                            <InputText size="small" v-model="item.assetName" placeholder="Tên tài sản"
+                                                class="w-full" readonly />
                                         </div>
                                         <div class="mb-[15px]">
                                             <label for="">Serial</label>
 
-                                            <InputText size="small" v-model="item.assetSerial" placeholder="Serial" class="w-full" readonly />
+                                            <InputText size="small" v-model="item.assetSerial" placeholder="Serial"
+                                                class="w-full" readonly />
                                         </div>
                                     </div>
                                     <div class="col-span-5">
@@ -128,30 +138,29 @@
                                             </TabList>
                                             <TabPanels class="!p-0">
                                                 <TabPanel value="0" as="p" class="m-0">
-                                                    <DataTable :value="item.deviceSpecifications" dataKey="id" class="w-full" showGridlines stripedRows>
+                                                    <DataTable :value="item.deviceSpecifications" dataKey="id"
+                                                        class="w-full" showGridlines stripedRows>
                                                         <Column header="Mã thông số">
                                                             <template #body="{ data, index }">
-                                                                <Dropdown
-                                                                    size="small"
-                                                                    v-model="data.parameterId"
-                                                                    placeholder="Thông số"
-                                                                    optionValue="id"
-                                                                    optionLabel="name"
-                                                                    :options="item.optionOperation"
+                                                                <Dropdown size="small" v-model="data.parameterId"
+                                                                    placeholder="Thông số" optionValue="id"
+                                                                    optionLabel="name" :options="item.optionOperation"
                                                                     @change="renParameter($event.value, data)"
                                                                     class="w-full"
-                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].parameterId`]"
-                                                                />
-                                                                <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].parameterId`]">{{
-                                                                    messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].parameterId`]
-                                                                }}</small>
+                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].parameterId`]" />
+                                                                <small class="text-red-500"
+                                                                    v-if="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].parameterId`]">{{
+                                                                        messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].parameterId`]
+                                                                    }}</small>
                                                             </template>
                                                         </Column>
                                                         <Column header="Tên thông số">
-                                                            <template #body="{ data }"> {{ data.parameterName }} </template>
+                                                            <template #body="{ data }"> {{ data.parameterName }}
+                                                            </template>
                                                         </Column>
                                                         <Column header="Đơn vị">
-                                                            <template #body="{ data }"> {{ data.parameterUnit }} </template>
+                                                            <template #body="{ data }"> {{ data.parameterUnit }}
+                                                            </template>
                                                         </Column>
                                                         <Column header="Tích luỹ">
                                                             <template #body="{ data }">
@@ -161,31 +170,31 @@
 
                                                         <Column header="Thực tế">
                                                             <template #body="{ data, index }">
-                                                                <InputNumber
-                                                                    size="small"
-                                                                    v-model="data.value"
-                                                                    min="0"
-                                                                    max="4800"
-                                                                    buttonLayout="horizontal"
-                                                                    class="w-full"
-                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].value`]"
-                                                                />
-                                                                <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].value`]">{{
-                                                                    messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].value`]
-                                                                }}</small>
+                                                                <InputNumber size="small" v-model="data.value" min="0"
+                                                                    max="4800" buttonLayout="horizontal" class="w-full"
+                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].value`]" />
+                                                                <small class="text-red-500"
+                                                                    v-if="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].value`]">{{
+                                                                        messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].value`]
+                                                                    }}</small>
                                                             </template>
                                                         </Column>
                                                         <Column header="Thời gian">
                                                             <template #body="{ data, index }">
-                                                                <DatePicker size="small" v-model="data.lastUpdated" showTime hourFormat="24" fluid :invalid="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].lastUpdated`]" />
-                                                                <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].lastUpdated`]">{{
-                                                                    messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].lastUpdated`]
-                                                                }}</small>
+                                                                <DatePicker size="small" v-model="data.lastUpdated"
+                                                                    showTime hourFormat="24" fluid
+                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].lastUpdated`]" />
+                                                                <small class="text-red-500"
+                                                                    v-if="messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].lastUpdated`]">{{
+                                                                        messages[`deviceOperationLines[${indexItem}].deviceSpecifications[${index}].lastUpdated`]
+                                                                    }}</small>
                                                             </template>
                                                         </Column>
                                                         <Column header="Hành động">
                                                             <template #body="{ data, index }">
-                                                                <Button size="small" icon="pi pi-trash" severity="danger" text rounded @click="confirmDelete(item.deviceSpecifications, index)" />
+                                                                <Button size="small" icon="pi pi-trash"
+                                                                    severity="danger" text rounded
+                                                                    @click="confirmDelete(item.deviceSpecifications, index)" />
                                                             </template>
                                                         </Column>
                                                         <template #empty>
@@ -194,59 +203,70 @@
                                                             </div>
                                                         </template>
                                                     </DataTable>
-                                                    <Button size="small" icon="pi pi-plus" label="Thêm thông số" outlined severity="primary" class="mt-[16px]" @click="addDeviceSpecifications(item)" />
-                                                    <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceSpecifications`]">{{ messages[`deviceOperationLines[${indexItem}].deviceSpecifications`] }}</small>
+                                                    <Button size="small" icon="pi pi-plus" label="Thêm thông số"
+                                                        outlined severity="primary" class="mt-[16px]"
+                                                        @click="addDeviceSpecifications(item)" />
+                                                    <small class="text-red-500"
+                                                        v-if="messages[`deviceOperationLines[${indexItem}].deviceSpecifications`]">{{
+                                                            messages[`deviceOperationLines[${indexItem}].deviceSpecifications`]
+                                                        }}</small>
                                                 </TabPanel>
                                                 <TabPanel value="1" as="p" class="m-0">
-                                                    <DataTable :value="item.deviceStatus" dataKey="id" class="w-full" showGridlines stripedRows>
+                                                    <DataTable :value="item.deviceStatus" dataKey="id" class="w-full"
+                                                        showGridlines stripedRows>
                                                         <Column header="Trạng thái">
                                                             <template #body="{ data, index }">
-                                                                <Select
-                                                                    size="small"
-                                                                    v-model="data.isActive"
-                                                                    option-label="label"
-                                                                    option-value="value"
-                                                                    :options="[
+                                                                <Select size="small" v-model="data.isActive"
+                                                                    option-label="label" option-value="value" :options="[
                                                                         { label: 'Hoạt động', value: true },
                                                                         { label: 'Dừng', value: false }
-                                                                    ]"
-                                                                    showTime
-                                                                    fluid
-                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].isActive`]"
-                                                                />
-                                                                <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].isActive`]">{{
-                                                                    messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].isActive`]
-                                                                }}</small>
+                                                                    ]" showTime fluid
+                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].isActive`]" />
+                                                                <small class="text-red-500"
+                                                                    v-if="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].isActive`]">{{
+                                                                        messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].isActive`]
+                                                                    }}</small>
                                                             </template>
                                                         </Column>
                                                         <Column header="Từ">
                                                             <template #body="{ data, index }">
-                                                                <DatePicker size="small" v-model="data.startTime" showTime hourFormat="24" fluid :invalid="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].startTime`]" />
-                                                                <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].startTime`]">{{
-                                                                    messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].startTime`]
-                                                                }}</small>
+                                                                <DatePicker size="small" v-model="data.startTime"
+                                                                    showTime hourFormat="24" fluid
+                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].startTime`]" />
+                                                                <small class="text-red-500"
+                                                                    v-if="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].startTime`]">{{
+                                                                        messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].startTime`]
+                                                                    }}</small>
                                                             </template>
                                                         </Column>
                                                         <Column header="Đến">
                                                             <template #body="{ data, index }">
-                                                                <DatePicker size="small" v-model="data.endTime" showTime hourFormat="24" fluid :invalid="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].endTime`]" />
-                                                                <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].endTime`]">{{
-                                                                    messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].endTime`]
-                                                                }}</small>
+                                                                <DatePicker size="small" v-model="data.endTime" showTime
+                                                                    hourFormat="24" fluid
+                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].endTime`]" />
+                                                                <small class="text-red-500"
+                                                                    v-if="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].endTime`]">{{
+                                                                        messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].endTime`]
+                                                                    }}</small>
                                                             </template>
                                                         </Column>
 
                                                         <Column header="Loại sự cố">
                                                             <template #body="{ data, index }">
-                                                                <Select size="small" v-model="data.incidentType" :options="['Sự cố']" showTime fluid :invalid="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].incidentType`]" />
-                                                                <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].incidentType`]">{{
-                                                                    messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].incidentType`]
-                                                                }}</small>
+                                                                <Select size="small" v-model="data.incidentType"
+                                                                    :options="['Sự cố']" showTime fluid
+                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].incidentType`]" />
+                                                                <small class="text-red-500"
+                                                                    v-if="messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].incidentType`]">{{
+                                                                        messages[`deviceOperationLines[${indexItem}].deviceStatus[${index}].incidentType`]
+                                                                    }}</small>
                                                             </template>
                                                         </Column>
                                                         <Column header="Hành động">
                                                             <template #body="{ data, index }">
-                                                                <Button size="small" icon="pi pi-trash" severity="danger" text rounded @click="confirmDelete(item.deviceStatus, index)" />
+                                                                <Button size="small" icon="pi pi-trash"
+                                                                    severity="danger" text rounded
+                                                                    @click="confirmDelete(item.deviceStatus, index)" />
                                                             </template>
                                                         </Column>
                                                         <template #empty>
@@ -255,55 +275,56 @@
                                                             </div>
                                                         </template>
                                                     </DataTable>
-                                                    <Button size="small" icon="pi pi-plus" label="Thêm trạng thái" outlined severity="primary" class="mt-[16px]" @click="addTrangThai(item)" />
-                                                    <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceStatus`]">{{ messages[`deviceOperationLines[${indexItem}].deviceStatus`] }}</small>
+                                                    <Button size="small" icon="pi pi-plus" label="Thêm trạng thái"
+                                                        outlined severity="primary" class="mt-[16px]"
+                                                        @click="addTrangThai(item)" />
+                                                    <small class="text-red-500"
+                                                        v-if="messages[`deviceOperationLines[${indexItem}].deviceStatus`]">{{
+                                                            messages[`deviceOperationLines[${indexItem}].deviceStatus`]
+                                                        }}</small>
                                                 </TabPanel>
                                                 <TabPanel value="2">
-                                                    <DataTable :value="item.deviceFuel" dataKey="id" class="w-full" showGridlines stripedRows>
+                                                    <DataTable :value="item.deviceFuel" dataKey="id" class="w-full"
+                                                        showGridlines stripedRows>
                                                         <Column header="Mã nhiên liệu">
                                                             <template #body="{ data, index }">
-                                                                <Dropdown
-                                                                    size="small"
-                                                                    v-model="data.fuelId"
-                                                                    placeholder="Mã nhiên liệu"
-                                                                    optionValue="id"
-                                                                    optionLabel="itemCode"
-                                                                    :options="optionItem"
+                                                                <Dropdown size="small" v-model="data.fuelId"
+                                                                    placeholder="Mã nhiên liệu" optionValue="id"
+                                                                    optionLabel="itemCode" :options="optionItem"
                                                                     @change="renItem($event.value, data)"
                                                                     :invalid="messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].fuelId`]"
-                                                                    class="w-full"
-                                                                />
-                                                                <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].fuelId`]">{{
-                                                                    messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].fuelId`]
-                                                                }}</small>
+                                                                    class="w-full" />
+                                                                <small class="text-red-500"
+                                                                    v-if="messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].fuelId`]">{{
+                                                                        messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].fuelId`]
+                                                                    }}</small>
                                                             </template>
                                                         </Column>
                                                         <Column header="Loại nhiên liệu">
                                                             <template #body="{ data }"> {{ data.fuelName }} </template>
                                                         </Column>
                                                         <Column header="Đơn vị">
-                                                            <template #body="{ data }"> {{ data.fuelUnit?.unitGroupName || '--' }} </template>
+                                                            <template #body="{ data }"> {{ data.fuelUnit?.unitGroupName
+                                                                || '--' }} </template>
                                                         </Column>
 
                                                         <Column header="Số lượng tiêu thụ">
                                                             <template #body="{ data, index }">
-                                                                <InputNumber
-                                                                    size="small"
-                                                                    v-model="data.quantity"
-                                                                    min="0"
-                                                                    buttonLayout="horizontal"
-                                                                    class="w-full"
-                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].quantity`]"
-                                                                />
-                                                                <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].quantity`]">{{
-                                                                    messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].quantity`]
-                                                                }}</small>
+                                                                <InputNumber size="small" v-model="data.quantity"
+                                                                    min="0" buttonLayout="horizontal" class="w-full"
+                                                                    :invalid="messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].quantity`]" />
+                                                                <small class="text-red-500"
+                                                                    v-if="messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].quantity`]">{{
+                                                                        messages[`deviceOperationLines[${indexItem}].deviceFuel[${index}].quantity`]
+                                                                    }}</small>
                                                             </template>
                                                         </Column>
 
                                                         <Column header="Hành động">
                                                             <template #body="{ data, index }">
-                                                                <Button size="small" icon="pi pi-trash" severity="danger" text rounded @click="confirmDelete(item.deviceFuel, index)" />
+                                                                <Button size="small" icon="pi pi-trash"
+                                                                    severity="danger" text rounded
+                                                                    @click="confirmDelete(item.deviceFuel, index)" />
                                                             </template>
                                                         </Column>
                                                         <template #empty>
@@ -312,8 +333,13 @@
                                                             </div>
                                                         </template>
                                                     </DataTable>
-                                                    <Button size="small" icon="pi pi-plus" label="Thêm nhiên liệu" outlined severity="primary" class="mt-[16px]" @click="addNhienLieu(item)" />
-                                                    <small class="text-red-500" v-if="messages[`deviceOperationLines[${indexItem}].deviceFuel`]">{{ messages[`deviceOperationLines[${indexItem}].deviceFuel`] }}</small>
+                                                    <Button size="small" icon="pi pi-plus" label="Thêm nhiên liệu"
+                                                        outlined severity="primary" class="mt-[16px]"
+                                                        @click="addNhienLieu(item)" />
+                                                    <small class="text-red-500"
+                                                        v-if="messages[`deviceOperationLines[${indexItem}].deviceFuel`]">{{
+                                                            messages[`deviceOperationLines[${indexItem}].deviceFuel`]
+                                                        }}</small>
                                                 </TabPanel>
                                             </TabPanels>
                                         </Tabs>
@@ -325,7 +351,8 @@
                     <div class="!mt-[25px] flex justify-end">
                         <Button label="Mở ca vận hành" type="submit" severity="primary" v-if="!form.id" />
                         <div class="flex gap-[8px]" v-else>
-                            <Button size="small" label="Đóng ca vận hành" @click="cancelDeviceOperation" text severity="danger" />
+                            <Button size="small" label="Đóng ca vận hành" @click="cancelDeviceOperation" text
+                                severity="danger" />
                             <Button size="small" label="Cập nhật ca vận hành" type="submit" severity="primary" />
                         </div>
                     </div>
@@ -348,7 +375,7 @@ const { proxy } = getCurrentInstance();
 const toast = useToast();
 const formRef = ref(null);
 const messages = ref({});
-const account = ref(JSON.parse(localStorage.getItem('auth_user') || '{}'));
+const account = ref(JSON.parse(localStorage.getItem('auth_user_id') || '{}'));
 const tab = ref([0]);
 // Props từ component cha
 const props = defineProps({
@@ -421,7 +448,7 @@ const getOption = async () => {
     try {
         const res = await SuppliesService.getAll({ Filter: 'groupItemId=34' });
         optionItem.value = res.data?.result || [];
-    } catch (error) {}
+    } catch (error) { }
 };
 const onDialogHide = () => {
     if (props.loadData) {
@@ -453,7 +480,7 @@ const cancelDeviceOperation = async () => {
     try {
         await Service.save({ ...form.value, isActive: false }, false);
     } catch (error) {
-         
+
     } finally {
         localShow.value = false;
     }

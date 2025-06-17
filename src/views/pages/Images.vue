@@ -147,7 +147,7 @@
   </div>
 </template>
 <script setup>
-import axios from 'axios';
+import http from '@/service/http';
 import { useToast } from "primevue";
 import { getCurrentInstance, onMounted, ref } from 'vue';
 
@@ -177,7 +177,7 @@ const fetchAllImages = async () => {
   isLoading.value = true
   try {
 
-    const res = await axios.get(`http://160.30.252.28:5880/cards`)
+    const res = await http.get(`/fastapi/cards/`)
     Images.value = res.data.items
     console.log(res);
   } catch (error) {
@@ -202,8 +202,12 @@ const UploadFileLocal = (event) => {
   payload.value.imgPreview = URL.createObjectURL(files[0]);
 };
 const validateData = () => {
-  if (!payload.value.title)
-    return proxy.$notify('E', 'Vui lòng nhập tiêu đề!', toast)
+  if (!payload.value.title) {
+    proxy.$notify('E', 'Vui lòng nhập tiêu đề!', toast)
+    return false
+  }
+
+  return true
 }
 const saveMedia = async () => {
   submited.value = true
@@ -213,7 +217,7 @@ const saveMedia = async () => {
     formData.append('image', payload.value.file);
     formData.append('data', JSON.stringify(payload.value));
 
-    const res = await axios.post('http://160.30.252.28:5880/cards', formData);
+    const res = await http.post('/fastapi/cards', formData);
     if (res.data) {
       fetchAllImages();
       addFileModal.value = false;
@@ -230,14 +234,14 @@ const resetPayload = () => {
     title: '',
     type: null,
     description: '',
-    tags: [],
+    items: [''],
     file: null,
     imgPreview: null
   };
 }
 const confirmDelete = async () => {
   try {
-    const res = await axios.delete(`http://160.30.252.28:5880/cards/${selectedImage.value.id}`)
+    const res = await http.delete(`/fastapi/cards/${selectedImage.value.id}`)
     if (res.data) {
       fetchAllImages()
       confirmDeleteDialog.value = false

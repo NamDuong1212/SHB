@@ -25,13 +25,12 @@ export const useAuthStore = defineStore('useAuth', {
             this.token = null;
             this.isLoggedIn = false;
             localStorage.removeItem('auth_token');
-            localStorage.removeItem('auth_user');
 
         },
 
         loadFromStorage() {
             const token = localStorage.getItem('auth_token');
-            const user = localStorage.getItem('auth_user');
+            const user = localStorage.getItem('auth_user_id');
             if (token) {
                 this.token = token;
                 this.isLoggedIn = true;
