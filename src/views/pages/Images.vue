@@ -246,9 +246,10 @@ const confirmDelete = async () => {
       fetchAllImages()
       confirmDeleteDialog.value = false
       selectedImage.value = null
+      proxy.$notify('S', 'Xóa thành công!', toast)
     }
   } catch (error) {
-    console.log(error)
+    proxy.$notify('E', error, toast)
   }
 };
 const removeLineItem = (index) => {

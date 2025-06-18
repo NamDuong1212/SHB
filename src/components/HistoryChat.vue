@@ -1,8 +1,8 @@
 <template>
   <div
-    class="col-span-2 bg-gradient-to-br max-h-[500px] from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    class="col-span-2 bg-gradient-to-br h-[90vh] from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-4">
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,7 +27,7 @@
       </div>
 
       <!-- Chat History -->
-      <div v-else-if="HistoryChat?.length > 0" class="space-y-3  overflow-y-auto custom-scrollbar">
+      <div v-else-if="false" class="space-y-3  overflow-y-auto custom-scrollbar">
         <div v-for="(item, index) in HistoryChat" :key="index"
           class="group bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-600 transition-all duration-300 cursor-pointer"
           @click="selectChat(item)">
@@ -85,12 +85,13 @@
               d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Chưa có lịch sử trò chuyện</h3>
+        <!-- <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Chưa có lịch sử trò chuyện</h3> -->
         <p class="text-gray-500 dark:text-gray-400 text-sm max-w-sm mx-auto">
-          Hãy bắt đầu cuộc trò chuyện đầu tiên của bạn. Tất cả các cuộc hội thoại sẽ được lưu lại ở đây.
+          <!-- Hãy bắt đầu cuộc trò chuyện đầu tiên của bạn. Tất cả các cuộc hội thoại sẽ được lưu lại ở đây. -->
+          Tính năng đang được phát triển
         </p>
         <button
-          class="mt-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all text-sm font-medium">
+          class="mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all text-sm font-medium">
           Bắt đầu trò chuyện
         </button>
       </div>

@@ -22,10 +22,23 @@
               <p class="text-sm text-gray-500">Trợ lý thông minh của bạn</p>
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            <MultiSelect v-model="selectedCollection" :options="Collections" filter placeholder="Chọn Collections"
-              size="small" :maxSelectedLabels="3" class="w-full md:w-80" />
-            <Button label="Xác nhận" size="small" @click="onselect"></Button>
+          <div class="flex items-center gap-3">
+            <!-- Collection Selector với styling đẹp hơn -->
+            <div class="relative">
+              <MultiSelect v-model="selectedCollection" :options="Collections" filter placeholder="🗂️ Chọn Collections"
+                size="small" :maxSelectedLabels="2" class="w-full md:w-80 collection-selector" :pt="{
+                  root: { class: 'border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 rounded-xl shadow-sm transition-all duration-200' },
+                  label: { class: 'text-gray-700 font-medium' },
+                  trigger: { class: 'text-blue-500' }
+                }" />
+            </div>
+
+            <!-- Confirm Button với styling gradient -->
+            <Button label="Xác nhận" icon="pi pi-check" size="small" @click="onselect"
+              class="confirm-btn bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-0 text-white font-medium px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105" />
+
+            <Button icon="pi pi-trash" size="small" severity="danger" text rounded @click="clearChat"
+              v-tooltip.top="'Xóa cuộc trò chuyện'" />
           </div>
         </div>
       </div>
@@ -68,7 +81,6 @@
               </template>
             </Carousel>
           </div>
-
           <!-- Messages -->
           <div class="space-y-6 px-2">
             <div v-for="(chat, index) in messages" :key="index">
@@ -185,13 +197,14 @@ const carouselResponsiveOptions = [
 ];
 const selectedCollection = ref([])
 const Collections = ref([])
-
+const HistoryMessChat = ref([])
 const messages = ref([]);
 const user_question = ref("");
 
 onBeforeMount(() => {
   getCard()
   fetchCollections()
+  fetchChatHistory()
 })
 
 
@@ -347,6 +360,31 @@ const onselect = async () => {
     console.log(error);
   }
 };
+const fetchChatHistory = async () => {
+  loading.value = true
+  try {
+    const res = await http.get(`/fastapi/history/?user_id=${store.getUser}&limit=100`)
+    HistoryMessChat.value = res.data.history
+    messages.value = [...HistoryMessChat.value, ...messages.value]
+  } catch (error) {
+    console.log(error);
+  } finally {
+    loading.value = false
+  }
+}
+
+const clearChat = () => {
+  messages.value = []
+  proxy.$notify('Bạn có chắc chắn muốn xóa toàn bộ cuộc trò chuyện?', 'Xác nhận xóa', {
+    acceptClass: 'p-button-danger',
+    acceptLabel: 'Xóa',
+    rejectLabel: 'Hủy',
+    accept: () => {
+      messages.value = []
+      proxy.$notify('S', 'Đã xóa cuộc trò chuyện!', toast)
+    }
+  })
+}
 </script>
 
 <style scoped>
@@ -414,5 +452,127 @@ const onselect = async () => {
 /* Thay đổi background từ hình ảnh sang gradient */
 .bg-gradient-to-br {
   background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+/* Custom styling cho Collection Selector */
+.collection-selector :deep(.p-multiselect) {
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.collection-selector :deep(.p-multiselect:hover) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}
+
+.collection-selector :deep(.p-multiselect-label) {
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+}
+
+.collection-selector :deep(.p-multiselect-token) {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  margin: 0.125rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.collection-selector :deep(.p-multiselect-token-icon) {
+  color: rgba(255, 255, 255, 0.8);
+  margin-left: 0.5rem;
+}
+
+.collection-selector :deep(.p-multiselect-token-icon:hover) {
+  color: white;
+}
+
+/* Custom styling cho Confirm Button */
+.confirm-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.confirm-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.confirm-btn:hover::before {
+  left: 100%;
+}
+
+/* Custom styling cho Clear Button */
+.clear-btn {
+  position: relative;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.clear-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  z-index: -1;
+}
+
+.clear-btn:hover::after {
+  width: 120%;
+  height: 120%;
+}
+
+/* Animation cho MultiSelect dropdown */
+.collection-selector :deep(.p-multiselect-panel) {
+  border-radius: 0.75rem;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.collection-selector :deep(.p-multiselect-item) {
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+  border-radius: 0.5rem;
+  margin: 0.25rem;
+}
+
+.collection-selector :deep(.p-multiselect-item:hover) {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  transform: translateX(4px);
+}
+
+.collection-selector :deep(.p-multiselect-item.p-highlight) {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
 }
 </style>
