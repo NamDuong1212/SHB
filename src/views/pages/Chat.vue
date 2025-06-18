@@ -34,10 +34,11 @@
             </div>
 
             <!-- Confirm Button với styling gradient -->
-            <Button label="Xác nhận" icon="pi pi-check" size="small" @click="onselect"
+            <Button :disabled="selectedCollection?.length < 1" label="Xác nhận" icon="pi pi-check" size="small"
+              @click="onselect"
               class="confirm-btn bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-0 text-white font-medium px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105" />
 
-            <Button icon="pi pi-trash" size="small" severity="danger" text rounded @click="clearChat"
+            <Button icon="pi pi-trash" size="small" severity="danger" text rounded @click="showDeleteDialog"
               v-tooltip.top="'Xóa cuộc trò chuyện'" />
           </div>
         </div>
@@ -155,6 +156,34 @@
     <HistoryChat></HistoryChat>
   </div>
 
+  <!-- Dialog xác nhận xóa -->
+  <Dialog v-model:visible="showDeleteConfirmDialog" modal :style="{ width: '30rem' }" :closable="false">
+    <template #header>
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+          <i class="pi pi-exclamation-triangle text-red-500 text-xl"></i>
+        </div>
+        <span class="text-xl font-semibold">Xác nhận xóa</span>
+      </div>
+    </template>
+    <div class="flex flex-col gap-4">
+      <p class="text-gray-600">
+        Bạn có chắc chắn muốn xóa <span class="font-semibold">cuộc trò chuyện này</span>?
+      </p>
+      <p class="text-sm text-gray-500">
+        Hành động này không thể hoàn tác. Tất cả tin nhắn sẽ bị xóa vĩnh viễn khỏi hệ thống.
+      </p>
+    </div>
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button type="button" size="small" label="Hủy" severity="secondary" @click="showDeleteConfirmDialog = false"
+          text></Button>
+        <Button type="button" size="small" label="Xóa" icon="pi pi-trash" severity="danger"
+          @click="confirmDelete"></Button>
+      </div>
+    </template>
+  </Dialog>
+
 </template>
 
 <script setup>
@@ -200,6 +229,7 @@ const Collections = ref([])
 const HistoryMessChat = ref([])
 const messages = ref([]);
 const user_question = ref("");
+const showDeleteConfirmDialog = ref(false);
 
 onBeforeMount(() => {
   getCard()
@@ -373,18 +403,24 @@ const fetchChatHistory = async () => {
   }
 }
 
-const clearChat = () => {
+const showDeleteDialog = () => {
+  showDeleteConfirmDialog.value = true;
+};
+
+const confirmDelete = async () => {
+  showDeleteConfirmDialog.value = false;
+  await clearChat();
+};
+
+const clearChat = async () => {
   messages.value = []
-  proxy.$notify('Bạn có chắc chắn muốn xóa toàn bộ cuộc trò chuyện?', 'Xác nhận xóa', {
-    acceptClass: 'p-button-danger',
-    acceptLabel: 'Xóa',
-    rejectLabel: 'Hủy',
-    accept: () => {
-      messages.value = []
-      proxy.$notify('S', 'Đã xóa cuộc trò chuyện!', toast)
-    }
-  })
-}
+  try {
+    const res = await http.delete(`/fastapi/delete/history/`)
+    proxy.$notify('S', 'Xóa thành công!', toast)
+  } catch (error) {
+    proxy.$notify('E', error, toast)
+  }
+};
 </script>
 
 <style scoped>
