@@ -375,6 +375,7 @@ const confirmDelete = async () => {
       fetchAllCollections()
       confirmDeleteDialog.value = false
       selectedCollection.value = null
+      proxy.$notify('S', 'Xóa thành công!', toast)
     }
   } catch (error) {
     console.log(error)
@@ -484,7 +485,7 @@ const funUpload = async () => {
     resetPayload()
     tabValue.value = '0'
   } catch (error) {
-    proxy.$notify('E', 'Đã có lỗi xảy ra', toast)
+    proxy.$notify('E', error.response.data ? error.response.data.error : 'Đã có lỗi xảy ra', toast)
     uploadStatus.value.progress = 0
     uploadStatus.value.show = false
     formData.delete('collection_name')
@@ -559,6 +560,8 @@ const openFile = (url) => {
   window.open(url, '_blank');
 };
 const openUploadFile = (data) => {
+  payload.value.file = null
+  payload.value.imgPreview = null
   payload.value.collection_name = data.collection_name
   tabValue.value = '1'
   addFileModal.value = true

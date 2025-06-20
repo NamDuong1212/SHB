@@ -6,7 +6,7 @@ const url = import.meta.env.VITE_APP_API;
 
 const http = axios.create({
   baseURL: url,
-  timeout: 15000,
+  timeout: 300000,
 });
 
 http.interceptors.request.use(
