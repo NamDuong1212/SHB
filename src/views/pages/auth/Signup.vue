@@ -84,7 +84,7 @@ onBeforeMount(async () => {
                         <FloatLabel variant="in">
                             <InputText id="username" v-model="username" :invalid="(submit && !username)"
                                 class="h-14 w-full !text-lg" />
-                            <label class="text-normal" for="username">Tên người dùng</label>
+                            <label class="text-normal" for="username">Username</label>
                         </FloatLabel>
                         <small class="text-red-500" v-if="!username && submit">Vui lòng nhập tên người dùng
                         </small>
@@ -137,7 +137,7 @@ onBeforeMount(async () => {
 
                     <div class="text-zinc-600 text-base text-center">
                         Trở lại trang
-                        <router-link to="/auth/signup" class="text-primary font-medium hover:underline">Đăng
+                        <router-link to="/auth/login" class="text-primary font-medium hover:underline">Đăng
                             nhập</router-link>
                     </div>
                 </div>

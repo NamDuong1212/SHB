@@ -52,7 +52,7 @@ const login = async () => {
           <div>
             <FloatLabel variant="in">
               <InputText id="text" v-model="username" class="h-14 w-full !text-lg" :invalid="submit && !username" />
-              <label class="text-normal" for="email">Số điện thoại hoặc email</label>
+              <label class="text-normal" for="email">Username</label>
             </FloatLabel>
             <small class="text-red-500" v-if="!password && submit">Vui lòng nhập username</small>
           </div>

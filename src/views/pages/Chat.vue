@@ -129,15 +129,17 @@
       </div>
 
       <!-- Input Area -->
-      <div class="chat-input z-50 fixed bottom-5 left-0 right-0  p-4 md:p-5">
+      <div class="chat-input z-50 relative bottom-5 left-0 right-0  p-4 md:p-5">
         <form class="flex items-center gap-3 max-w-4xl mx-auto" @submit="submitChat">
           <div class="relative flex-1">
             <input
               class="w-full pl-5 pr-12 py-4 bg-gray-50 hover:bg-white focus:bg-white rounded-full border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all duration-200 text-base"
-              placeholder="Nhập câu hỏi của bạn tại đây..." v-model="user_question" />
-            <button type="button" @click=""
-              class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
-              <i class="pi pi-paperclip text-lg"></i>
+              placeholder="Nhập câu hỏi của bạn tại đây... (Nhấn Tab để xem gợi ý)" v-model="user_question"
+              @focus="handleInputFocus" @keydown="handleKeyDown" />
+            <button type="button" @click="showSuggestions = !showSuggestions"
+              class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors"
+              v-tooltip.top="'Hiển thị gợi ý câu hỏi'">
+              <i class="pi pi-lightbulb text-lg" :class="{ 'text-blue-500': showSuggestions }"></i>
             </button>
           </div>
           <button type="submit"
@@ -145,11 +147,56 @@
             :disabled="!user_question.length" :class="{ 'opacity-50': !user_question.length }">
             <i class="pi pi-send text-lg"></i>
           </button>
+          <!-- Suggestions Popup -->
+          <div v-if="showSuggestions && suggestedPrompts.length > 0"
+            class="suggestions-popup absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden backdrop-blur-lg bg-white/95 max-w-4xl mx-auto">
+            <div class="p-2 border-b border-gray-50 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-lightbulb text-blue-500 text-lg"></i>
+                  <h6 class="font-semibold text-gray-800 m-0">Gợi ý câu hỏi</h6>
+                </div>
+                <button @click="showSuggestions = false"
+                  class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-white/50">
+                  <i class="pi pi-times text-sm"></i>
+                </button>
+              </div>
+            </div>
+            <ScrollPanel style="width: 100%; height: 300px" class="max-h-64  p-2">
+              <div class="grid grid-cols-1 gap-1">
+                <div v-for="(prompt, index) in suggestedPrompts" :key="index" @click="selectSuggestion(prompt)"
+                  class="suggestion-item flex items-center gap-3 p-3 mx-2 rounded-xl hover:bg-blue-50 cursor-pointer transition-all duration-200 group">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center flex-shrink-0 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all">
+                    <i
+                      class="pi pi-arrow-right text-blue-500 text-sm group-hover:translate-x-0.5 transition-transform"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-gray-700 text-sm font-medium group-hover:text-blue-700 transition-colors">{{
+                      prompt.title
+                    }}</p>
+                    <p class="text-gray-500 text-xs mt-0.5 group-hover:text-blue-500 transition-colors">{{
+                      prompt.description
+                    }}</p>
+                  </div>
+                  <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i class="pi pi-chevron-right text-blue-400 text-xs"></i>
+                  </div>
+                </div>
+              </div>
+            </ScrollPanel>
+            <div class="p-3 bg-gray-50 border-t border-gray-100">
+              <p class="text-xs text-gray-500 text-center">
+                <i class="pi pi-info-circle mr-1"></i>
+                Nhấn ESC để đóng hoặc nhấp vào gợi ý để sử dụng
+              </p>
+            </div>
+          </div>
         </form>
         <p class="text-center text-xs font-italic">
           Thông tin được tạo ra bằng AI. Hãy luôn cẩn trọng và sử dụng thông tin AI một cách có trách nhiệm.
-
         </p>
+
       </div>
 
     </div>
@@ -187,26 +234,32 @@
 </template>
 
 <script setup>
+import HistoryChat from "@/components/HistoryChat.vue";
+import SkeletonLoading from "@/components/SkeletonLoading.vue";
+import http from "@/service/http";
+import { useAuthStore } from "@/stores/useAuth";
+import { marked } from 'marked';
 import { useToast } from "primevue";
-import { computed, getCurrentInstance } from "vue";
+import { getCurrentInstance, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref } from "vue";
 
 const toast = useToast();
 const { proxy } = getCurrentInstance();
-import SkeletonLoading from "@/components/SkeletonLoading.vue";
-import HistoryChat from "@/components/HistoryChat.vue";
-import axios from "axios";
-import { marked } from 'marked';
-import { nextTick, onBeforeMount, onMounted, ref } from "vue";
-import http from "@/service/http";
-import { useAuthStore } from "@/stores/useAuth";
 const CardBox = ref([]);
 const scrollPanel = ref(null);
 const loading = ref(false);
 const loadingType = ref("chat");
 const store = useAuthStore()
 onMounted(() => {
-  console.log();
-})
+  // Thêm event listener cho việc click bên ngoài
+  document.addEventListener('click', handleClickOutside);
+  document.addEventListener('keydown', handleKeyDown);
+});
+
+// Cleanup khi component bị destroy
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('keydown', handleKeyDown);
+});
 const carouselResponsiveOptions = [
   {
     breakpoint: '1024px',
@@ -230,6 +283,29 @@ const HistoryMessChat = ref([])
 const messages = ref([]);
 const user_question = ref("");
 const showDeleteConfirmDialog = ref(false);
+const showSuggestions = ref(false);
+const suggestedPrompts = ref([
+  {
+    title: "/help",
+    description: "Tìm hiểu các quy trình và quy định công ty",
+  },
+  {
+    title: "Thông tin nhân sự",
+    description: "Câu hỏi về chính sách nhân sự, lương thưởng",
+  },
+  {
+    title: "Tài liệu kỹ thuật",
+    description: "Hướng dẫn kỹ thuật và tài liệu hệ thống",
+  },
+  {
+    title: "Báo cáo và thống kê",
+    description: "Cách tạo báo cáo và xem thống kê",
+  },
+  {
+    title: "Hỗ trợ kỹ thuật",
+    description: "Giải quyết các vấn đề kỹ thuật",
+  }
+]);
 
 onBeforeMount(() => {
   getCard()
@@ -421,6 +497,44 @@ const clearChat = async () => {
     proxy.$notify('E', error, toast)
   }
 };
+
+// Xử lý popup gợi ý
+const selectSuggestion = (prompt) => {
+  showSuggestions.value = false;
+  // Tự động focus vào input
+  nextTick(() => {
+    const input = document.querySelector('input[placeholder*="Nhập câu hỏi"]');
+    if (input) input.focus();
+  });
+};
+
+// Xử lý sự kiện bàn phím
+const handleKeyDown = (event) => {
+  if (event.key === 'Escape') {
+    showSuggestions.value = false;
+  }
+  if (event.key === 'Tab' && !showSuggestions.value && user_question.value.trim() === '') {
+    event.preventDefault();
+    showSuggestions.value = true;
+  }
+};
+
+// Xử lý focus vào input
+const handleInputFocus = () => {
+  if (user_question.value.trim() === '') {
+    showSuggestions.value = true;
+  }
+};
+
+// Xử lý click bên ngoài để đóng popup
+const handleClickOutside = (event) => {
+  const popup = document.querySelector('.suggestions-popup');
+  const input = document.querySelector('input[placeholder*="Nhập câu hỏi"]');
+
+  if (popup && input && !popup.contains(event.target) && !input.contains(event.target)) {
+    showSuggestions.value = false;
+  }
+};
 </script>
 
 <style scoped>
@@ -573,6 +687,63 @@ const clearChat = async () => {
 .clear-btn:hover::after {
   width: 120%;
   height: 120%;
+}
+
+/* Suggestions Popup Styles */
+.suggestions-popup {
+  animation: fadeInUp 0.3s ease-out;
+  transform-origin: bottom center;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.suggestion-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.suggestion-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.suggestion-item:hover::before {
+  left: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .suggestions-popup {
+    left: 1rem;
+    right: 1rem;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .suggestion-item {
+    padding: 0.75rem;
+  }
+
+  .suggestion-item .w-8 {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
 }
 
 /* Animation cho MultiSelect dropdown */

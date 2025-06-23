@@ -62,7 +62,10 @@ const model = ref([
             label: "Quản lý FAQ",
             to: "/images",
           },
-
+          {
+            label: "Quản lý kịch bản",
+            to: "/script-manage"
+          }
         ],
       },
     ],
