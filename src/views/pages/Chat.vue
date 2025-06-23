@@ -470,7 +470,11 @@ const fetchChatHistory = async () => {
   loading.value = true
   try {
     const res = await http.get(`/fastapi/history/?user_id=${store.getUser}&limit=100`)
-    HistoryMessChat.value = res.data.history
+    HistoryMessChat.value = res.data.history.map(el => ({
+      ...el,
+      content: marked.parse(el.content)
+    }))
+    console.log(HistoryMessChat.value);
     messages.value = [...HistoryMessChat.value, ...messages.value]
   } catch (error) {
     console.log(error);
