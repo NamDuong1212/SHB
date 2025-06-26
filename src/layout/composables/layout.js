@@ -9,7 +9,7 @@ const layoutConfig = reactive({
 });
 
 const layoutState = reactive({
-    staticMenuDesktopInactive: false,
+    staticMenuDesktopInactive: true,
     overlayMenuActive: false,
     profileSidebarVisible: false,
     configSidebarVisible: false,
@@ -38,12 +38,19 @@ export function useLayout() {
         document.documentElement.classList.toggle('app-dark');
     };
 
-    const toggleMenu = (isHover = false) => {
-        if (!isHover) {
-            layoutState.staticMenuDesktopInactive = true;
+    const toggleMenu = () => {
+        // Toggle menu cho desktop
+        if (window.innerWidth >= 992) {
+            layoutState.staticMenuDesktopInactive = !layoutState.staticMenuDesktopInactive;
         } else {
-            layoutState.staticMenuDesktopInactive = false;
+            // Toggle menu cho mobile
+            layoutState.staticMenuMobileActive = !layoutState.staticMenuMobileActive;
+            layoutState.overlayMenuActive = !layoutState.overlayMenuActive;
         }
+    };
+
+    const onMenuToggle = () => {
+        toggleMenu();
     };
 
     const isSidebarActive = computed(() => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive);
@@ -58,6 +65,7 @@ export function useLayout() {
         layoutConfig,
         layoutState,
         toggleMenu,
+        onMenuToggle,
         isSidebarActive,
         isDarkTheme,
         getPrimary,

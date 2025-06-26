@@ -1,6 +1,6 @@
 <template>
   <div
-    class="col-span-2 bg-gradient-to-br h-[90vh] from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    class="col-span-2 bg-gradient-to-br h-[50vh] from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     <!-- Header -->
     <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-4">
       <div class="flex items-center gap-3">

@@ -5,7 +5,7 @@ const { layoutState, setActiveMenuItem, toggleMenu } = useLayout();
 </script>
 
 <template>
-    <div class="layout-sidebar" @mouseenter="toggleMenu(true)" :class="{ 'hovered': isHovered }">
+    <div class="layout-sidebar" :class="{ 'hovered': isHovered }">
         <app-menu></app-menu>
     </div>
 </template>
