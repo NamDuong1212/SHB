@@ -85,7 +85,7 @@
             </Carousel>
           </div>
           <!-- Messages -->
-          <div class="space-y-4 md:space-y-6 px-1 md:px-2">
+          <div class="space-y-4 md:space-y-6 px-1 md:px-2 mb-28">
             <div v-for="(chat, index) in messages" :key="index">
               <!-- AI Message -->
               <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start" v-if="chat.role == 'assistant'">

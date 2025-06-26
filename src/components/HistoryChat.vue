@@ -15,11 +15,11 @@
     </div>
 
     <!-- Content -->
-    <ScrollPanel style="width: 100%; height: 440px" class="p-4">
+    <ScrollPanel style="width: 100%; height: 440px" class="scroll-padding custom-scroll-panel">
       <!-- Loading State -->
       <div v-if="loading" class="space-y-4">
-        <div v-for="i in 3" :key="i" class="animate-pulse">
-          <div class="bg-gray-200 dark:bg-gray-700 rounded-xl p-4">
+        <div v-for="i in 3" :key="i" class="animate-pulse px-4">
+          <div class="bg-gray-200 dark:bg-gray-700 rounded-xl p-4 mb-3">
             <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
             <div class="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
           </div>
@@ -27,7 +27,7 @@
       </div>
 
       <!-- Chat History -->
-      <div v-else-if="false" class="space-y-3  overflow-y-auto custom-scrollbar">
+      <div v-else-if="false" class="space-y-3 p-4">
         <div v-for="(item, index) in HistoryChat" :key="index"
           class="group bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-600 transition-all duration-300 cursor-pointer"
           @click="selectChat(item)">
@@ -78,7 +78,7 @@
       </div>
 
       <!-- Empty State -->
-      <div v-else class="text-center py-12">
+      <div v-else class="text-center py-12 px-4">
         <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -147,7 +147,7 @@ const formatTime = (dateString) => {
     month: '2-digit',
     year: 'numeric'
   })
-}
+};
 </script>
 
 <style scoped>
@@ -159,35 +159,61 @@ const formatTime = (dateString) => {
 }
 
 
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
+/* ScrollPanel Custom Styling */
+.custom-scroll-panel {
   background: transparent;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+/* Bỏ padding của ScrollPanel */
+.scroll-padding :deep(.p-scrollpanel-content) {
+  padding: 0 !important;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+/* Custom ScrollPanel Bar */
+.custom-scroll-panel .p-scrollpanel-bar-x,
+.custom-scroll-panel .p-scrollpanel-bar-y {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  transition: all 0.3s ease;
 }
 
+.custom-scroll-panel .p-scrollpanel-bar-y {
+  width: 6px;
+}
+
+.custom-scroll-panel .p-scrollpanel-bar-x {
+  height: 6px;
+}
+
+.custom-scroll-panel:hover .p-scrollpanel-bar-x,
+.custom-scroll-panel:hover .p-scrollpanel-bar-y {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode ScrollPanel */
 @media (prefers-color-scheme: dark) {
-  .custom-scrollbar {
-    scrollbar-color: #4b5563 transparent;
+
+  .custom-scroll-panel .p-scrollpanel-bar-x,
+  .custom-scroll-panel .p-scrollpanel-bar-y {
+    background: rgba(255, 255, 255, 0.1);
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #4b5563;
+  .custom-scroll-panel:hover .p-scrollpanel-bar-x,
+  .custom-scroll-panel:hover .p-scrollpanel-bar-y {
+    background: rgba(255, 255, 255, 0.2);
   }
+}
 
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
+/* Responsive height for smaller screens */
+@media (max-height: 800px) {
+  .custom-scroll-panel {
+    height: 300px !important;
+  }
+}
+
+@media (max-height: 600px) {
+  .custom-scroll-panel {
+    height: 200px !important;
   }
 }
 </style>

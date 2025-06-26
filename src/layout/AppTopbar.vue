@@ -99,17 +99,13 @@ const funSignOut = async () => {
     <div class="layout-topbar-logo-container">
       <router-link to="/" class="layout-topbar-logo">
         <div class="flex items-center gap-2 w-full">
-          <img class="w-28 h-auto" src="https://fox.ai.vn/wp-content/uploads/2016/08/logowhite-1536x645.png" alt="" />
+          <img class="w-20 lg:w-28 h-auto" src="https://fox.ai.vn/wp-content/uploads/2016/08/logowhite-1536x645.png"
+            alt="" />
         </div>
       </router-link>
 
     </div>
-    <button class="p-link layout-menu-button layout-topbar-button" @click="optimizedToggleMenu()"
-      aria-label="Toggle menu"
-      :aria-expanded="(layoutState.staticMenuDesktopInactive || layoutState.staticMenuMobileActive || layoutState.overlayMenuActive).toString()"
-      :class="{ 'menu-active': layoutState.staticMenuDesktopInactive || layoutState.staticMenuMobileActive || layoutState.overlayMenuActive }">
-      <i class="pi pi-bars text-white"></i>
-    </button>
+
 
     <button class="p-link layout-topbar-menu-button layout-topbar-button" @click="onTopBarMenuButton()"
       aria-label="Toggle topbar menu" :aria-expanded="topbarMenuActive.toString()">
@@ -135,10 +131,10 @@ const funSignOut = async () => {
         </div>
       </div>
 
-      <button class="layout-topbar-menu-button layout-topbar-action layout-topbar-action-highlight"
+      <!-- <button class="layout-topbar-menu-button layout-topbar-action layout-topbar-action-highlight"
         @click="onTopBarMenuButton()" aria-label="Toggle menu actions" :aria-expanded="topbarMenuActive.toString()">
         <i class="pi pi-ellipsis-v transition-transform duration-200" :class="{ 'rotate-90': topbarMenuActive }"></i>
-      </button>
+      </button> -->
 
       <!-- Desktop Menu -->
       <div class="hidden lg:block">
@@ -157,10 +153,16 @@ const funSignOut = async () => {
       </div>
 
       <!-- Mobile Menu - Hiển thị trực tiếp menu items -->
-      <div>
+      <div class="flex items-center gap-2">
         <button @click="toggle" type="button" aria-haspopup="true" aria-controls="overlay_menu_mobile"
           class="layout-topbar-action p-2 text-white hover:bg-white/10 rounded-lg transition-colors">
           <i class="pi pi-user text-lg"></i>
+        </button>
+        <button class="p-link layout-menu-button layout-topbar-button h-full" @click="optimizedToggleMenu()"
+          aria-label="Toggle menu"
+          :aria-expanded="(layoutState.staticMenuDesktopInactive || layoutState.staticMenuMobileActive || layoutState.overlayMenuActive).toString()"
+          :class="{ 'menu-active': layoutState.staticMenuDesktopInactive || layoutState.staticMenuMobileActive || layoutState.overlayMenuActive }">
+          <i class="pi pi-bars text-white"></i>
         </button>
         <Menu ref="menu" id="overlay_menu_mobile" :model="items" :popup="true" />
       </div>
