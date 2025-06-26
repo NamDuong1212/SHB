@@ -113,7 +113,7 @@
         </Column>
       </DataTable>
     </div>
-    <Dialog v-model:visible="addFileModal" modal header="Collections" :style="{ width: '35rem' }">
+    <Dialog v-model:visible="addFileModal" modal header="Collections" :style="{ width: '40rem' }">
       <Tabs v-model:value="tabValue">
         <TabList>
           <Tab :disabled="tabValue == '1'" value="0">Tạo Collections</Tab>
@@ -123,7 +123,12 @@
           <TabPanel value="0">
             <div class="flex flex-col gap-2">
               <label for="">Tên Collections</label>
-              <InputText size="small" v-model="payload.collection_name" placeholder="Nhập tên Collections"></InputText>
+              <InputText size="small" v-model="payload.collection_name" placeholder="Nhập tên Collections"
+                :invalid="validationError" @input="validateInput"></InputText>
+              <small v-if="validationError" class="text-red-500">{{ validationError }}</small>
+              <small v-else class="text-gray-500">
+                Cú pháp: chữ cái tiếng Việt không dấu, số và dấu gạch dưới (_). Ví dụ: tai_lieu_quan_ly
+              </small>
             </div>
           </TabPanel>
           <TabPanel value="1">
@@ -246,7 +251,7 @@
         <div class="flex justify-end gap-2">
           <Button size="small" type="button" label="Hủy" severity="secondary" icon="pi pi-times"
             @click="addFileModal = false" text></Button>
-          <Button size="small" type="button" :label="tabValue == '0' ? `Tiếp tục` : `Lưu`"
+          <Button size="small" type="button" :label="tabValue == '0' ? `Tiếp tục` : `Lưu`" :loading="isLoadingBtn"
             :icon="tabValue == '0' ? `pi pi-arrow-right` : `pi pi-check`" @click="saveMedia"></Button>
         </div>
       </template>
@@ -327,6 +332,7 @@ const payload = ref({
   collection_name: "",
   visibility: "",
 })
+const validationError = ref('')
 const uploadStatus = ref({
   show: false,
   uploading: false,
@@ -342,6 +348,7 @@ const addFileModal = ref(false)
 const confirmDeleteDialog = ref(false)
 const isDropping = ref(false)
 const isLoading = ref(false)
+const isLoadingBtn = ref(false)
 const selectedCollection = ref(null)
 const expandedRows = ref({});
 const confirmDeleteDocDialog = ref(false)
@@ -442,11 +449,26 @@ const fileType = computed(() => {
 
 const saveMedia = async () => {
   if (tabValue.value === '0') {
+
     return CreateCollect()
   }
   return funUpload()
 }
+const validateInput = () => {
+  const validation = validateCollectionName(payload.value.collection_name)
+  validationError.value = validation.isValid ? '' : validation.message
+}
+
 const CreateCollect = async () => {
+  // Validate trước khi tạo
+  const validation = validateCollectionName(payload.value.collection_name)
+  if (!validation.isValid) {
+    validationError.value = validation.message
+    proxy.$notify('E', validation.message, toast)
+    return
+  }
+
+  isLoadingBtn.value = true
   try {
     const res = await http.post(`collections/create`, payload.value)
     if (res.data) {
@@ -457,7 +479,64 @@ const CreateCollect = async () => {
   } catch (error) {
     proxy.$notify('E', error, toast)
 
+  } finally {
+    isLoadingBtn.value = false
   }
+}
+const validateCollectionName = (data) => {
+  // Regex cho tiếng Việt không dấu, chữ số và dấu gạch dưới
+  // Bắt đầu bằng chữ cái, theo sau có thể là chữ cái, số hoặc dấu gạch dưới
+  const vietnamesePattern = /^[a-zA-Z][a-zA-Z0-9_]*$/;
+
+  if (!data || data.trim() === '') {
+    return {
+      isValid: false,
+      message: 'Tên collection không được để trống'
+    };
+  }
+
+  if (!vietnamesePattern.test(data)) {
+    return {
+      isValid: false,
+      message: 'Tên collection chỉ được chứa chữ cái tiếng Việt không dấu, số và dấu gạch dưới (_). Phải bắt đầu bằng chữ cái.'
+    };
+  }
+
+  // Kiểm tra không có dấu cách
+  if (data.includes(' ')) {
+    return {
+      isValid: false,
+      message: 'Tên collection không được chứa dấu cách. Sử dụng dấu gạch dưới (_) để thay thế.'
+    };
+  }
+
+  // Kiểm tra không có nhiều dấu gạch dưới liên tiếp
+  if (data.includes('__')) {
+    return {
+      isValid: false,
+      message: 'Tên collection không được chứa nhiều dấu gạch dưới liên tiếp.'
+    };
+  }
+
+  // Kiểm tra độ dài
+  if (data.length < 3) {
+    return {
+      isValid: false,
+      message: 'Tên collection phải có ít nhất 3 ký tự.'
+    };
+  }
+
+  if (data.length > 50) {
+    return {
+      isValid: false,
+      message: 'Tên collection không được vượt quá 50 ký tự.'
+    };
+  }
+
+  return {
+    isValid: true,
+    message: 'Tên collection hợp lệ'
+  };
 }
 const funUpload = async () => {
   formData.append('collection_name', payload.value.collection_name)
@@ -476,6 +555,7 @@ const funUpload = async () => {
       uploadStatus.value.progress += 10
     }
   }, 200)
+  isLoadingBtn.value = true
   try {
     const res = await http.post(`run-pipeline`, formData)
     clearInterval(uploadInterval)
@@ -492,6 +572,8 @@ const funUpload = async () => {
     formData.delete('file')
 
   } finally {
+    isLoadingBtn.value = false
+
     fetchAllCollections()
   }
 }
@@ -515,6 +597,7 @@ const resetPayload = () => {
   payload.value = {
     collection_name: '',
   };
+  validationError.value = '';
   uploadStatus.value.show = false;
   tabValue.value = '0'
 
