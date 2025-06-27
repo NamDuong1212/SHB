@@ -5,7 +5,7 @@
   <div class="grid bg-gradient-to-br from-blue-50 to-indigo-50 grid-cols-12 gap-2 lg:gap-4">
     <div class="chat-container col-span-12 lg:col-span-10 relative flex flex-col h-screen ">
       <!-- Header -->
-      <div class="chat-header rounded-xl bg-white p-3 md:p-4 mx-2 md:mx-0">
+      <div class="chat-header rounded-xl bg-white p-3 md:p-4 mx-2 md:mx-0 shadow-xl">
         <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 max-w-6xl mx-auto">
           <div class="flex items-center gap-3">
             <div
@@ -18,7 +18,7 @@
               </svg>
             </div>
             <div>
-              <h2 class="font-bold text-2xl text-gray-800 mb-0">FOXAI BOT</h2>
+              <h2 class="font-bold text-lg lg:text-2xl text-gray-800 mb-0">FOXAI BOT</h2>
               <p class="text-sm text-gray-500">Trợ lý thông minh của bạn</p>
             </div>
           </div>
@@ -26,9 +26,10 @@
             <!-- Collection Selector với styling đẹp hơn -->
             <div class="relative flex-1 sm:flex-none">
               <MultiSelect v-model="selectedCollection" :options="Collections" filter placeholder="🗂️ Chọn Collections"
-                size="small" :maxSelectedLabels="1" class="w-full sm:w-64 md:w-80 collection-selector" :pt="{
+                size="small" :maxSelectedLabels="1" selectedItemsLabel="{0} collections đã chọn"
+                class="w-full sm:w-64 md:w-80 collection-selector" :pt="{
                   root: { class: 'border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 rounded-xl shadow-sm transition-all duration-200' },
-                  label: { class: 'text-gray-700 font-medium text-sm' },
+                  label: { class: 'text-gray-700 font-medium text-sm truncate' },
                   trigger: { class: 'text-blue-500' }
                 }" />
             </div>
@@ -37,7 +38,7 @@
               <!-- Confirm Button với styling gradient -->
               <Button :disabled="selectedCollection?.length < 1" label="Xác nhận" icon="pi pi-check" size="small"
                 @click="onselect"
-                class="confirm-btn bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-0 text-white font-medium px-3 md:px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 text-sm" />
+                class=" bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-0 text-white font-medium px-3 md:px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 text-sm" />
 
               <Button icon="pi pi-trash" size="small" severity="danger" text rounded @click="showDeleteDialog"
                 v-tooltip.top="'Xóa cuộc trò chuyện'" class="flex-shrink-0" />
@@ -85,7 +86,7 @@
             </Carousel>
           </div>
           <!-- Messages -->
-          <div class="space-y-4 md:space-y-6 px-1 md:px-2 mb-28">
+          <div class="space-y-4 md:space-y-6 px-1 md:px-2 mb-44 lg:mb-28">
             <div v-for="(chat, index) in messages" :key="index">
               <!-- AI Message -->
               <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start" v-if="chat.role == 'assistant'">
@@ -136,17 +137,17 @@
         <form class="flex items-center gap-2 md:gap-3 w-full max-w-4xl mx-auto" @submit="submitChat">
           <div class="relative flex-1">
             <input
-              class="w-full pl-4 md:pl-5 pr-10 md:pr-12 py-3 md:py-4 bg-gray-50 hover:bg-white focus:bg-white rounded-full border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all duration-200 text-sm md:text-base"
+              class="w-full shadow-xl pl-4 md:pl-5 pr-10 md:pr-12 py-3 md:py-4 bg-gray-50 hover:bg-white focus:bg-white rounded-full border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all duration-200 text-sm md:text-base"
               placeholder="Nhập câu hỏi..." v-model="user_question" @focus="handleInputFocus"
               @keydown="handleKeyDown" />
             <button type="button" @click="showSuggestions = !showSuggestions"
-              class="absolute right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors"
+              class="absolute  right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors"
               v-tooltip.top="'Hiển thị gợi ý câu hỏi'">
               <i class="pi pi-lightbulb text-base md:text-lg" :class="{ 'text-blue-500': showSuggestions }"></i>
             </button>
           </div>
           <button type="submit"
-            class="p-3 md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
+            class="p-3 shadow-xl md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
             :disabled="!user_question.length" :class="{ 'opacity-50': !user_question.length }">
             <i class="pi pi-send text-sm md:text-lg"></i>
           </button>
@@ -474,6 +475,7 @@ const onselect = async () => {
     user_id: store.getUser,
     selected_names: selectedCollection.value,
   }
+  loading.value = true
   try {
     const res = await http.post(`/fastapi/select/`, data)
     if (res.data) {
@@ -481,6 +483,8 @@ const onselect = async () => {
     }
   } catch (error) {
     console.log(error);
+  } finally {
+    loading.value = false
   }
 };
 const fetchChatHistory = async () => {
@@ -639,7 +643,7 @@ const handleClickOutside = (event) => {
 }
 
 .collection-selector :deep(.p-multiselect-label) {
-  padding: 0.75rem 1rem;
+
   font-weight: 500;
 }
 
@@ -663,26 +667,7 @@ const handleClickOutside = (event) => {
   color: white;
 }
 
-/* Custom styling cho Confirm Button */
-.confirm-btn {
-  position: relative;
-  overflow: hidden;
-}
 
-.confirm-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.confirm-btn:hover::before {
-  left: 100%;
-}
 
 /* Custom styling cho Clear Button */
 .clear-btn {
@@ -1042,6 +1027,20 @@ const handleClickOutside = (event) => {
   border: 2px solid #e5e7eb;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   animation: slideDown 0.3s ease-out;
+  max-width: min(90vw, 320px);
+  max-height: min(60vh, 400px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Đảm bảo không có horizontal scroll */
+.collection-selector :deep(.p-multiselect-panel),
+.collection-selector :deep(.p-multiselect-items),
+.collection-selector :deep(.p-multiselect-items-wrapper) {
+  overflow-x: hidden !important;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 @keyframes slideDown {
@@ -1071,5 +1070,119 @@ const handleClickOutside = (event) => {
 .collection-selector :deep(.p-multiselect-item.p-highlight) {
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: white;
+}
+
+/* Mobile responsive cho MultiSelect dropdown - FIX OVERFLOW */
+@media (max-width: 768px) {
+  .collection-selector :deep(.p-multiselect-panel) {
+    position: fixed !important;
+    top: auto !important;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    min-width: unset !important;
+    max-height: min(50vh, 300px) !important;
+    z-index: 9999 !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .collection-selector :deep(.p-multiselect-items-wrapper) {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+  }
+
+  .collection-selector :deep(.p-multiselect-item) {
+    padding: 0.875rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .collection-selector :deep(.p-multiselect-item-text),
+  .collection-selector :deep(.p-multiselect-item .p-checkbox-label) {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: calc(100vw - 4rem) !important;
+    display: block !important;
+  }
+
+  .collection-selector :deep(.p-multiselect-filter-container) {
+    padding: 0.5rem !important;
+    max-width: 100% !important;
+  }
+
+  .collection-selector :deep(.p-multiselect-filter) {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .collection-selector :deep(.p-multiselect-panel) {
+    left: 0.25rem !important;
+    right: 0.25rem !important;
+    width: calc(100vw - 0.5rem) !important;
+    max-width: calc(100vw - 0.5rem) !important;
+    max-height: min(40vh, 250px) !important;
+  }
+
+  .collection-selector :deep(.p-multiselect-item) {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.8125rem !important;
+    margin: 0.125rem 0 !important;
+  }
+
+  .collection-selector :deep(.p-multiselect-item-text),
+  .collection-selector :deep(.p-multiselect-item .p-checkbox-label) {
+    max-width: calc(100vw - 3rem) !important;
+  }
+}
+
+/* Ultra small screens - đảm bảo không overflow */
+@media (max-width: 360px) {
+  .collection-selector :deep(.p-multiselect-panel) {
+    left: 0.125rem !important;
+    right: 0.125rem !important;
+    width: calc(100vw - 0.25rem) !important;
+    max-width: calc(100vw - 0.25rem) !important;
+    max-height: min(35vh, 200px) !important;
+  }
+
+  .collection-selector :deep(.p-multiselect-item) {
+    padding: 0.625rem 0.375rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .collection-selector :deep(.p-multiselect-item-text),
+  .collection-selector :deep(.p-multiselect-item .p-checkbox-label) {
+    max-width: calc(100vw - 2rem) !important;
+  }
+}
+
+/* Force viewport containment for dropdown */
+@media (max-width: 768px) {
+  body:has(.collection-selector .p-multiselect-panel:not(.p-hidden)) {
+    overflow-x: hidden !important;
+  }
+
+  .collection-selector :deep(.p-multiselect-panel) * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Đảm bảo không có element nào vượt quá viewport */
+  .collection-selector :deep(.p-multiselect-panel .p-multiselect-item),
+  .collection-selector :deep(.p-multiselect-panel .p-multiselect-header),
+  .collection-selector :deep(.p-multiselect-panel .p-multiselect-filter-container) {
+    contain: layout !important;
+    overflow: hidden !important;
+  }
 }
 </style>

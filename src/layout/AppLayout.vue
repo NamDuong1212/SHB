@@ -67,7 +67,7 @@ function isOutsideClicked(event) {
     <app-sidebar></app-sidebar>
     <div class="layout-main-container">
       <div class="layout-main">
-        <div class="table-wrapper ">
+        <div class="table-wrapper">
           <div class="table-container">
             <router-view></router-view>
           </div>

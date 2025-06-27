@@ -1,6 +1,6 @@
 <template>
+
   <div class="chat-container  flex flex-col gap-3 h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-    <!-- Header -->
     <div class="chat-header col-span-12 rounded-xl bg-white  p-4">
       <div class="flex justify-between items-center max-w-9xl mx-auto">
         <div class="flex items-center gap-3">
@@ -266,12 +266,14 @@
       </template>
     </Dialog>
     <loading v-if="isLoading"></loading>
+    <PopupChat></PopupChat>
   </div>
 </template>
 <script setup>
 import http from '@/service/http';
 import { useToast } from "primevue";
 import { getCurrentInstance, onMounted, ref } from 'vue';
+import PopupChat from '../PopupChat.vue';
 
 const toast = useToast();
 const { proxy } = getCurrentInstance();
