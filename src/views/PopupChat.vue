@@ -24,7 +24,7 @@
     <div v-if="isOpen" :class="[
       'backdrop-blur-xl bg-white/90 border border-white/20 rounded-2xl shadow-2xl transition-all duration-500 ease-out flex flex-col overflow-hidden',
       'before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/10 before:to-transparent before:pointer-events-none',
-      isMinimized ? 'w-80 h-16' : 'w-[420px] h-[600px]',
+      isMinimized ? 'w-80 h-16' : 'w-[420px] h-[450px]',
       'animate-slideUp'
     ]">
       <!-- Header với gradient -->

@@ -272,16 +272,14 @@
 <script setup>
 import http from '@/service/http';
 import { useToast } from "primevue";
-import { getCurrentInstance, onMounted, ref } from 'vue';
+import { getCurrentInstance, ref } from 'vue';
 import PopupChat from '../PopupChat.vue';
 
 const toast = useToast();
 const { proxy } = getCurrentInstance();
 
 
-onMounted(() => {
-  fetchAllImages()
-})
+
 const payload = ref({
   title: '',
   type: null,
@@ -298,9 +296,8 @@ const confirmDeleteDialog = ref(false)
 const selectedImage = ref(null)
 
 const fetchAllImages = async () => {
-  isLoading.value = true
   try {
-
+    // isLoading.value = true
     const res = await http.get(`/fastapi/cards/`)
     Images.value = res.data.items
     console.log(res);
