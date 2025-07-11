@@ -4,19 +4,19 @@ export const useAuthStore = defineStore('useAuth', {
     state: () => ({
         isLoggedIn: false,  // trạng thái đăng nhập
         user: null,         // thông tin người dùng, có thể là object hoặc null
-        token: null,        // token khi người dùng đăng nhập
+        access_token: null,        // token khi người dùng đăng nhập
     }),
 
     getters: {
         getUser: (state) => state.user,
         isAuthenticated: (state) => state.isLoggedIn,
-        getToken: (state) => state.token,
+        getToken: (state) => state.access_token,
     },
 
     actions: {
         login(user, token) {
             this.user = user;
-            this.token = token;
+            this.token = access_token;
             this.isLoggedIn = true;
         },
 

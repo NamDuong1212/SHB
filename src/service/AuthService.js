@@ -9,8 +9,8 @@ export default class AuthService {
                 throw new Error('Đăng nhập thất bại');
             }
             const data = response.data;
-            localStorage.setItem('auth_token', data.access);
-            localStorage.setItem('auth_user_id', JSON.stringify(data.user_id));
+            localStorage.setItem('auth_token', data.access_token);
+            localStorage.setItem('auth_user_id', JSON.stringify(data.user));
             return data;
         } catch (error) {
             throw error;

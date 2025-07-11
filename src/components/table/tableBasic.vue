@@ -27,8 +27,7 @@ const props = defineProps({
   header: String,
   columns: Array,
   filters: Object,
-  globalFilterFields: Array,
-  apiEndpoint: String,
+  globalFilterFields: Array, 
   isExpanded: Boolean,
 });
 
