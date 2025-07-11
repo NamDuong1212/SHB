@@ -1,20 +1,35 @@
 <script setup>
 import DeleteComps from "@/components/DeleteComps.vue";
 import tableDoc from "@/components/table/tableBasic.vue";
+import CollectionService from "@/service/CollectionService";
 import { renderDropdownFilter } from "@/composables/renderFilter";
 import { FilterMatchMode } from "@primevue/core/api";
 import Button from "primevue/button";
 import Tag from "primevue/tag";
 import { h, onBeforeMount, ref } from "vue";
 import FormData from "../components/FormData.vue";
+
 const dialogRef = ref();
 const filters = ref(null);
 const TableBasic = ref();
 const dataSelection = ref([]);
 const modelDialogDelete = ref(false);
+
+const getAllCollection = async (params = {}) => {
+  try {
+    const { data } = await CollectionService.getAll(params);
+    if (data.result) {
+      return data.result;
+    }
+  } catch (error) {
+    console.error("Error fetching collections:", error);
+    return [];
+  }
+};
+
 const columns = ref([
   {
-    field: "organizationLevelName",
+    field: "name",
     header: "Tên collection",
     display: true,
     renderValue: (rowData) =>
@@ -24,14 +39,14 @@ const columns = ref([
           class: "text-blue-600 font-semibold cursor-pointer hover:underline",
           onClick: () => openAddDialog(rowData),
         },
-        rowData.organizationLevelName
+        rowData.name
       ),
   },
   {
     field: "description",
     header: "Mô tả",
     display: true,
-    renderValue: (rowData) => h("span", {}, rowData.description),
+    renderValue: (rowData) => h("span", {}, rowData.description || ""),
   },
 ]);
 
@@ -47,28 +62,55 @@ const initFilters = () => {
     },
   };
 };
+
 const openAddDialog = (data) => {
   dialogRef.value?.openDialog(data);
 };
+
 const refreshData = () => {
   TableBasic.value?.refresh();
 };
+
 const delteItems = () => {
   modelDialogDelete.value = true;
 };
 </script>
 
 <template>
-  <tableDoc ref="TableBasic" v-model:selection="dataSelection" header="Danh sách collection" :columns="columns"
-    :filters="filters" apiEndpoint="" @resetFilter="initFilters">
+  <tableDoc 
+    ref="TableBasic" 
+    v-model:selection="dataSelection" 
+    header="Danh sách collection" 
+    :columns="columns"
+    :filters="filters" 
+    :apiFunction="getAllCollection"
+    @resetFilter="initFilters">
     <template #header>
-      <Button :disabled="!dataSelection.length" @click="delteItems()" size="small" label="Xóa" icon="pi pi-trash"
-        severity="danger"></Button>
-      <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Thêm mới" size="small" />
+      <Button 
+        :disabled="!dataSelection.length" 
+        @click="delteItems()" 
+        size="small" 
+        label="Xóa" 
+        icon="pi pi-trash"
+        severity="danger">
+      </Button>
+      <Button 
+        @click="openAddDialog" 
+        type="button" 
+        icon="pi pi-plus" 
+        severity="primary" 
+        label="Thêm mới" 
+        size="small" />
     </template>
   </tableDoc>
+  
   <FormData ref="dialogRef" :loadData="refreshData"></FormData>
-  <DeleteComps v-model:isOpenDelete="modelDialogDelete" :ids="dataSelection.flatMap((e) => e.id)"
-    @update:isOpenDelete="refreshData()" :content="`Bạn có chắc chắn muốn xóa ${dataSelection.length} bản ghi không?`"
-    api="OrganizationalLevel"></DeleteComps>
+  
+  <DeleteComps 
+    v-model:isOpenDelete="modelDialogDelete" 
+    :ids="dataSelection.flatMap((e) => e.name)"
+    @update:isOpenDelete="refreshData()" 
+    :content="`Bạn có chắc chắn muốn xóa ${dataSelection.length} bản ghi không?`"
+    api="collection">
+  </DeleteComps>
 </template>

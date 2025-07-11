@@ -5,7 +5,7 @@ export default class CollectionService {
     static api = "collection";
 
     static async getAll(params = {}) {
-        return http.get(`${this.api}`, { params });
+        return http.get(this.api, { params });
     }
 
     static async delete(name) {

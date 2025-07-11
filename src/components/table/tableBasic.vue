@@ -23,6 +23,7 @@ const modelExpandedRows = defineModel("expandedRows", {
 const emits = defineEmits(["resetFilter"]);
 
 const props = defineProps({
+  apiFunction: Function,
   header: String,
   columns: Array,
   filters: Object,
@@ -37,20 +38,13 @@ onBeforeMount(() => {
 });
 
 const getAllData = async (params = {}) => {
-  if (!!!props.apiEndpoint) return;
+  if (!props.apiFunction) return;
   try {
     loading.value = true;
-    const { data } = await http.get(props.apiEndpoint, { params });
-
-    if (data.result) {
-      dataTable.value = data.result;
-      paginator.value.pageSize = data.pageSize;
-      paginator.value.page = data.page;
-      paginator.value.total = data.total;
-    }
+    const result = await props.apiFunction(params);
+    dataTable.value = result || [];
   } catch (error) {
     dataTable.value = [];
-    paginator.value.total = 0;
   } finally {
     loading.value = false;
   }
