@@ -21,11 +21,6 @@ const router = createRouter({
                 },
                 // === Thiết lập hệ thống ===
                 {
-                    path: '/danh-muc-cap-to-chuc',
-                    name: 'danh-muc-cap-to-chuc',
-                    component: () => import('@/views/pages/ThietLapHeThong/CoCauToChuc/CapToChuc/page/index.vue')
-                },
-                {
                     path: '/co-cau-to-chuc',
                     name: 'co-cau-to-chuc',
                     component: () => import('@/views/pages/ThietLapHeThong/CoCauToChuc/CoCauToChuc/page/index.vue')

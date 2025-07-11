@@ -31,16 +31,9 @@ const model = ref([
       {
         label: "Cơ cấu tổ chức",
         icon: "pi pi-fw pi-users",
-        items: [
-          {
-            label: "Cơ cấu tổ chức",
-            to: "/co-cau-to-chuc",
-          },
-          {
-            label: "Cấp tổ chức",
-            to: "/danh-muc-cap-to-chuc",
-          },
-        ],
+        to: "/co-cau-to-chuc",
+
+
       },
       {
         label: "Thiết lập hệ thống",
@@ -55,8 +48,12 @@ const model = ref([
             to: "/danh-muc-vai-tro",
           },
           {
-            label: "Quản lý collection",
+            label: "Quản lý collections",
             to: "/collections",
+          },
+          {
+            label: "Quản lý documents",
+            to: "/files",
           },
           {
             label: "Quản lý FAQ",

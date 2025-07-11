@@ -6,9 +6,9 @@ export default class OrgsTrucService {
   static api = "OrganizationalStructure";
 
   static schema = yup.object({
-    orgStrCode: yup.string().required("Vui lòng nhập mã đơn vị"),
-    orgStrName: yup.string().required("Vui lòng nhập tên đơn vị"),
-    organizationalLevelId: yup.string().required("Vui lòng chọn cấp tổ chức"),
+    // orgStrCode: yup.string().required("Vui lòng nhập mã đơn vị"),
+    orgName: yup.string().required("Vui lòng nhập tên đơn vị"),
+    orgType: yup.string().required("Vui lòng chọn cấp tổ chức"),
   });
 
   static async getAll(params = {}) {
