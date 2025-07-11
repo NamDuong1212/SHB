@@ -74,7 +74,6 @@
   </Dialog>
 </template>
 <script setup>
-import OrganizationalService from "@/service/OrganizationalService";
 import OrgsTrucService from "@/service/OrganizationalStructureService";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
@@ -119,7 +118,7 @@ const funClearPayload = () => {
   payload.value = JSON.parse(clearPayload);
 };
 const openDialog = async (data = null) => {
-  fetchOrgLevel();
+
   if (data && data.id) {
     try {
       const res = await OrgsTrucService.getById(data.id);
@@ -148,12 +147,7 @@ const saveData = async () => {
     }
   }
 };
-const fetchOrgLevel = async () => {
-  try {
-    const res = await OrganizationalService.getAll();
-    OrgLevelOpts.value = res.data.result;
-  } catch (error) { }
-};
+
 defineExpose({
   openDialog,
 });

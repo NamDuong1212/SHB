@@ -14,20 +14,41 @@
                 >Tên vai trò<sup class="text-red-500">*</sup></label
               >
               <InputText
-                placeholder="Nhập nội dung"
+                placeholder="Nhập tên vai trò"
                 size="small"
                 v-model="payload.roleName"
               />
             </div>
           </div>
+          
           <div class="col-span-12">
-            <div class="p-5">
-              <Privilege
-                :Claims="payload.permissionList"
-                v-model:claim="payload.permissionList"
-              ></Privilege>
+            <div class="flex flex-col gap-2">
+              <label class="font-medium text-gray-700">Quyền hạn</label>
+              <div class="flex flex-wrap gap-2">
+                <Button
+                  v-for="permission in availablePermissions"
+                  :key="permission.value"
+                  :label="permission.label"
+                  :severity="isPermissionSelected(permission.value) ? 'primary' : 'secondary'"
+                  :outlined="!isPermissionSelected(permission.value)"
+                  size="small"
+                  @click="togglePermission(permission.value)"
+                />
+              </div>
             </div>
           </div>
+          
+          <div class="col-span-12">
+            <div class="flex flex-col gap-2">
+              <label class="font-medium text-gray-700">Nhóm ID</label>
+              <InputText
+                placeholder="Nhập nhóm ID"
+                size="small"
+                v-model="payload.orgIds"
+              />
+            </div>
+          </div>
+          
           <div class="col-span-12">
             <div class="flex flex-col gap-2">
               <label class="font-medium text-gray-700">Trạng thái</label>
@@ -59,12 +80,13 @@
   </Dialog>
   <Loading v-if="isLoading"></Loading>
 </template>
+
 <script setup>
-import Privilege from "@/components/Privilege.vue";
 import RoleService from "@/service/RoleService";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
+import ToggleSwitch from "primevue/toggleswitch";
 import { useToast } from "primevue/usetoast";
 import { getCurrentInstance, ref } from "vue";
 
@@ -73,47 +95,83 @@ const visibleModal = ref(false);
 const messages = ref({});
 const toast = useToast();
 const isLoading = ref(false);
+
 const props = defineProps({
   dataTable: Array,
 });
+
 const emits = defineEmits(["loadData"]);
 
+// Add, View, Edit, Delete cố định 
+const availablePermissions = ref([
+  { label: "Thêm", value: "Add" },
+  { label: "Xem", value: "View" },
+  { label: "Sửa", value: "Edit" },
+  { label: "Xoá", value: "Delete" },
+]);
+
 const payload = ref({
-  groupItemId: null,
+  roleName: "",
+  permissions: [],
+  orgIds: "",
   isActive: false,
 });
 
-const openDialog = async (data = null) => {
-  if (data.id) {
-    payload.value = { ...data };
-    payload.value.roleName = data.name;
-    payload.value.permissionList = await getByID(data.id);
+const isPermissionSelected = (permission) => {
+  return payload.value.permissions?.includes(permission) || false;
+};
+
+const togglePermission = (permission) => {
+  if (!payload.value.permissions) {
+    payload.value.permissions = [];
+  }
+  
+  const index = payload.value.permissions.indexOf(permission);
+  if (index > -1) {
+    payload.value.permissions.splice(index, 1);
   } else {
-    payload.value = {};
+    payload.value.permissions.push(permission);
+  }
+};
+
+const openDialog = async (data = null) => {
+  if (data?.id) {
+    payload.value = { ...data };
+    payload.value.roleName = data.name || data.roleName;
+    // Lấy permissions từ API hoặc data
+    payload.value.permissions = data.permissions || [];
+    payload.value.orgIds = data.orgIds || "";
+  } else {
+    payload.value = {
+      roleName: "",
+      permissions: [],
+      orgIds: "",
+      isActive: false,
+    };
   }
   messages.value = {};
   visibleModal.value = true;
 };
 
-const getByID = async (id) => {
-  try {
-    const res = await RoleService.getById(id);
-    return res.data;
-  } catch (error) {
-    return {};
-  }
-};
-
 const saveData = async () => {
   try {
     isLoading.value = true;
-    const response = await RoleService.save(payload.value);
+    
+    // Chuẩn bị dữ liệu theo format yêu cầu
+    const dataToSave = {
+      ...payload.value,
+      
+    };
+    
+    const response = await RoleService.save(dataToSave);
     proxy.$notify("S", "Thao tác thành công!", toast);
     visibleModal.value = false;
+    emits("loadData");
   } catch (error) {
     if (error.isValidate) {
       messages.value = error;
     } else {
+      proxy.$notify("E", "Có lỗi xảy ra!", toast);
     }
   } finally {
     isLoading.value = false;
@@ -124,6 +182,7 @@ defineExpose({
   openDialog,
 });
 </script>
+
 <style>
 .p-toast .p-toast-message.p-toast-message-success {
   background-color: #ecfdf5;
