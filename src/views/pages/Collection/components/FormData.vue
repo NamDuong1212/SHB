@@ -1,22 +1,27 @@
 <template>
   <Dialog v-model:visible="visible" modal header="Cập nhật collection" :style="{ width: '80rem' }">
-    <div class="flex flex-col gap-3">
-      <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
-        <div class="grid grid-cols-12 gap-4">
-          <div class="col-span-12">
-            <div class="flex flex-col gap-2">
-              <label class="font-medium text-gray-700">Tên collection <sup class="text-red-500">*</sup></label>
-              <InputText v-model="payload.organizationLevelName" :invalid="messages.organizationLevelName"></InputText>
-              <small class="text-red-500">{{ messages.organizationLevelName }}</small>
-            </div>
-          </div>
-          <div class="col-span-12">
-            <div class="flex flex-col gap-2">
-              <label class="font-medium text-gray-700">Tệp đính kèm </label>
-              <FileUpload></FileUpload>
-            </div>
+    <div class="bg-gray-50 p-4 rounded-lg">
+      <div class="grid grid-cols-12 gap-4">
+        <div class="col-span-6">
+          <div class="flex flex-col gap-2">
+            <label class="font-medium text-gray-700">Tên collection <sup class="text-red-500">*</sup></label>
+            <InputText v-model="payload.name" class="w-full" placeholder="Nhập tên collection " size="small" />
+            <small class="text-red-500" v-if="messages.name">{{
+              messages.name
+            }}</small>
           </div>
         </div>
+        <div class="col-span-6">
+          <div class="flex flex-col gap-2">
+            <label class="font-medium text-gray-700">Mô tả <sup class="text-red-500">*</sup></label>
+            <InputText v-model="payload.description" class="w-full" size="small" placeholder="Nhập mô tả"
+              :invalid="!!messages.description" />
+            <small class="text-red-500" v-if="messages.description">{{
+              messages.description
+            }}</small>
+          </div>
+        </div>
+
       </div>
     </div>
     <template #footer>
@@ -29,7 +34,8 @@
   </Dialog>
 </template>
 <script setup>
-import OrganizationalService from "@/service/OrganizationalService";
+import CollectionService from "@/service/CollectionService";
+import { InputText } from "primevue";
 import { useToast } from "primevue/usetoast";
 import { getCurrentInstance, onMounted, ref } from "vue";
 const emits = defineEmits(["loadData"]);
@@ -38,7 +44,7 @@ const toast = useToast();
 
 onMounted(() => { });
 const visible = ref(false);
-const payload = ref({ isActive: true });
+const payload = ref({ name: null, description: null });
 const clearPayload = JSON.stringify(payload.value);
 const messages = ref({});
 const openDialog = async (data = null) => {
@@ -52,7 +58,7 @@ const openDialog = async (data = null) => {
 };
 const saveData = async () => {
   try {
-    const res = await OrganizationalService.save(payload.value);
+    const res = await CollectionService.create(payload.value);
     if (res.data) {
       proxy.$notify("S", "Thao tác thành công!", toast);
       visible.value = false;

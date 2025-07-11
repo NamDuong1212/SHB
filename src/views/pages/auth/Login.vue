@@ -101,7 +101,7 @@ const login = async () => {
     </div>
     <div class="w-1/2 flex justify-center">
       <div class="bg-[#D9D9D9] rounded-3xl overflow-hidden w-[75%] h-[75vh]">
-        <img src="../../../assets/img/logo1.png" alt="login-bg" class="w-full h-full object-cover"
+        <img src="../../../assets/img/FOXAI.jpg" alt="login-bg" class="w-full h-full object-cover"
           style="filter: contrast(90%)" />
       </div>
     </div>

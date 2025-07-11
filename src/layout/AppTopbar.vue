@@ -95,7 +95,7 @@ const funSignOut = async () => {
 </script>
 
 <template>
-  <div class="layout-topbar bg-gradient-to-r from-blue-600 to-indigo-700">
+  <div class="layout-topbar bg-gradient-to-r from-[#0082ca] to-[#4db9ed]">
     <div class="layout-topbar-logo-container">
       <router-link to="/" class="layout-topbar-logo">
         <div class="flex items-center gap-2 w-full">

@@ -32,8 +32,11 @@ const model = ref([
         label: "Cơ cấu tổ chức",
         icon: "pi pi-fw pi-users",
         to: "/co-cau-to-chuc",
-
-
+      },
+      {
+        label: "Quản lý collections",
+        icon: "pi pi-fw pi-folder",
+        to: "/danh-sach-collection",
       },
       {
         label: "Thiết lập hệ thống",

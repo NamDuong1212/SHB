@@ -99,7 +99,6 @@ const fixedOrgLevels = [
 
 const OrgLevelOpts = ref([]);
 const payload = ref({
-  // orgStrCode: null,
   orgName: null,
   orgType: null,
   parentOrgId: null,
