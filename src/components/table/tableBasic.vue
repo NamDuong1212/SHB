@@ -142,15 +142,12 @@ defineExpose({
     @page="changePaginator"
     @filter="changeFilter"
     @rowClick="onRowClick"
-    size="small"
     dataKey="id"
     :rowHover="true"
     v-model:filters="filters1"
     :loading="loading"
     :filters="props.filters"
-    showGridlines
     scrollable
-    scrollHeight="flex"
     filterDisplay="menu"
     resizableColumns
     columnResizeMode="fit"
@@ -162,7 +159,7 @@ defineExpose({
     v-model:expandedRows="modelExpandedRows"
   >
     <template #header>
-      <div class="flex justify-between p-2">
+      <div class="flex justify-between p-3">
         <div class="flex gap-4">
           <IconField>
             <InputIcon>

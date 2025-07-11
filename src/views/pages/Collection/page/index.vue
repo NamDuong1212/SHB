@@ -33,25 +33,6 @@ const columns = ref([
     display: true,
     renderValue: (rowData) => h("span", {}, rowData.description),
   },
-  {
-    field: "isActive",
-    header: "Trạng thái",
-    display: true,
-    renderFilter: renderDropdownFilter({
-      placeholder: "Chọn...",
-      options: [true, false],
-    }),
-    renderValue: (rowData) => {
-      const severityMap = {
-        true: "info",
-        false: "danger",
-      };
-      return h(Tag, {
-        value: rowData.isActive === true ? `Đang hoạt động` : `Ngừng hoạt động`,
-        severity: severityMap[rowData.isActive] || null,
-      });
-    },
-  },
 ]);
 
 onBeforeMount(() => {

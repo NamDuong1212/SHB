@@ -21,7 +21,7 @@
       </div>
     </div>
     <div class="card">
-      <DataTable :value="Users" paginator rows="5" scrollable scrollHeight="600px" size="small" showGridlines>
+      <DataTable :value="customers" paginator :rows="10" :rowsPerPageOptions="[10, 20, 30, 50]" tableStyle="min-width: 50rem">
         <Column header="#">
           <template #body="{ index }">
             {{ index + 1 }}
