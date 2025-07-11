@@ -210,7 +210,7 @@ const detailItem = (data) => {
             <div class="col-span-8 md:col-span-9">
               <div class="flex flex-col mb-4">
                 <div
-                  class="bg-white p-4 rounded-lg shadow-sm mb-4 border border-gray-100"
+                  class="p-4 rounded-lg shadow-sm mb-4 border border-gray-100"
                 >
                   <div class="mb-3 border-b pb-2 border-gray-100">
                     <h3 class="text-lg font-semibold text-primary">Thông tin đơn vị</h3>
@@ -218,7 +218,7 @@ const detailItem = (data) => {
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <div class="flex items-center">
                       <div class="w-32 flex-shrink-0">
-                        <span class="text-gray-600 font-medium">Mã đơn vị:</span>
+                        <span class="font-medium">Mã đơn vị:</span>
                       </div>
                       <div class="flex-grow">
                         <span class="font-semibold text-gray-800">{{
@@ -228,7 +228,7 @@ const detailItem = (data) => {
                     </div>
                     <div class="flex items-center">
                       <div class="w-32 flex-shrink-0">
-                        <span class="text-gray-600 font-medium">Cấp tổ chức:</span>
+                        <span class="ont-medium">Cấp tổ chức:</span>
                       </div>
                       <div class="flex-grow">
                         <span class="font-semibold text-gray-800">{{
@@ -238,10 +238,10 @@ const detailItem = (data) => {
                     </div>
                     <div class="flex items-center">
                       <div class="w-32 flex-shrink-0">
-                        <span class="text-gray-600 font-medium">Tên đơn vị:</span>
+                        <span class="font-medium">Tên đơn vị:</span>
                       </div>
                       <div class="flex-grow flex items-center gap-2">
-                        <span class="font-semibold text-gray-800">{{
+                        <span class="font-semibold">{{
                           selectedNode?.orgStrName ?? "--"
                         }}</span>
                         <Button
@@ -258,7 +258,7 @@ const detailItem = (data) => {
                     </div>
                     <div class="flex items-center">
                       <div class="w-32 flex-shrink-0">
-                        <span class="text-gray-600 font-medium">Trạng thái:</span>
+                        <span class="font-medium">Trạng thái:</span>
                       </div>
                       <div class="flex-grow">
                         <Tag
@@ -277,7 +277,7 @@ const detailItem = (data) => {
                     </div>
                   </div>
                 </div>
-                <Card class="h-auto shadow-sm">
+                <Card class="h-auto shadow-sm border border-gray-100">
                   <template #content>
                     <table-data-props
                       header="Chi tiết đơn vị"

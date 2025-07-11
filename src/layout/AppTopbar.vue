@@ -113,9 +113,9 @@ const funSignOut = async () => {
     </button>
     <div class="layout-topbar-actions">
       <div class="layout-config-menu">
-        <!-- <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
+        <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
           <i :class="['pi', { 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"></i>
-        </button> -->
+        </button>
         <div class="relative">
           <!-- <button v-styleclass="{
             selector: '@next',
@@ -129,7 +129,7 @@ const funSignOut = async () => {
           </button> -->
           <AppConfigurator />
         </div>
-      </div>
+      </div> 
 
       <!-- <button class="layout-topbar-menu-button layout-topbar-action layout-topbar-action-highlight"
         @click="onTopBarMenuButton()" aria-label="Toggle menu actions" :aria-expanded="topbarMenuActive.toString()">
