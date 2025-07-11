@@ -66,11 +66,6 @@ const router = createRouter({
                     component: () => import('@/views/pages/Collections.vue')
                 },
                 {
-                    path: '/script-manage',
-                    name: 'script-manage',
-                    component: () => import('@/views/pages/ScriptManage.vue')
-                },
-                {
                     path: '/users',
                     name: 'users',
                     component: () => import('@/views/pages/Users.vue')
@@ -80,16 +75,6 @@ const router = createRouter({
                     path: 'pages/empty',
                     name: 'empty',
                     component: () => import('@/views/pages/Empty.vue')
-                },
-                {
-                    path: 'pages/crud',
-                    name: 'crud',
-                    component: () => import('@/views/pages/Crud.vue')
-                },
-                {
-                    path: 'documentation',
-                    name: 'documentation',
-                    component: () => import('@/views/pages/Documentation.vue')
                 },
                 {
                     path: '/chat',
