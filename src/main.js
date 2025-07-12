@@ -12,6 +12,7 @@ import Notification from './service/Notification';
 
 import Loading from './components/Loading.vue';
 import locale from './service/primevueLocale';
+import { useAuthStore } from './stores/useAuth';
 
 const app = createApp(App);
 
@@ -35,3 +36,6 @@ app.use(ToastService);
 app.use(ConfirmationService);
 
 app.mount('#app');
+
+const authStore = useAuthStore();
+authStore.loadFromStorage();

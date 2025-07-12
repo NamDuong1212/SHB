@@ -362,7 +362,7 @@ const fetchAllCollections = async () => {
   isLoading.value = true;
 
   try {
-    const res = await http.get(`collections`)
+    const res = await http.get(`collection`)
     Collections.value = res.data
   } catch (error) {
     console.log(error);

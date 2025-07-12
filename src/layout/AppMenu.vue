@@ -51,15 +51,15 @@ const model = ref([
             to: "/danh-muc-vai-tro",
           },
           {
-            label: "Quản lý collections",
-            to: "/collections",
-          },
-          {
             label: "Quản lý documents",
             to: "/files",
           },
           {
             label: "Quản lý FAQ",
+            to: "/images",
+          },
+          {
+            label: "Quản lý card",
             to: "/images",
           },
         ],

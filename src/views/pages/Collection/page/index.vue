@@ -17,7 +17,12 @@ const modelDialogDelete = ref(false);
 
 const getAllCollection = async (params = {}) => {
   try {
-    const { data } = await CollectionService.getAll(params);
+    // Remove pagination parameters and only keep filtering params if needed
+    const filteredParams = {};
+    if (params.Search) filteredParams.Search = params.Search;
+    if (params.isActive) filteredParams.isActive = params.isActive;
+    
+    const { data } = await CollectionService.getAll(filteredParams);
     if (data.result) {
       return data.result;
     }
@@ -77,39 +82,40 @@ const delteItems = () => {
 </script>
 
 <template>
-  <tableDoc 
-    ref="TableBasic" 
-    v-model:selection="dataSelection" 
-    header="Danh sách collection" 
+  <tableDoc
+    ref="TableBasic"
+    v-model:selection="dataSelection"
+    header="Danh sách collection"
     :columns="columns"
-    :filters="filters" 
+    :filters="filters"
     :apiFunction="getAllCollection"
+    :paginator="false"
     @resetFilter="initFilters">
     <template #header>
-      <Button 
-        :disabled="!dataSelection.length" 
-        @click="delteItems()" 
-        size="small" 
-        label="Xóa" 
+      <Button
+        :disabled="!dataSelection.length"
+        @click="delteItems()"
+        size="small"
+        label="Xóa"
         icon="pi pi-trash"
         severity="danger">
       </Button>
-      <Button 
-        @click="openAddDialog" 
-        type="button" 
-        icon="pi pi-plus" 
-        severity="primary" 
-        label="Thêm mới" 
+      <Button
+        @click="openAddDialog"
+        type="button"
+        icon="pi pi-plus"
+        severity="primary"
+        label="Thêm mới"
         size="small" />
     </template>
   </tableDoc>
-  
+
   <FormData ref="dialogRef" :loadData="refreshData"></FormData>
-  
-  <DeleteComps 
-    v-model:isOpenDelete="modelDialogDelete" 
+
+  <DeleteComps
+    v-model:isOpenDelete="modelDialogDelete"
     :ids="dataSelection.flatMap((e) => e.name)"
-    @update:isOpenDelete="refreshData()" 
+    @update:isOpenDelete="refreshData()"
     :content="`Bạn có chắc chắn muốn xóa ${dataSelection.length} bản ghi không?`"
     api="collection">
   </DeleteComps>

@@ -9,14 +9,21 @@ const http = axios.create({
   // timeout: 300000,
 });
 
+// Request interceptor - tự động thêm token vào header
 http.interceptors.request.use(
-  (config) => {
-    if (!config.url?.includes('login') && !config.url?.includes('register')) {
-      config.headers.Authorization = 'Bearer ' + auth.getToken;
+    (config) => {
+        const auth = useAuthStore();
+        const token = auth.getToken || localStorage.getItem('auth_token');
+        
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    return config;
-  },
-  (error) => Promise.reject(error)
 );
 
 http.interceptors.response.use(

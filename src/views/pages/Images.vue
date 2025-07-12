@@ -177,7 +177,7 @@ const fetchAllImages = async () => {
   isLoading.value = true
   try {
 
-    const res = await http.get(`/fastapi/cards/`)
+    const res = await http.get(`cards`)
     Images.value = res.data.items
     console.log(res);
   } catch (error) {
@@ -217,7 +217,7 @@ const saveMedia = async () => {
     formData.append('image', payload.value.file);
     formData.append('data', JSON.stringify(payload.value));
 
-    const res = await http.post('/fastapi/cards', formData);
+    const res = await http.post('/cards', formData);
     if (res.data) {
       fetchAllImages();
       addFileModal.value = false;

@@ -12,6 +12,7 @@ const password = ref("");
 const isLoading = ref(false);
 const submit = ref(false);
 const loginFail = ref(false);
+const checked = ref(false);
 
 // Lấy router để chuyển hướng sau khi đăng nhập
 const router = useRouter();
@@ -19,17 +20,23 @@ const authStore = useAuthStore();
 
 // Phương thức đăng nhập
 const login = async () => {
+  submit.value = true;
+  if (!username.value || !password.value) return;
+  isLoading.value = true;
   try {
-    submit.value = true;
-    isLoading.value = true;
-    if (!username.value || !password.value) return;
-    const user = await AuthService.login(username.value, password.value);
-    authStore.login(user, user.Token);
+    const data = await AuthService.login(username.value, password.value);
+    // Giả sử AuthService trả về { access_token, user }
+    authStore.login(data.access_token /*, data.user nếu cần */);
     loginFail.value = false;
     router.push("/");
   } catch (error) {
     loginFail.value = true;
-    proxy.$notify('E', 'Đăng nhập thất bại', toast)
+    toast.add({
+      severity: 'error',
+      summary: 'Đăng nhập thất bại',
+      detail: error.response?.data?.message || error.message,
+      life: 3000
+    });
   } finally {
     isLoading.value = false;
   }

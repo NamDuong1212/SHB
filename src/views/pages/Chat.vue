@@ -338,8 +338,7 @@ const submitChat = async (e) => {
   if (!user_question.value.trim()) return;
 
   loading.value = true;
-  // Hiển thị loading ngay lập tức
-  loadingType.value = "chat"; // Hoặc bạn có thể sử dụng: "pulse", "skeleton"
+  loadingType.value = "chat";
 
   // Push user message
   messages.value.push({
@@ -347,40 +346,45 @@ const submitChat = async (e) => {
     content: user_question.value,
   });
 
+  // Cập nhật payload theo yêu cầu của bot
   const data = {
-    user_id: store.getUser,
-    user_question: user_question.value,
-    messages: messages.value,
+    message: user_question.value,
+    collection: "foxai123"  // Mặc định như yêu cầu
   };
 
+  const userQuestion = user_question.value;
   user_question.value = "";
   scrollToBottom();
 
   try {
-    const response = await http.post("/fastapi/chat/", data);
-    const answerRaw = response.data.final_answer || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
+    const response = await http.post("/chat/internal", data);
+    
+    // Cập nhật cách xử lý response
+    const botResponse = response.data;
+    const answerRaw = botResponse.content || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
 
-    // Khi có dữ liệu trả về, tắt loading
     loading.value = false;
 
     // Thêm tin nhắn trợ lý với nội dung rỗng
     const assistantMessage = {
       role: "assistant",
       content: "",
+      timestamp: botResponse.timestamp || new Date().toISOString()
     };
     messages.value.push(assistantMessage);
 
     // Typing effect từng ký tự
     let currentText = "";
     for (let i = 0; i < answerRaw.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 10)); // tốc độ typing
+      await new Promise((resolve) => setTimeout(resolve, 10));
       currentText += answerRaw[i];
-      messages.value[messages.value.length - 1].content = marked.parse(currentText); // parse từng phần
+      messages.value[messages.value.length - 1].content = marked.parse(currentText);
       scrollToBottom();
     }
 
   } catch (error) {
     loading.value = false;
+    console.error("Chat API Error:", error);
     messages.value.push({
       role: "assistant",
       content: marked.parse("❌ Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng thử lại."),
@@ -390,7 +394,6 @@ const submitChat = async (e) => {
     loading.value = false;
   }
 };
-
 const getCard = async () => {
   try {
     const res = await http.get('/fastapi/cards/');
@@ -416,43 +419,45 @@ const getValueMessage = async (item) => {
     content: item,
   });
 
-  const data = {
-    user_id: store.getUser,
-    user_question: item,
-    messages: messages.value,
+   const data = {
+    message: item,
+    collection: "foxai123"  // Mặc định như yêu cầu
   };
 
   user_question.value = "";
   scrollToBottom();
   loading.value = true;
-  // Chọn kiểu loading khác nhau
-  loadingType.value = "skeleton"; // Có thể là: "typing", "chat", "pulse", "skeleton"
+  loadingType.value = "skeleton";
 
   try {
-    const response = await http.post("/fastapi/chat/", data);
-    const answerRaw = response.data.final_answer || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
+    const response = await http.post("/chat/internal", data);
+    
+    // Cập nhật cách xử lý response
+    const botResponse = response.data;
+    const answerRaw = botResponse.content || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
 
-    // Khi có dữ liệu trả về, tắt loading
     loading.value = false;
 
     // Thêm tin nhắn trợ lý với nội dung rỗng
     const assistantMessage = {
       role: "assistant",
       content: "",
+      timestamp: botResponse.timestamp || new Date().toISOString()
     };
     messages.value.push(assistantMessage);
 
     // Typing effect từng ký tự
     let currentText = "";
     for (let i = 0; i < answerRaw.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 10)); // tốc độ typing
+      await new Promise((resolve) => setTimeout(resolve, 10));
       currentText += answerRaw[i];
-      messages.value[messages.value.length - 1].content = marked.parse(currentText); // parse từng phần
+      messages.value[messages.value.length - 1].content = marked.parse(currentText);
       scrollToBottom();
     }
 
   } catch (error) {
     loading.value = false;
+    console.error("Chat API Error:", error);
     messages.value.push({
       role: "assistant",
       content: marked.parse("❌ Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng thử lại."),

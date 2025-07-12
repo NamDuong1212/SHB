@@ -1,17 +1,26 @@
 <script setup>
 import { useLayout } from "@/layout/composables/layout";
+import { useAuthStore } from "@/stores/useAuth";
 import Menu from 'primevue/menu';
 import { onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import AppConfigurator from "./AppConfigurator.vue";
 
 const { toggleMenu, toggleDarkMode, isDarkTheme, layoutState } = useLayout();
+const authStore = useAuthStore(); // Use auth store
 
 const router = useRouter();
 const topbarMenuActive = ref(false);
 const menu = ref();
 
 const items = ref([
+  {
+    label: 'Kiểm tra Token',
+    icon: 'pi pi-key',
+    command: () => {
+      checkAccessToken()
+    }
+  },
   {
     label: 'Đăng xuất',
     icon: 'pi pi-sign-out',
@@ -23,6 +32,54 @@ const items = ref([
 
 // Debug để kiểm tra items
 console.log('Menu items:', items.value);
+
+// Function to check access token
+const checkAccessToken = () => {
+  const token = localStorage.getItem('auth_token');
+  
+  if (!token) {
+    alert('Không có token trong localStorage');
+    return;
+  }
+
+  try {
+    // Decode JWT token to get expiration time
+    const tokenParts = token.split('.');
+    if (tokenParts.length !== 3) {
+      alert('Token không hợp lệ (định dạng sai)');
+      return;
+    }
+
+    const payload = JSON.parse(atob(tokenParts[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+    
+    let message = `Token Info:\n`;
+    message += `- Token: ${token.substring(0, 50)}...\n`;
+    message += `- Trạng thái store: ${authStore.isAuthenticated ? 'Đã đăng nhập' : 'Chưa đăng nhập'}\n`;
+    
+    if (payload.exp) {
+      const expirationTime = new Date(payload.exp * 1000);
+      message += `- Hết hạn: ${expirationTime.toLocaleString('vi-VN')}\n`;
+      
+      if (currentTime > payload.exp) {
+        message += `- Trạng thái: Token đã hết hạn ❌`;
+      } else {
+        const remainingTime = payload.exp - currentTime;
+        const hours = Math.floor(remainingTime / 3600);
+        const minutes = Math.floor((remainingTime % 3600) / 60);
+        message += `- Trạng thái: Token còn hiệu lực ✅\n`;
+        message += `- Thời gian còn lại: ${hours}h ${minutes}m`;
+      }
+    } else {
+      message += `- Trạng thái: Không thể xác định thời gian hết hạn`;
+    }
+    
+    alert(message);
+  } catch (error) {
+    console.error('Lỗi khi kiểm tra token:', error);
+    alert(`Lỗi khi giải mã token: ${error.message}`);
+  }
+};
 
 // Tối ưu toggle menu với debounce
 let toggleTimeout = null;
@@ -87,6 +144,7 @@ onUnmounted(() => {
 const funSignOut = async () => {
   try {
     localStorage.removeItem('auth_token');
+    authStore.logout(); // Update store state
     await router.push('/auth/login');
   } catch (error) {
     console.error('Lỗi đăng xuất:', error);
@@ -103,38 +161,29 @@ const funSignOut = async () => {
             alt="" />
         </div>
       </router-link>
-
     </div>
-
 
     <button class="p-link layout-topbar-menu-button layout-topbar-button" @click="onTopBarMenuButton()"
       aria-label="Toggle topbar menu" :aria-expanded="topbarMenuActive.toString()">
       <!-- <i class="pi pi-ellipsis-v transition-transform duration-200" :class="{ 'rotate-90': topbarMenuActive }"></i> -->
     </button>
+    
     <div class="layout-topbar-actions">
       <div class="layout-config-menu">
         <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
           <i :class="['pi', { 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"></i>
         </button>
+        
+        <!-- Add standalone token check button -->
+        <button type="button" class="layout-topbar-action" @click="checkAccessToken" 
+          title="Kiểm tra Access Token">
+          <i class="pi pi-key"></i>
+        </button>
+        
         <div class="relative">
-          <!-- <button v-styleclass="{
-            selector: '@next',
-            enterFromClass: 'hidden',
-            enterActiveClass: 'animate-scalein',
-            leaveToClass: 'hidden',
-            leaveActiveClass: 'animate-fadeout',
-            hideOnOutsideClick: true,
-          }" type="button" class="layout-topbar-action">
-            <i class="pi pi-palette"></i>
-          </button> -->
           <AppConfigurator />
         </div>
       </div> 
-
-      <!-- <button class="layout-topbar-menu-button layout-topbar-action layout-topbar-action-highlight"
-        @click="onTopBarMenuButton()" aria-label="Toggle menu actions" :aria-expanded="topbarMenuActive.toString()">
-        <i class="pi pi-ellipsis-v transition-transform duration-200" :class="{ 'rotate-90': topbarMenuActive }"></i>
-      </button> -->
 
       <!-- Desktop Menu -->
       <div class="hidden lg:block">
@@ -168,7 +217,6 @@ const funSignOut = async () => {
       </div>
     </div>
   </div>
-
 </template>
 
 <style scoped>
@@ -180,9 +228,6 @@ const funSignOut = async () => {
 .layout-topbar-menu-button:hover .pi-ellipsis-v {
   transform: scale(1.1);
 }
-
-/* Active state cho menu button (chỉ background) */
-
 
 .layout-menu-button.menu-active .pi-bars {
   color: #fbbf24 !important;
@@ -205,6 +250,17 @@ const funSignOut = async () => {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Styling cho token check button */
+.layout-topbar-action .pi-key {
+  color: #fbbf24;
+  transition: all 0.3s ease;
+}
+
+.layout-topbar-action:hover .pi-key {
+  color: #f59e0b;
+  transform: scale(1.1);
 }
 
 /* Animation cho menu content */
