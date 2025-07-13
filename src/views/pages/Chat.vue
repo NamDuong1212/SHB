@@ -23,23 +23,42 @@
             </div>
           </div>
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-            <!-- Collection Selector với styling đẹp hơn -->
-            <div class="relative flex-1 sm:flex-none">
-              <MultiSelect v-model="selectedCollection" :options="Collections" filter placeholder="🗂️ Chọn Collections"
-                size="small" :maxSelectedLabels="1" selectedItemsLabel="{0} collections đã chọn"
-                class="w-full sm:w-64 md:w-80 collection-selector" :pt="{
-                  root: { class: 'border-2 border-gray-200 hover:border-blue-300 focus:border-blue-500 rounded-xl shadow-sm transition-all duration-200' },
-                  label: { class: 'text-gray-700 font-medium text-sm truncate' },
-                  trigger: { class: 'text-blue-500' }
-                }" />
+            <div class="relative flex-1 sm:flex-none min-w-[280px] collection-selector">
+              <div class="flex items-center gap-2 p-2 rounded-xl ">
+                <i class="text-blue-500 text-sm"></i>
+                <span class="text-sm font-medium text-gray-700">Collection:</span>
+                <div class="flex-1 min-w-0">
+                  <Select v-model="selectedCollection" :options="Collections" optionLabel="name" optionValue="name"
+                    placeholder="Chọn collection..." @change="onCollectionChange" class="w-full custom-select" :pt="{
+                      root: {
+                        class: 'bg-transparent border-none outline-none'
+                      },
+                      input: {
+                        class: 'text-sm font-medium text-gray-800 bg-transparent p-0 border-none outline-none'
+                      },
+                      trigger: {
+                        class: 'text-blue-500 hover:text-blue-700'
+                      }
+                    }">
+                    <template #value="slotProps">
+                      <div v-if="slotProps.value" class="flex items-center gap-2">
+                        <i class="pi pi-folder text-blue-500 text-sm"></i>
+                        <span class="text-sm font-medium text-gray-800">{{ slotProps.value }}</span>
+                      </div>
+                      <span v-else class="text-sm text-gray-500">Chọn collection...</span>
+                    </template>
+                    <template #option="slotProps">
+                      <div class="flex items-center gap-2 p-2">
+                        <i class="pi pi-folder text-blue-500 text-sm"></i>
+                        <span class="text-sm">{{ slotProps.option.name }}</span>
+                      </div>
+                    </template>
+                  </Select>
+                </div>
+              </div>
             </div>
 
             <div class="flex gap-2 justify-end sm:justify-start">
-              <!-- Confirm Button với styling gradient -->
-              <Button :disabled="selectedCollection?.length < 1" label="Xác nhận" icon="pi pi-check" size="small"
-                @click="onselect"
-                class=" bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-0 text-white font-medium px-3 md:px-4 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 text-sm" />
-
               <Button icon="pi pi-trash" size="small" severity="danger" text rounded @click="showDeleteDialog"
                 v-tooltip.top="'Xóa cuộc trò chuyện'" class="flex-shrink-0" />
             </div>
@@ -47,8 +66,24 @@
         </div>
       </div>
 
-      <!-- Chat Content -->
       <div class="flex-1 relative p-2 md:p-4 lg:p-6 overflow-hidden">
+        <div v-if="!selectedCollection" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-exclamation-triangle text-yellow-500"></i>
+            <span class="text-sm text-yellow-700">Vui lòng chọn một collection để bắt đầu trò chuyện</span>
+          </div>
+        </div>
+
+        <div v-if="selectedCollection" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-check-circle text-blue-500"></i>
+            <span class="text-sm font-medium text-blue-700">Đang sử dụng collection:</span>
+            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+              {{ selectedCollection }}
+            </span>
+          </div>
+        </div>
+
         <ScrollPanel style="height: calc(100vh - 180px); width: 100%; " :dt="{
           bar: {
             background: ''
@@ -138,21 +173,22 @@
           <div class="relative flex-1">
             <input
               class="w-full shadow-xl pl-4 md:pl-5 pr-10 md:pr-12 py-3 md:py-4 bg-gray-50 hover:bg-white focus:bg-white rounded-full border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all duration-200 text-sm md:text-base"
-              placeholder="Nhập câu hỏi..." v-model="user_question" @focus="handleInputFocus"
-              @keydown="handleKeyDown" />
+              placeholder="Nhập câu hỏi..." v-model="user_question" @focus="handleInputFocus" @keydown="handleKeyDown"
+              :disabled="!selectedCollection" />
             <button type="button" @click="showSuggestions = !showSuggestions"
               class="absolute  right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors"
-              v-tooltip.top="'Hiển thị gợi ý câu hỏi'">
+              v-tooltip.top="'Hiển thị gợi ý câu hỏi'" :disabled="!selectedCollection">
               <i class="pi pi-lightbulb text-base md:text-lg" :class="{ 'text-blue-500': showSuggestions }"></i>
             </button>
           </div>
           <button type="submit"
             class="p-3 shadow-xl md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
-            :disabled="!user_question.length" :class="{ 'opacity-50': !user_question.length }">
+            :disabled="!user_question.length || !selectedCollection"
+            :class="{ 'opacity-50': !user_question.length || !selectedCollection }">
             <i class="pi pi-send text-sm md:text-lg"></i>
           </button>
           <!-- Suggestions Popup -->
-          <div v-if="showSuggestions && suggestedPrompts.length > 0"
+          <div v-if="showSuggestions && suggestedPrompts.length > 0 && selectedCollection"
             class="suggestions-popup absolute bottom-full left-0 right-0 mb-2 mx-2 md:mx-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden backdrop-blur-lg bg-white/95 max-w-4xl md:mx-auto">
             <div class="p-3 md:p-4 border-b border-gray-50 bg-gradient-to-r from-blue-50 to-indigo-50">
               <div class="flex items-center justify-between">
@@ -249,11 +285,12 @@
 <script setup>
 import HistoryChat from "@/components/HistoryChat.vue";
 import SkeletonLoading from "@/components/SkeletonLoading.vue";
+import CollectionService from "@/service/CollectionService";
 import http from "@/service/http";
 import { useAuthStore } from "@/stores/useAuth";
 import { marked } from 'marked';
 import { useToast } from "primevue";
-import { getCurrentInstance, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, getCurrentInstance, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref } from "vue";
 
 const toast = useToast();
 const { proxy } = getCurrentInstance();
@@ -262,6 +299,7 @@ const scrollPanel = ref(null);
 const loading = ref(false);
 const loadingType = ref("chat");
 const store = useAuthStore()
+
 onMounted(() => {
   // Thêm event listener cho việc click bên ngoài
   document.addEventListener('click', handleClickOutside);
@@ -273,6 +311,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
   document.removeEventListener('keydown', handleKeyDown);
 });
+
 const carouselResponsiveOptions = [
   {
     breakpoint: '1400px',
@@ -295,7 +334,9 @@ const carouselResponsiveOptions = [
     numScroll: 1
   }
 ];
-const selectedCollection = ref([])
+
+// Đổi từ selectedCollections sang selectedCollection (string)
+const selectedCollection = ref('')
 const Collections = ref([])
 const HistoryMessChat = ref([])
 const messages = ref([]);
@@ -325,17 +366,21 @@ const suggestedPrompts = ref([
   }
 ]);
 
+
+
 onBeforeMount(() => {
   getCard()
   fetchCollections()
   fetchChatHistory()
 })
 
-
+const onCollectionChange = () => {
+  console.log('Collection changed to:', selectedCollection.value);
+};
 
 const submitChat = async (e) => {
   e.preventDefault();
-  if (!user_question.value.trim()) return;
+  if (!user_question.value.trim() || !selectedCollection.value) return;
 
   loading.value = true;
   loadingType.value = "chat";
@@ -346,10 +391,10 @@ const submitChat = async (e) => {
     content: user_question.value,
   });
 
-  // Cập nhật payload theo yêu cầu của bot
+  // Sử dụng collection được chọn
   const data = {
     message: user_question.value,
-    collection: "foxai123"  // Mặc định như yêu cầu
+    collection: selectedCollection.value // Gửi string collection
   };
 
   const userQuestion = user_question.value;
@@ -358,7 +403,7 @@ const submitChat = async (e) => {
 
   try {
     const response = await http.post("/chat/internal", data);
-    
+
     // Cập nhật cách xử lý response
     const botResponse = response.data;
     const answerRaw = botResponse.content || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
@@ -394,6 +439,7 @@ const submitChat = async (e) => {
     loading.value = false;
   }
 };
+
 const getCard = async () => {
   try {
     const res = await http.get('/fastapi/cards/');
@@ -413,15 +459,21 @@ function scrollToBottom() {
     }
   })
 }
+
 const getValueMessage = async (item) => {
+  if (!selectedCollection.value) {
+    proxy.$notify('W', 'Vui lòng chọn collection trước khi gửi tin nhắn', toast);
+    return;
+  }
+
   messages.value.push({
     role: "user",
     content: item,
   });
 
-   const data = {
+  const data = {
     message: item,
-    collection: "foxai123"  // Mặc định như yêu cầu
+    collection: selectedCollection.value
   };
 
   user_question.value = "";
@@ -431,7 +483,7 @@ const getValueMessage = async (item) => {
 
   try {
     const response = await http.post("/chat/internal", data);
-    
+
     // Cập nhật cách xử lý response
     const botResponse = response.data;
     const answerRaw = botResponse.content || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
@@ -467,31 +519,20 @@ const getValueMessage = async (item) => {
     loading.value = false;
   }
 };
+
 const fetchCollections = async () => {
   try {
-    const res = await http.get(`/fastapi/col/?user_id=${store.getUser}`)
-    Collections.value = res.data.collections
-  } catch (error) {
-    console.log(error);
-  }
-};
-const onselect = async () => {
-  let data = {
-    user_id: store.getUser,
-    selected_names: selectedCollection.value,
-  }
-  loading.value = true
-  try {
-    const res = await http.post(`/fastapi/select/`, data)
-    if (res.data) {
-      proxy.$notify('S', 'Cập nhật Collections thành công!', toast)
+    const response = await CollectionService.getAll();
+    Collections.value = response.data;
+    // Tự động chọn collection đầu tiên nếu có
+    if (Collections.value.length > 0) {
+      selectedCollection.value = Collections.value[0].name;
     }
   } catch (error) {
-    console.log(error);
-  } finally {
-    loading.value = false
+    console.error("Không thể tải collections:", error);
   }
 };
+
 const fetchChatHistory = async () => {
   loading.value = true
   try {
@@ -508,7 +549,6 @@ const fetchChatHistory = async () => {
     loading.value = false
   }
 }
-
 const showDeleteDialog = () => {
   showDeleteConfirmDialog.value = true;
 };

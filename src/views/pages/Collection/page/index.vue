@@ -23,8 +23,8 @@ const getAllCollection = async (params = {}) => {
     if (params.isActive) filteredParams.isActive = params.isActive;
     
     const { data } = await CollectionService.getAll(filteredParams);
-    if (data.result) {
-      return data.result;
+    if (data) {
+      return data;
     }
   } catch (error) {
     console.error("Error fetching collections:", error);

@@ -20,10 +20,10 @@
         </div>
         <div>
           <Button size="small" @click="openAddFile" icon="pi pi-plus" label="Thêm mới"></Button>
-
         </div>
       </div>
     </div>
+    
     <div class="card">
       <DataTable :value="Files" paginator rows="5" scrollable scrollHeight="600px" size="small" showGridlines>
         <Column header="#">
@@ -42,13 +42,34 @@
           </template>
         </Column>
         <Column header="Thao tác">
-
+          <template #body="{ data }">
+            <Button size="small" icon="pi pi-trash" severity="danger" @click="deleteFile(data.id)" outlined></Button>
+          </template>
         </Column>
       </DataTable>
     </div>
+    
     <Dialog v-model:visible="addFileModal" modal header="Tải lên file" :style="{ width: '50rem' }"
       class="chatbot-upload-dialog modern-dialog" :closable="false">
       <div class="upload-container p-4">
+        <!-- Form fields -->
+        <div class="form-fields mb-6">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Tiêu đề tài liệu *</label>
+            <InputText v-model="payload.doc_title" placeholder="Nhập tiêu đề tài liệu" class="w-full" />
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Tên collection *</label>
+            <InputText v-model="payload.collection_name" placeholder="Nhập tên collection" class="w-full" />
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Mô tả</label>
+            <Textarea v-model="payload.description" placeholder="Nhập mô tả tài liệu" rows="3" class="w-full" />
+          </div>
+        </div>
+
         <!-- Upload area -->
         <div
           class="upload-area relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-all duration-300 cursor-pointer mb-6"
@@ -70,7 +91,7 @@
             </div>
             <h3 class="font-medium text-gray-700 mb-1">Kéo thả file vào đây</h3>
             <p class="text-sm text-gray-500 mb-3">hoặc click để chọn file</p>
-            <div class="file-specs text-xs text-gray-400">PDF, DOCX, JPG, PNG, MP4, ZIP (tối đa 20MB)</div>
+            <div class="file-specs text-xs text-gray-400">PDF, DOCX, TXT, CSV (tối đa 20MB)</div>
           </div>
 
           <div v-else class="preview-container relative w-full">
@@ -87,8 +108,6 @@
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                       <polyline points="14 2 14 8 20 8"></polyline>
                       <path d="M9 15v-6h6v6"></path>
-                      <path d="M9 15v-6h6v6"></path>
-                      <path d="M9 15v-6h6v6"></path>
                     </svg>
                   </div>
 
@@ -103,22 +122,13 @@
                     </svg>
                   </div>
 
-                  <div v-else-if="fileType === 'video'" class="file-icon text-purple-600 mx-auto mb-3">
+                  <div v-else-if="fileType === 'csv'" class="file-icon text-green-600 mx-auto mb-3">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
                       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
-                      <polygon points="10 8 16 12 10 16 10 8"></polygon>
-                    </svg>
-                  </div>
-
-                  <div v-else-if="fileType === 'zip'" class="file-icon text-yellow-500 mx-auto mb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path
-                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-                      </path>
-                      <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                      <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
                     </svg>
                   </div>
 
@@ -152,7 +162,8 @@
             </div>
           </div>
 
-          <input type="file" class="hidden click-file" @change="UploadFileLocal($event)" />
+          <input type="file" class="hidden click-file" @change="UploadFileLocal($event)" 
+                 accept=".pdf,.doc,.docx,.txt,.csv" />
         </div>
 
         <div class="upload-status mt-4" v-if="uploadStatus.show">
@@ -160,6 +171,7 @@
           <Message :severity="uploadStatus.severity" :closable="false">{{ uploadStatus.message }}</Message>
         </div>
       </div>
+      
       <template #footer>
         <div class="flex justify-end gap-3">
           <Button size="small" type="button" label="Hủy" severity="secondary" icon="pi pi-times"
@@ -169,28 +181,25 @@
         </div>
       </template>
     </Dialog>
-
-
   </div>
 </template>
+
 <script setup>
-import axios from 'axios';
-import { format } from 'date-fns';
+import http from '@/service/http';
 import { computed, onMounted, ref } from 'vue';
-
-
 
 onMounted(() => {
   fetchAllImages()
 })
+
 const payload = ref({
-  title: '',
-  type: null,
+  doc_title: '',
+  collection_name: '',
   description: '',
-  items: [''],
   file: null,
   imgPreview: null
 })
+
 const Files = ref([])
 const addFileModal = ref(false)
 const isDropping = ref(false)
@@ -202,62 +211,87 @@ const uploadStatus = ref({
   severity: 'info'
 })
 
-const fileTypes = [
-  { name: 'Hình ảnh', code: 'image' },
-  { name: 'Tài liệu', code: 'document' },
-  { name: 'Video', code: 'video' }
-]
-
 const isFormValid = computed(() => {
-  return payload.value.file
+  return payload.value.file && payload.value.doc_title.trim() && payload.value.collection_name.trim()
 })
 
-const fetchAllImages = async () => {
+const fetchAllImages = async (id) => {
   try {
-    const res = await axios.get(`http://160.30.252.28:6868/api/v1/file/files`)
+    const res = await http.get(`/doc/${id}`)
     Files.value = res.data.files
   } catch (error) {
     console.log(error);
   }
 }
+
 const openAddFile = () => {
   addFileModal.value = true
   resetPayload()
 }
+
 const Openfile = () => {
   document.querySelectorAll('.click-file')[0].click();
-};
+}
+
 const handleFileDrop = (event) => {
   isDropping.value = false
   const files = event.dataTransfer.files
   if (files.length) {
     const file = files[0]
-    payload.value.file = file
-    if (checkIsImageFile(file)) {
-      payload.value.imgPreview = URL.createObjectURL(file)
+    if (isValidFileType(file)) {
+      payload.value.file = file
+      if (checkIsImageFile(file)) {
+        payload.value.imgPreview = URL.createObjectURL(file)
+      } else {
+        payload.value.imgPreview = 'placeholder'
+      }
     } else {
-      payload.value.imgPreview = 'placeholder'
+      showUploadStatus('File không được hỗ trợ. Chỉ chấp nhận PDF, DOCX, TXT, CSV', 'error')
     }
   }
 }
+
 const UploadFileLocal = (event) => {
   const files = event.target.files;
   if (files.length) {
-    payload.value.file = files[0];
-    if (checkIsImageFile(files[0])) {
-      payload.value.imgPreview = URL.createObjectURL(files[0]);
+    const file = files[0];
+    if (isValidFileType(file)) {
+      payload.value.file = file;
+      if (checkIsImageFile(file)) {
+        payload.value.imgPreview = URL.createObjectURL(file);
+      } else {
+        payload.value.imgPreview = 'placeholder';
+      }
     } else {
-      payload.value.imgPreview = 'placeholder';
+      showUploadStatus('File không được hỗ trợ. Chỉ chấp nhận PDF, DOCX, TXT, CSV', 'error')
     }
   }
-};
+}
+
 const resetPreview = (event) => {
   event.stopPropagation()
   payload.value.file = null
   payload.value.imgPreview = null
 }
+
 const saveMedia = async () => {
+  let uploadInterval = null;
+  
   try {
+    // Validate form
+    if (!payload.value.doc_title.trim()) {
+      showUploadStatus('Vui lòng nhập tiêu đề tài liệu', 'error')
+      return
+    }
+    if (!payload.value.collection_name.trim()) {
+      showUploadStatus('Vui lòng nhập tên collection', 'error')
+      return
+    }
+    if (!payload.value.file) {
+      showUploadStatus('Vui lòng chọn file', 'error')
+      return
+    }
+
     // Hiển thị thanh tiến trình upload
     uploadStatus.value = {
       show: true,
@@ -268,16 +302,28 @@ const saveMedia = async () => {
     }
 
     // Giả lập tiến trình tải lên
-    const uploadInterval = setInterval(() => {
+    uploadInterval = setInterval(() => {
       if (uploadStatus.value.progress < 90) {
         uploadStatus.value.progress += 10
       }
     }, 200)
 
-    // Tạo FormData để upload file
+    // Tạo FormData theo đúng API specification
     const formData = new FormData();
     formData.append('file', payload.value.file);
-    const res = await axios.post('http://160.30.252.28:6868/api/v1/file/upload', formData);
+    formData.append('doc_title', payload.value.doc_title);
+    formData.append('collection_name', payload.value.collection_name);
+    if (payload.value.description) {
+      formData.append('description', payload.value.description);
+    }
+
+    // Gọi API upload using HTTP service
+    const res = await http.post('/doc', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
     clearInterval(uploadInterval)
     uploadStatus.value.progress = 100
 
@@ -293,9 +339,31 @@ const saveMedia = async () => {
     }
   } catch (error) {
     console.log(error);
-    showUploadStatus('Có lỗi xảy ra khi tải lên', 'error')
+    if (uploadInterval) {
+      clearInterval(uploadInterval)
+    }
+    
+    if (error.response?.status === 401) {
+      showUploadStatus('Không có quyền truy cập. Vui lòng đăng nhập lại.', 'error')
+    } else if (error.response?.status === 422) {
+      showUploadStatus('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.', 'error')
+    } else {
+      showUploadStatus('Có lỗi xảy ra khi tải lên', 'error')
+    }
   }
 }
+
+const deleteFile = async (fileId) => {
+  try {
+    await http.delete(`/api/v1/file/${fileId}`)
+    fetchAllImages()
+    showUploadStatus('Xóa file thành công', 'success')
+  } catch (error) {
+    console.log(error);
+    showUploadStatus('Có lỗi xảy ra khi xóa file', 'error')
+  }
+}
+
 const showUploadStatus = (message, severity = 'info') => {
   uploadStatus.value = {
     show: true,
@@ -305,23 +373,22 @@ const showUploadStatus = (message, severity = 'info') => {
     severity: severity
   }
 
-  if (severity === 'success') {
-    setTimeout(() => {
-      uploadStatus.value.show = false
-    }, 3000)
-  }
+  setTimeout(() => {
+    uploadStatus.value.show = false
+  }, 3000)
 }
+
 const formatFileSize = (bytes) => {
   if (bytes < 1024) return bytes + ' B'
   else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
   else return (bytes / 1048576).toFixed(1) + ' MB'
 }
+
 const resetPayload = () => {
   payload.value = {
-    title: '',
-    type: null,
+    doc_title: '',
+    collection_name: '',
     description: '',
-    tags: [],
     file: null,
     imgPreview: null
   };
@@ -332,6 +399,23 @@ const checkIsImageFile = (file) => {
   return file && file.type.startsWith('image/');
 }
 
+const isValidFileType = (file) => {
+  const validTypes = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+    'text/csv',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  ];
+  
+  const validExtensions = ['.pdf', '.doc', '.docx', '.txt', '.csv'];
+  const filename = file.name.toLowerCase();
+  
+  return validTypes.includes(file.type) || validExtensions.some(ext => filename.endsWith(ext));
+}
+
 const isImageFile = computed(() => {
   return payload.value.file && payload.value.file.type.startsWith('image/');
 })
@@ -340,17 +424,12 @@ const fileType = computed(() => {
   if (!payload.value.file) return '';
 
   const type = payload.value.file.type;
-  if (type.includes('pdf')) return 'pdf';
-  if (type.includes('word') || type.includes('doc')) return 'doc';
-  if (type.includes('video')) return 'video';
-  if (type.includes('zip') || type.includes('rar') || type.includes('compressed')) return 'zip';
-
-  // Kiểm tra theo tên file nếu MIME type không rõ ràng
   const filename = payload.value.file.name.toLowerCase();
-  if (filename.endsWith('.pdf')) return 'pdf';
-  if (filename.endsWith('.doc') || filename.endsWith('.docx')) return 'doc';
-  if (filename.endsWith('.mp4') || filename.endsWith('.avi') || filename.endsWith('.mov')) return 'video';
-  if (filename.endsWith('.zip') || filename.endsWith('.rar') || filename.endsWith('.7z')) return 'zip';
+  
+  if (type.includes('pdf') || filename.endsWith('.pdf')) return 'pdf';
+  if (type.includes('word') || type.includes('doc') || filename.endsWith('.doc') || filename.endsWith('.docx')) return 'doc';
+  if (type.includes('csv') || filename.endsWith('.csv')) return 'csv';
+  if (type.includes('text') || filename.endsWith('.txt')) return 'txt';
 
   return 'other';
 })
@@ -361,18 +440,16 @@ const fileExtension = computed(() => {
   return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2);
 });
 </script>
+
 <style>
 .upload-animation {
   animation: bounce 1.5s infinite ease-in-out;
 }
 
 @keyframes bounce {
-
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0);
   }
-
   50% {
     transform: translateY(-5px);
   }
@@ -410,5 +487,10 @@ const fileExtension = computed(() => {
   color: #4b5563;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   letter-spacing: 0.05em;
+}
+
+.form-fields {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1rem;
 }
 </style>
