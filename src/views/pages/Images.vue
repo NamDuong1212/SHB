@@ -100,11 +100,6 @@
               payload.items.push('')
             }"></Button>
           </div>
-          <div class="flex flex-col gap-2">
-            <label for="media-description" class="font-medium text-gray-700">Mô tả</label>
-            <Textarea size="small" id="media-description" v-model="payload.description" placeholder="Thêm mô tả ngắn"
-              rows="3" autoResize />
-          </div>
 
         </div>
       </div>
@@ -160,8 +155,6 @@ onMounted(() => {
 })
 const payload = ref({
   title: '',
-  type: null,
-  description: '',
   items: [''],
   file: null,
   imgPreview: null
@@ -232,8 +225,6 @@ const saveMedia = async () => {
 const resetPayload = () => {
   payload.value = {
     title: '',
-    type: null,
-    description: '',
     items: [''],
     file: null,
     imgPreview: null
