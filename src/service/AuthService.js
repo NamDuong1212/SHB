@@ -13,6 +13,8 @@ export default class AuthService {
             // Lưu token
             localStorage.setItem('auth_token', data.access_token);
             //localStorage.setItem('auth_user_id', JSON.stringify(data.user));
+
+            return data;
         } catch (error) {
             throw error;
         }

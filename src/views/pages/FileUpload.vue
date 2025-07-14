@@ -36,6 +36,13 @@
             <a class="hover:underline text-primary" :href="data.file_path">Xem file</a>
           </template>
         </Column>
+        <Column header="Collection">
+          <template #body="{ data }">
+            <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+              {{ data.collection_name }}
+            </span>
+          </template>
+        </Column>
         <Column header="Ngày tạo">
           <template #body="{ data }">
             {{ format(data.created_at, 'dd/MM/yyyy') }}
@@ -60,8 +67,43 @@
           </div>
           
           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Tên collection *</label>
-            <InputText v-model="payload.collection_name" placeholder="Nhập tên collection" class="w-full" />
+            <label class="block text-sm font-medium text-gray-700 mb-2">Collection *</label>
+            <div class="flex gap-2">
+              <Select 
+                v-model="payload.collection_name" 
+                :options="Collections" 
+                optionLabel="name" 
+                optionValue="name"
+                placeholder="Chọn collection..." 
+                class="flex-1"
+                :loading="collectionsLoading"
+              >
+                <template #value="slotProps">
+                  <div v-if="slotProps.value" class="flex items-center gap-2">
+                    <i class="pi pi-folder text-blue-500 text-sm"></i>
+                    <span>{{ slotProps.value }}</span>
+                  </div>
+                  <span v-else class="text-gray-500">Chọn collection...</span>
+                </template>
+                <template #option="slotProps">
+                  <div class="flex items-center gap-2 p-2">
+                    <i class="pi pi-folder text-blue-500 text-sm"></i>
+                    <span>{{ slotProps.option.name }}</span>
+                  </div>
+                </template>
+              </Select>
+              <Button 
+                type="button" 
+                icon="pi pi-refresh" 
+                size="small" 
+                severity="secondary" 
+                @click="refreshCollections"
+                :loading="collectionsLoading"
+                v-tooltip.top="'Làm mới danh sách collection'"
+                outlined
+              />
+            </div>
+            <small class="text-gray-500 mt-1">Chọn collection để phân loại tài liệu</small>
           </div>
           
           <div class="mb-4">
@@ -186,10 +228,12 @@
 
 <script setup>
 import http from '@/service/http';
+import CollectionService from '@/service/CollectionService';
 import { computed, onMounted, ref } from 'vue';
 
 onMounted(() => {
   fetchAllImages()
+  fetchCollections()
 })
 
 const payload = ref({
@@ -201,6 +245,8 @@ const payload = ref({
 })
 
 const Files = ref([])
+const Collections = ref([])
+const collectionsLoading = ref(false)
 const addFileModal = ref(false)
 const isDropping = ref(false)
 const uploadStatus = ref({
@@ -212,7 +258,7 @@ const uploadStatus = ref({
 })
 
 const isFormValid = computed(() => {
-  return payload.value.file && payload.value.doc_title.trim() && payload.value.collection_name.trim()
+  return payload.value.file && payload.value.doc_title.trim() && payload.value.collection_name
 })
 
 const fetchAllImages = async (id) => {
@@ -223,6 +269,28 @@ const fetchAllImages = async (id) => {
     console.log(error);
   }
 }
+
+const fetchCollections = async () => {
+  collectionsLoading.value = true
+  try {
+    const response = await CollectionService.getAll();
+    Collections.value = response.data;
+    // Tự động chọn collection đầu tiên nếu có và payload chưa có collection
+    if (Collections.value.length > 0 && !payload.value.collection_name) {
+      payload.value.collection_name = Collections.value[0].name;
+    }
+  } catch (error) {
+    console.error("Không thể tải collections:", error);
+    showUploadStatus('Không thể tải danh sách collection', 'error');
+  } finally {
+    collectionsLoading.value = false
+  }
+};
+
+const refreshCollections = async () => {
+  await fetchCollections();
+  showUploadStatus('Làm mới danh sách collection thành công', 'success');
+};
 
 const openAddFile = () => {
   addFileModal.value = true
@@ -283,8 +351,8 @@ const saveMedia = async () => {
       showUploadStatus('Vui lòng nhập tiêu đề tài liệu', 'error')
       return
     }
-    if (!payload.value.collection_name.trim()) {
-      showUploadStatus('Vui lòng nhập tên collection', 'error')
+    if (!payload.value.collection_name) {
+      showUploadStatus('Vui lòng chọn collection', 'error')
       return
     }
     if (!payload.value.file) {
@@ -328,7 +396,7 @@ const saveMedia = async () => {
     uploadStatus.value.progress = 100
 
     if (res.data) {
-      showUploadStatus('Tải lên thành công!', 'success')
+      showUploadStatus(`Tải lên thành công vào collection "${payload.value.collection_name}"!`, 'success')
       fetchAllImages();
 
       // Đóng dialog sau 1s
@@ -387,7 +455,7 @@ const formatFileSize = (bytes) => {
 const resetPayload = () => {
   payload.value = {
     doc_title: '',
-    collection_name: '',
+    collection_name: Collections.value.length > 0 ? Collections.value[0].name : '',
     description: '',
     file: null,
     imgPreview: null
@@ -440,7 +508,6 @@ const fileExtension = computed(() => {
   return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2);
 });
 </script>
-
 <style>
 .upload-animation {
   animation: bounce 1.5s infinite ease-in-out;

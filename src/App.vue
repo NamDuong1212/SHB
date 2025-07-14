@@ -25,7 +25,7 @@ updatePreset({
     colorScheme: {
       light: {
         primary: {
-          color: "linear-gradient(to right, #4db9ed, #0082ca)",
+          color: "linear-gradient(to right, #04c0f4, #28548c)",
           contrastColor: "#ffffff",
           hoverColor: "{primary.600}",
           activeColor: "{primary.700}",
@@ -39,7 +39,7 @@ updatePreset({
       },
       dark: {
         primary: {
-          color: "linear-gradient(to right, #4db9ed, #0082ca)",
+          color: "linear-gradient(to right, #04c0f4, #28548c)",
           contrastColor: "{surface.900}",
           hoverColor: "{primary.300}",
           activeColor: "{primary.200}",

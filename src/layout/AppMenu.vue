@@ -55,10 +55,6 @@ const model = ref([
             to: "/files",
           },
           {
-            label: "Quản lý FAQ",
-            to: "/images",
-          },
-          {
             label: "Quản lý card",
             to: "/images",
           },

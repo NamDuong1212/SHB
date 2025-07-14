@@ -22,13 +22,27 @@ const authStore = useAuthStore();
 const login = async () => {
   submit.value = true;
   if (!username.value || !password.value) return;
+
   isLoading.value = true;
   try {
     const data = await AuthService.login(username.value, password.value);
-    // Giả sử AuthService trả về { access_token, user }
-    authStore.login(data.access_token /*, data.user nếu cần */);
-    loginFail.value = false;
-    router.push("/");
+
+    if (data?.access_token) {
+      authStore.login(data.user || null, data.access_token);
+      loginFail.value = false;
+
+      toast.add({
+        severity: 'success',
+        summary: 'Đăng nhập thành công',
+        detail: 'Chào mừng bạn trở lại!',
+        life: 3000
+      });
+
+      router.push("/");
+    } else {
+      throw new Error("Không nhận được access token");
+    }
+
   } catch (error) {
     loginFail.value = true;
     toast.add({
@@ -41,6 +55,8 @@ const login = async () => {
     isLoading.value = false;
   }
 };
+
+
 </script>
 
 <template>
@@ -81,10 +97,8 @@ const login = async () => {
             </FloatLabel>
             <small class="text-red-500" v-if="!password && submit">Vui lòng nhập mật khẩu</small>
           </div>
-          <Message severity="error" icon="pi pi-times-circle" v-if="loginFail">Thông tin đăng nhập không chính xác
-          </Message>
 
-          <Button :loading="loading" label="Đăng nhập" class="w-full h-12 md:h-14 !text-base md:!text-lg mt-1"
+          <Button :loading="isLoading" label="Đăng nhập" class="w-full h-12 md:h-14 !text-base md:!text-lg mt-1"
             @click="login" />
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">

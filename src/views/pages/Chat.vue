@@ -2,10 +2,10 @@
 
   <!-- Heading -->
   <!-- <div style="box-shadow: 0 0 #0000, 0 0 #0000, 0 1px 2px 0 rgb(0 0 0 / 0.05)"></div> -->
-  <div class="grid bg-gradient-to-br from-blue-50 to-indigo-50 grid-cols-12 gap-2 lg:gap-4">
+  <div class="grid bg-gradient-to-br grid-cols-12 gap-2 lg:gap-4">
     <div class="chat-container col-span-12 lg:col-span-10 relative flex flex-col h-screen ">
       <!-- Header -->
-      <div class="chat-header rounded-xl bg-white p-3 md:p-4 mx-2 md:mx-0 shadow-xl">
+      <div class="chat-header rounded-xl p-3 md:p-4 mx-2 md:mx-0 shadow-xl col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 max-w-6xl mx-auto">
           <div class="flex items-center gap-3">
             <div
@@ -18,15 +18,15 @@
               </svg>
             </div>
             <div>
-              <h2 class="font-bold text-lg lg:text-2xl text-gray-800 mb-0">FOXAI BOT</h2>
-              <p class="text-sm text-gray-500">Trợ lý thông minh của bạn</p>
+              <h2 class="font-bold text-lg lg:text-2xl mb-0">FOXAI BOT</h2>
+              <p class="text-sm">Trợ lý thông minh của bạn</p>
             </div>
           </div>
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
             <div class="relative flex-1 sm:flex-none min-w-[280px] collection-selector">
               <div class="flex items-center gap-2 p-2 rounded-xl ">
                 <i class="text-blue-500 text-sm"></i>
-                <span class="text-sm font-medium text-gray-700">Collection:</span>
+                <span class="text-sm font-medium">Collection:</span>
                 <div class="flex-1 min-w-0">
                   <Select v-model="selectedCollection" :options="Collections" optionLabel="name" optionValue="name"
                     placeholder="Chọn collection..." @change="onCollectionChange" class="w-full custom-select" :pt="{
@@ -34,7 +34,7 @@
                         class: 'bg-transparent border-none outline-none'
                       },
                       input: {
-                        class: 'text-sm font-medium text-gray-800 bg-transparent p-0 border-none outline-none'
+                        class: 'text-sm font-medium bg-transparent p-0 border-none outline-none'
                       },
                       trigger: {
                         class: 'text-blue-500 hover:text-blue-700'
@@ -43,7 +43,7 @@
                     <template #value="slotProps">
                       <div v-if="slotProps.value" class="flex items-center gap-2">
                         <i class="pi pi-folder text-blue-500 text-sm"></i>
-                        <span class="text-sm font-medium text-gray-800">{{ slotProps.value }}</span>
+                        <span class="text-sm font-medium ">{{ slotProps.value }}</span>
                       </div>
                       <span v-else class="text-sm text-gray-500">Chọn collection...</span>
                     </template>
@@ -121,10 +121,10 @@
             </Carousel>
           </div>
           <!-- Messages -->
-          <div class="space-y-4 md:space-y-6 px-1 md:px-2 mb-44 lg:mb-28">
+          <div class="space-y-4 md:space-y-6 px-1 md:px-2 mb-60 lg:mb-40">
             <div v-for="(chat, index) in messages" :key="index">
               <!-- AI Message -->
-              <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start" v-if="chat.role == 'assistant'">
+              <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start " v-if="chat.role == 'assistant'">
                 <div
                   class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex-shrink-0 flex items-center justify-center shadow-md">
                   <svg stroke="white" fill="white" stroke-width="0" viewBox="0 0 24 24" height="14" width="14"
@@ -135,8 +135,8 @@
                   </svg>
                 </div>
                 <div
-                  class="bg-white rounded-2xl rounded-tl-none px-3 md:px-6 py-3 md:py-4 shadow-md border border-gray-100 max-w-[90%] md:max-w-[85%]">
-                  <div v-html="chat.content" class="markdown-content text-gray-700 text-sm md:text-md leading-relaxed">
+                  class="rounded-2xl rounded-tl-none px-3 md:px-6 py-3 md:py-4 shadow-md border border-gray-100 max-w-[90%] md:max-w-[85%] col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <div v-html="chat.content" class="markdown-content text-sm md:text-md leading-relaxed">
                   </div>
                 </div>
               </div>
@@ -172,7 +172,7 @@
         <form class="flex items-center gap-2 md:gap-3 w-full max-w-4xl mx-auto" @submit="submitChat">
           <div class="relative flex-1">
             <input
-              class="w-full shadow-xl pl-4 md:pl-5 pr-10 md:pr-12 py-3 md:py-4 bg-gray-50 hover:bg-white focus:bg-white rounded-full border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all duration-200 text-sm md:text-base"
+              class="w-full shadow-xl pl-4 md:pl-5 pr-10 md:pr-12 py-3 md:py-4 rounded-full border border-gray-200 col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
               placeholder="Nhập câu hỏi..." v-model="user_question" @focus="handleInputFocus" @keydown="handleKeyDown"
               :disabled="!selectedCollection" />
             <button type="button" @click="showSuggestions = !showSuggestions"
@@ -536,15 +536,31 @@ const fetchCollections = async () => {
 const fetchChatHistory = async () => {
   loading.value = true
   try {
-    const res = await http.get(`/fastapi/history/?user_id=${store.getUser}&limit=100`)
-    HistoryMessChat.value = res.data.history.map(el => ({
+    const res = await http.get(`history`)
+    
+    // Cập nhật để xử lý response format mới
+    const historyMessages = res.data.messages || []
+    
+    HistoryMessChat.value = historyMessages.map(el => ({
       ...el,
-      content: marked.parse(el.content)
+      // Chỉ parse markdown cho assistant messages
+      content: el.role === 'assistant' ? marked.parse(el.content) : el.content,
+      timestamp: el.timestamp || new Date().toISOString()
     }))
-    console.log(HistoryMessChat.value);
-    messages.value = [...HistoryMessChat.value, ...messages.value]
+    
+    console.log('Chat history loaded:', HistoryMessChat.value);
+    
+    // Gán trực tiếp thay vì spread để tránh duplicate
+    messages.value = [...HistoryMessChat.value]
+    
+    // Scroll xuống cuối sau khi load xong
+    nextTick(() => {
+      scrollToBottom()
+    })
+    
   } catch (error) {
-    console.log(error);
+    console.error('Error fetching chat history:', error);
+    proxy.$notify('E', 'Không thể tải lịch sử chat', toast)
   } finally {
     loading.value = false
   }

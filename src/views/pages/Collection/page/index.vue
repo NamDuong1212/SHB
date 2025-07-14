@@ -149,9 +149,6 @@ const handleBatchDelete = async (names) => {
   <tableDoc ref="TableBasic" v-model:selection="dataSelection" header="Danh sách collection" :columns="columns"
     :filters="filters" :apiFunction="getAllCollection" :paginator="false" @resetFilter="initFilters">
     <template #header>
-      <Button :disabled="!dataSelection.length" @click="delteItems()" size="small" label="Xóa" icon="pi pi-trash"
-        severity="danger">
-      </Button>
       <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Thêm mới" size="small" />
     </template>
   </tableDoc>
@@ -165,3 +162,9 @@ const handleBatchDelete = async (names) => {
     :content="`Bạn có chắc chắn muốn xóa ${dataSelection.length} bản ghi không?`" api="collection">
   </DeleteComps>
 </template>
+<style scoped>
+.p-button.p-button-primary {
+  color: white !important;
+}
+
+</style>
