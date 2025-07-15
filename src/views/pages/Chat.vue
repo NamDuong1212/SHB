@@ -18,7 +18,20 @@
               </svg>
             </div>
             <div>
-              <h2 class="font-bold text-lg lg:text-2xl mb-0">FOXAI BOT</h2>
+              <div class="flex items-center gap-2">
+                <h2 class="font-bold text-lg lg:text-2xl mb-0">FOXAI BOT</h2>
+                <!-- Status Indicator -->
+                <div class="flex items-center gap-1.5">
+                  <div 
+                    class="w-2 h-2 rounded-full transition-all duration-300"
+                    :class="getStatusColor()"
+                    v-tooltip.top="getStatusTooltip()"
+                  ></div>
+                  <span class="text-xs font-medium hidden sm:inline" :class="getStatusTextColor()">
+                    {{ getStatusText() }}
+                  </span>
+                </div>
+              </div>
               <p class="text-sm">Trợ lý thông minh của bạn</p>
             </div>
           </div>
@@ -59,6 +72,18 @@
             </div>
 
             <div class="flex gap-2 justify-end sm:justify-start">
+              <!-- Refresh Status Button -->
+              <Button 
+                icon="pi pi-refresh" 
+                size="small" 
+                severity="info" 
+                text 
+                rounded 
+                @click="checkChatStatus"
+                :loading="statusLoading"
+                v-tooltip.top="'Kiểm tra trạng thái hệ thống'" 
+                class="flex-shrink-0" 
+              />
               <Button icon="pi pi-trash" size="small" severity="danger" text rounded @click="showDeleteDialog"
                 v-tooltip.top="'Xóa cuộc trò chuyện'" class="flex-shrink-0" />
             </div>
@@ -67,6 +92,15 @@
       </div>
 
       <div class="flex-1 relative p-2 md:p-4 lg:p-6 overflow-hidden">
+        <!-- System Status Alert -->
+        <div v-if="systemStatus.status === 'unhealthy'" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-exclamation-triangle text-red-500"></i>
+            <span class="text-sm text-red-700 font-medium">Hệ thống đang gặp sự cố</span>
+          </div>
+          <p class="text-xs text-red-600 mt-1">{{ systemStatus.message }}</p>
+        </div>
+
         <div v-if="!selectedCollection" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div class="flex items-center gap-2">
             <i class="pi pi-exclamation-triangle text-yellow-500"></i>
@@ -174,21 +208,21 @@
             <input
               class="w-full shadow-xl pl-4 md:pl-5 pr-10 md:pr-12 py-3 md:py-4 rounded-full border border-gray-200 col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
               placeholder="Nhập câu hỏi..." v-model="user_question" @focus="handleInputFocus" @keydown="handleKeyDown"
-              :disabled="!selectedCollection" />
+              :disabled="!selectedCollection || systemStatus.status === 'unhealthy'" />
             <button type="button" @click="showSuggestions = !showSuggestions"
               class="absolute  right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors"
-              v-tooltip.top="'Hiển thị gợi ý câu hỏi'" :disabled="!selectedCollection">
+              v-tooltip.top="'Hiển thị gợi ý câu hỏi'" :disabled="!selectedCollection || systemStatus.status === 'unhealthy'">
               <i class="pi pi-lightbulb text-base md:text-lg" :class="{ 'text-blue-500': showSuggestions }"></i>
             </button>
           </div>
           <button type="submit"
             class="p-3 shadow-xl md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
-            :disabled="!user_question.length || !selectedCollection"
-            :class="{ 'opacity-50': !user_question.length || !selectedCollection }">
+            :disabled="!user_question.length || !selectedCollection || systemStatus.status === 'unhealthy'"
+            :class="{ 'opacity-50': !user_question.length || !selectedCollection || systemStatus.status === 'unhealthy' }">
             <i class="pi pi-send text-sm md:text-lg"></i>
           </button>
           <!-- Suggestions Popup -->
-          <div v-if="showSuggestions && suggestedPrompts.length > 0 && selectedCollection"
+          <div v-if="showSuggestions && suggestedPrompts.length > 0 && selectedCollection && systemStatus.status === 'healthy'"
             class="suggestions-popup absolute bottom-full left-0 right-0 mb-2 mx-2 md:mx-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden backdrop-blur-lg bg-white/95 max-w-4xl md:mx-auto">
             <div class="p-3 md:p-4 border-b border-gray-50 bg-gradient-to-r from-blue-50 to-indigo-50">
               <div class="flex items-center justify-between">
@@ -300,17 +334,110 @@ const loading = ref(false);
 const loadingType = ref("chat");
 const store = useAuthStore()
 
+// Quản lý kiếm tra status của bot
+const systemStatus = ref({
+  status: 'unknown', // 'healthy', 'degraded', 'unhealthy', 'unknown'
+  message: 'Đang kiểm tra trạng thái hệ thống...',
+  lastChecked: null
+});
+const statusLoading = ref(false);
+const statusCheckInterval = ref(null);
+
 onMounted(() => {
   // Thêm event listener cho việc click bên ngoài
   document.addEventListener('click', handleClickOutside);
   document.addEventListener('keydown', handleKeyDown);
+  
+  // Kiểm tra trạng thái hệ thống khi component mount
+  checkChatStatus();
+  
+  // Thiết lập interval kiểm tra trạng thái mỗi 30 giây
+  statusCheckInterval.value = setInterval(checkChatStatus, 30000);
 });
 
 // Cleanup khi component bị destroy
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
   document.removeEventListener('keydown', handleKeyDown);
+
+  if (statusCheckInterval.value) {
+    clearInterval(statusCheckInterval.value);
+  }
 });
+
+const checkChatStatus = async () => {
+  try {
+    statusLoading.value = true;
+    const response = await http.get('/chat/status');
+    
+    systemStatus.value = {
+      status: response.data.status || 'unknown',
+      message: response.data.message || 'Không có thông tin trạng thái',
+      lastChecked: new Date().toISOString()
+    };
+    
+    // Log để debug
+    console.log('Chat Status:', systemStatus.value);
+    
+  } catch (error) {
+    console.error('Error checking chat status:', error);
+    systemStatus.value = {
+      status: 'unhealthy',
+      message: 'Không thể kết nối đến hệ thống chat',
+      lastChecked: new Date().toISOString()
+    };
+  } finally {
+    statusLoading.value = false;
+  }
+};
+
+const getStatusColor = () => {
+  switch (systemStatus.value.status) {
+    case 'healthy':
+      return 'bg-green-400 shadow-green-400/50 animate-pulse';
+    case 'degraded':
+      return 'bg-orange-400 shadow-orange-400/50 animate-pulse';
+    case 'unhealthy':
+      return 'bg-red-400 shadow-red-400/50 animate-pulse';
+    default:
+      return 'bg-yellow-400 shadow-yellow-400/50 animate-pulse';
+  }
+};
+
+
+const getStatusTextColor = () => {
+  switch (systemStatus.value.status) {
+    case 'healthy':
+      return 'text-green-600';
+    case 'degraded':
+      return 'text-orange-600';
+    case 'unhealthy':
+      return 'text-red-600';
+    default:
+      return 'text-yellow-600';
+  }
+};
+const getStatusText = () => {
+  switch (systemStatus.value.status) {
+    case 'healthy':
+      return 'Hoạt động';
+    case 'degraded':
+      return 'Hạn chế';
+    case 'unhealthy':
+      return 'Gặp sự cố';
+    default:
+      return 'Đang kiểm tra';
+  }
+};
+
+const getStatusTooltip = () => {
+  const lastChecked = systemStatus.value.lastChecked 
+    ? new Date(systemStatus.value.lastChecked).toLocaleTimeString('vi-VN')
+    : 'Chưa kiểm tra';
+    
+  return `${systemStatus.value.message} (Cập nhật: ${lastChecked})`;
+};
+
 
 const carouselResponsiveOptions = [
   {
@@ -366,8 +493,6 @@ const suggestedPrompts = ref([
   }
 ]);
 
-
-
 onBeforeMount(() => {
   getCard()
   fetchCollections()
@@ -378,23 +503,32 @@ const onCollectionChange = () => {
   console.log('Collection changed to:', selectedCollection.value);
 };
 
+
 const submitChat = async (e) => {
   e.preventDefault();
   if (!user_question.value.trim() || !selectedCollection.value) return;
 
+  // Nếu hệ thống status là unhealthy, hiển thị thông báo và không gửi yêu cầu
+  if (systemStatus.value.status === 'unhealthy') {
+    proxy.$notify('W', 'Hệ thống đang gặp sự cố, vui lòng thử lại sau', toast);
+    return;
+  }
+
   loading.value = true;
   loadingType.value = "chat";
 
-  // Push user message
+  if (systemStatus.value.status === 'degraded') {
+    proxy.$notify('W', 'Hệ thống đang hoạt động hạn chế, phản hồi có thể chậm hơn', toast);
+  }
+
   messages.value.push({
     role: "user",
     content: user_question.value,
   });
 
-  // Sử dụng collection được chọn
   const data = {
     message: user_question.value,
-    collection: selectedCollection.value // Gửi string collection
+    collection: selectedCollection.value
   };
 
   const userQuestion = user_question.value;
@@ -403,14 +537,11 @@ const submitChat = async (e) => {
 
   try {
     const response = await http.post("/chat/internal", data);
-
-    // Cập nhật cách xử lý response
     const botResponse = response.data;
     const answerRaw = botResponse.content || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
 
     loading.value = false;
 
-    // Thêm tin nhắn trợ lý với nội dung rỗng
     const assistantMessage = {
       role: "assistant",
       content: "",
@@ -418,10 +549,11 @@ const submitChat = async (e) => {
     };
     messages.value.push(assistantMessage);
 
-    // Typing effect từng ký tự
+    // Test // Tốc độ gõ chữ với tốc độ chậm hơn nếu hệ thống đang degraded (mặc định là 10 nhưng sẽ giảm xuống 20 nếu degraded)
+    const typingSpeed = systemStatus.value.status === 'degraded' ? 20 : 10;
     let currentText = "";
     for (let i = 0; i < answerRaw.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, typingSpeed));
       currentText += answerRaw[i];
       messages.value[messages.value.length - 1].content = marked.parse(currentText);
       scrollToBottom();
@@ -466,6 +598,17 @@ const getValueMessage = async (item) => {
     return;
   }
 
+  // Nếu hệ thống có status unhealthy, hiển thị thông báo và không gửi yêu cầu
+  if (systemStatus.value.status === 'unhealthy') {
+    proxy.$notify('W', 'Hệ thống đang gặp sự cố, vui lòng thử lại sau', toast);
+    return;
+  }
+
+  // Cảnh báo nếu hệ thống đang có status degraded
+  if (systemStatus.value.status === 'degraded') {
+    proxy.$notify('W', 'Hệ thống đang hoạt động hạn chế, phản hồi có thể chậm hơn', toast);
+  }
+
   messages.value.push({
     role: "user",
     content: item,
@@ -483,25 +626,21 @@ const getValueMessage = async (item) => {
 
   try {
     const response = await http.post("/chat/internal", data);
-
-    // Cập nhật cách xử lý response
     const botResponse = response.data;
     const answerRaw = botResponse.content || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
 
     loading.value = false;
 
-    // Thêm tin nhắn trợ lý với nội dung rỗng
     const assistantMessage = {
       role: "assistant",
       content: "",
       timestamp: botResponse.timestamp || new Date().toISOString()
     };
     messages.value.push(assistantMessage);
-
-    // Typing effect từng ký tự
+    const typingSpeed = systemStatus.value.status === 'degraded' ? 20 : 10;
     let currentText = "";
     for (let i = 0; i < answerRaw.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, typingSpeed));
       currentText += answerRaw[i];
       messages.value[messages.value.length - 1].content = marked.parse(currentText);
       scrollToBottom();
@@ -536,7 +675,7 @@ const fetchCollections = async () => {
 const fetchChatHistory = async () => {
   loading.value = true
   try {
-    const res = await http.get(`history`)
+    const res = await http.get(`history/`)
     
     // Cập nhật để xử lý response format mới
     const historyMessages = res.data.messages || []

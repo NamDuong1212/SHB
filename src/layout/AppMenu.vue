@@ -55,7 +55,7 @@ const model = ref([
             to: "/files",
           },
           {
-            label: "Quản lý card",
+            label: "Quản lý FAQ",
             to: "/images",
           },
         ],

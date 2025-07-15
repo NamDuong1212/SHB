@@ -32,12 +32,14 @@
     </div>
     
     <div class="card">
-      <DataTable :value="Images" paginator rows="5" scrollable scrollHeight="600px" size="small" showGridlines>
+      <DataTable :value="Images" paginator rows="5" scrollable scrollHeight="600px" size="small" showGridlines
+        :reorderableRows="true" @row-reorder="onRowReorder">
         <template #header>
           <div class="flex justify-end p-2">
             <Button size="small" @click="openAddFile" icon="pi pi-plus" label="Thêm mới"></Button>
           </div>
         </template>
+        <Column :rowReorder="true" headerStyle="width: 3rem" />
         <Column header="STT">
           <template #body="{ index }">
             {{ index + 1 }}
@@ -58,6 +60,11 @@
             <div class="flex flex-col gap-1">
               <span v-for="item in data.items" :key="item" class="text-sm text-gray-600">{{ item }}</span>
             </div>
+          </template>
+        </Column>
+        <Column header="Order">
+          <template #body="{ data }">
+            <span class="text-sm font-medium text-blue-600">{{ data.order }}</span>
           </template>
         </Column>
         <Column header="Thao tác">
@@ -355,6 +362,72 @@ const confirmDelete = async () => {
 const removeLineItem = (index) => {
   payload.value.items.splice(index, 1)
 }
+
+// Drag and Drop functionality
+const onRowReorder = async (event) => {
+  const { dragIndex, dropIndex } = event;
+  
+  // Tạo bản sao của mảng để thao tác
+  const reorderedItems = [...Images.value];
+  
+  // Di chuyển item từ vị trí cũ sang vị trí mới
+  const draggedItem = reorderedItems.splice(dragIndex, 1)[0];
+  reorderedItems.splice(dropIndex, 0, draggedItem);
+  
+  // Cập nhật lại order cho từng item
+  const updatedItems = reorderedItems.map((item, index) => ({
+    ...item,
+    order: index + 1
+  }));
+  
+  // Cập nhật UI ngay lập tức
+  Images.value = updatedItems;
+  
+  try {
+    // Gửi request để cập nhật order trên server
+    const reorderData = {
+      id: draggedItem.id,
+      new_order: dropIndex + 1
+    };
+    
+    await http.patch('/api/v1/cards/reorder', reorderData);
+    
+    // Hiển thị thông báo thành công
+    proxy.$notify('S', 'Thay đổi thứ tự thành công!', toast);
+    
+    // Refresh lại data từ server để đảm bảo đồng bộ
+    await fetchAllImages();
+    
+  } catch (error) {
+    console.error('Error reordering cards:', error);
+    proxy.$notify('E', 'Có lỗi xảy ra khi thay đổi thứ tự!', toast);
+    
+    // Khôi phục lại trạng thái ban đầu nếu có lỗi
+    await fetchAllImages();
+  }
+}
 </script>
 
-<style></style>
+<style>
+/* Custom styles for drag and drop */
+.p-datatable .p-datatable-tbody > tr.p-highlight {
+  background-color: #e3f2fd !important;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #f5f5f5;
+}
+
+.p-datatable .p-datatable-reorder-indicator-up,
+.p-datatable .p-datatable-reorder-indicator-down {
+  background-color: #2196f3;
+}
+
+.p-rowreorder-handle {
+  cursor: move;
+}
+
+.p-rowreorder-handle:hover {
+  color: #2196f3;
+}
+</style>

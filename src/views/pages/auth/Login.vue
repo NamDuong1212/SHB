@@ -33,12 +33,14 @@ const login = async () => {
 
       toast.add({
         severity: 'success',
-        summary: 'Đăng nhập thành công',
-        detail: 'Chào mừng bạn trở lại!',
+        summary: 'Thành công',
+        detail: 'Đăng nhập thành công',
         life: 3000
       });
 
-      router.push("/");
+      setTimeout(() => {
+        router.push("/");
+      }, 3000);
     } else {
       throw new Error("Không nhận được access token");
     }
@@ -57,9 +59,11 @@ const login = async () => {
 };
 
 
+
 </script>
 
 <template>
+  <Toast />
   <Loading v-if="isLoading" />
   <div class="bg-white dark:bg-surface-950 flex items-center justify-center overflow-hidden">
     <div class="relative w-1/2 min-h-screen flex items-center">

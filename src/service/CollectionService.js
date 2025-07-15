@@ -2,7 +2,7 @@ import http from "./http";
 
 export default class CollectionService {
     // Static API endpoints
-    static api = "collection";
+    static api = "collection/";
 
     static async getAll(params = {}) {
         return http.get(this.api, { params });

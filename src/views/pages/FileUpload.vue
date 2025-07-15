@@ -386,7 +386,7 @@ const saveMedia = async () => {
     }
 
     // Gọi API upload using HTTP service
-    const res = await http.post('/doc', formData, {
+    const res = await http.post('/doc/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
