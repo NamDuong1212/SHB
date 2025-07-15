@@ -15,4 +15,7 @@ export default class CollectionService {
     static async create(data) {
         return await http.post(`${this.api}`, data);
     }
+    static async getDocumentsByCollection (id){
+        return await http.get(`/doc/collection/${id}`);
+    }
 }

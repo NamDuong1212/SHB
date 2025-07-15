@@ -11,6 +11,8 @@ import FormData from "../components/FormData.vue";
 import DocumentForm from "../components/DocumentForm.vue";
 import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
+import { get } from "lodash";
+import ProgressSpinner from 'primevue/progressspinner';
 
 const dialogRef = ref();
 const documentDialogRef = ref();
@@ -20,6 +22,9 @@ const dataSelection = ref([]);
 const modelDialogDelete = ref(false);
 const collections = ref([]);
 const confirm = useConfirm();
+const collectionDocuments = ref({});
+const expandedRows = ref({});
+const loadingDocuments = ref({});
 
 const getAllCollection = async (params = {}) => {
   try {
@@ -39,20 +44,107 @@ const getAllCollection = async (params = {}) => {
   }
 };
 
+const getDocumentsByCollection = async (id) => {
+  try {
+    loadingDocuments.value[id] = true;
+    const { data } = await CollectionService.getDocumentsByCollection(id);
+    if (data) {
+      collectionDocuments.value[id] = data.documents;
+      expandedRows.value[id] = !expandedRows.value[id];
+    }
+  } catch (error) {
+    console.error(`Error fetching documents for collection ${id}:`, error);
+  } finally {
+    loadingDocuments.value[id] = false;
+  }
+};
+
+const getFileExtension = (filename) => {
+  if (!filename) return '';
+  return filename.split('.').pop().toLowerCase();
+};
+
+const getFileIconClass = (filename) => {
+  const ext = getFileExtension(filename);
+  switch (ext) {
+    case 'pdf': return 'pi pi-file-pdf text-red-500';
+    case 'doc':
+    case 'docx': return 'pi pi-file-word text-blue-500';
+    case 'xls':
+    case 'xlsx': return 'pi pi-file-excel text-green-500';
+    case 'ppt':
+    case 'pptx': return 'pi pi-file-ppt text-orange-500';
+    case 'txt': return 'pi pi-file text-gray-500';
+    default: return 'pi pi-file text-gray-400';
+  }
+};
+
+const getFileName = (path) => {
+  if (!path) return '';
+  return path.split('/').pop();
+};
+
+
+
 const columns = ref([
-  {
-    field: "name",
-    header: "Tên collection",
-    display: true,
-    renderValue: (rowData) =>
+{
+  field: "name",
+  header: "Tên collection",
+  display: true,
+  renderValue: (rowData) =>
+    h("div", { class: "collection-wrapper" }, [
       h(
-        "span",
+        "div",
         {
-          class: "text-blue-600 font-semibold cursor-pointer hover:underline",
+          class: "collection-header flex items-center gap-2 p-2 border-round cursor-pointer hover:surface-100",
+          onClick: () => getDocumentsByCollection(rowData.id),
         },
-        rowData.name
+        [
+          h("i", {
+            class: `pi ${expandedRows.value[rowData.id] ? "pi-chevron-down" : "pi-chevron-right"} transition-transform transition-duration-300`,
+          }),
+          h(
+            "span",
+            { class: "text-blue-600 font-semibold" },
+            rowData.name
+          ),
+          loadingDocuments.value[rowData.id] &&
+            h(ProgressSpinner, { style: { width: '20px', height: '20px' }})
+        ]
       ),
-  },
+      expandedRows.value[rowData.id] &&
+        h("div", { 
+          class: "documents-container pl-4 mt-2 transition-all transition-duration-300"
+        }, [
+          collectionDocuments.value[rowData.id]?.map(doc =>
+            h("div", { 
+              class: "document-card p-3 mb-2 surface-50 border-round-lg shadow-1" 
+            }, [
+              // Dòng tiêu đề + loại file + tên file
+              h("div", { class: "flex justify-content-between align-items-center" }, [
+                h("div", { class: "flex align-items-center gap-2" }, [
+                  h("i", { class: getFileIconClass(doc.source_file) }),
+                  h("span", { class: "font-semibold" }, doc.title),
+                  h("span", { class: "text-sm text-500" }, `(${getFileName(doc.source_file)})`)
+                ]),
+              ]),
+              // Dòng info phụ: Ngày + size
+              h("div", { class: "mt-2 flex gap-3 text-sm" }, [
+                h("span", { class: "text-600" }, [
+                  h("i", { class: "pi pi-calendar-times mr-2" }),
+                  new Date(doc.created_at).toLocaleDateString('vi-VN')
+                ]),
+                h("span", { class: "text-600" }, [
+                  h("i", { class: "pi pi-file mr-2" }),
+                  `${(doc.file_size / 1024).toFixed(1)} KB`
+                ])
+              ]),
+              
+            ])
+          )
+        ])
+    ])
+},
   {
     field: "description",
     header: "Mô tả",
@@ -181,12 +273,53 @@ const handleBatchDelete = async (names) => {
 .p-button.p-button-primary {
   color: white !important;
 }
-
-.p-button.p-button-success {
+.p-button.p-button-success{
   color: white !important;
+} 
+
+  .collection-wrapper {
+  overflow: hidden;
 }
 
-.collection-container {
-  padding: 1rem;
+.collection-header {
+  transition: all 0.2s ease;
+}
+
+.collection-header:hover {
+  background-color: var(--surface-100);
+}
+
+.documents-container {
+  border-left: 2px solid var(--primary-color);
+  margin-left: 10px;
+}
+
+.document-card {
+  transition: all 0.2s ease;
+  border: 1px solid var(--surface-200);
+}
+
+.document-card:hover {
+  transform: translateX(4px);
+  background: var(--surface-100) !important;
+  border-color: var(--primary-200);
+}
+
+.pi-chevron-down, .pi-chevron-right {
+  color: var(--primary-color);
+}
+
+.transition-transform {
+  transition: transform 0.3s ease;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+/* Spinner styles */
+.p-progress-spinner {
+  width: 20px !important;
+  height: 20px !important;
 }
 </style>

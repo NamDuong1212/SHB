@@ -217,7 +217,7 @@
             </button>
           </div>
           <button type="submit"
-            class="p-3 shadow-xl md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
+            class="p-3 shadow-xl md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] hover:from-[#28548c] hover:to-[#04c0f4] text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
             :disabled="!user_question.length || !selectedCollection || systemStatus.status === 'unhealthy'"
             :class="{ 'opacity-50': !user_question.length || !selectedCollection || systemStatus.status === 'unhealthy' }">
             <i class="pi pi-send text-sm md:text-lg"></i>
@@ -242,7 +242,7 @@
                 <div v-for="(prompt, index) in suggestedPrompts" :key="index" @click="selectSuggestion(prompt)"
                   class="suggestion-item flex items-center gap-2 md:gap-3 p-2 md:p-3 mx-1 md:mx-2 rounded-xl hover:bg-blue-50 cursor-pointer transition-all duration-200 group">
                   <div
-                    class="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-r from-[#28548c] to-[#04c0f4] flex items-center justify-center flex-shrink-0 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all">
+                    class="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-r from-[#28548c] to-[#04c0f4] flex items-center justify-center flex-shrink-0 group-hover:from-[#28548c] group-hover:to-[#04c0f4] transition-all">
                     <i
                       class="pi pi-arrow-right text-blue-500 text-xs md:text-sm group-hover:translate-x-0.5 transition-transform"></i>
                   </div>
