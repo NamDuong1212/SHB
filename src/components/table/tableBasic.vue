@@ -3,7 +3,8 @@ import buildGridifyQueryFromPrimeVueFilters from "@/composables/buildGridifyQuer
 import http from "@/service/http";
 import debounce from "lodash/debounce";
 import { onBeforeMount, ref, watchEffect } from "vue";
-
+import { useToast } from "primevue";
+const toast = useToast();
 const filters1 = ref(null);
 const loading = ref(false);
 const dataTable = ref([]);
@@ -123,6 +124,7 @@ defineExpose({
 </script>
 
 <template>
+  <Toast />
   <div class="header mb-3 flex justify-between">
     <div class="font-semibold text-xl">{{ header }}</div>
   </div>

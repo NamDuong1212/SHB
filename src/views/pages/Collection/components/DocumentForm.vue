@@ -403,6 +403,7 @@ const createDocument = async () => {
     return
   }
 
+  visible.value = false;
   let uploadInterval = null
   
   try {

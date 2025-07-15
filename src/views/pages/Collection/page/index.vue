@@ -13,7 +13,11 @@ import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
 import { get } from "lodash";
 import ProgressSpinner from 'primevue/progressspinner';
-
+import DocumentService from "@/service/DocumentService";
+import { useToast } from "primevue/usetoast";
+import { useRouter } from "vue-router";
+const router = useRouter();
+const toast = useToast();
 const dialogRef = ref();
 const documentDialogRef = ref();
 const filters = ref(null);
@@ -25,6 +29,7 @@ const confirm = useConfirm();
 const collectionDocuments = ref({});
 const expandedRows = ref({});
 const loadingDocuments = ref({});
+
 
 const getAllCollection = async (params = {}) => {
   try {
@@ -84,49 +89,95 @@ const getFileName = (path) => {
   return path.split('/').pop();
 };
 
+const deleteDocument = (id, collectionId) => {
+  confirm.require({
+    message: `Bạn có chắc chắn muốn xóa document này không?`,
+    header: 'Xác nhận xóa',
+    icon: 'pi pi-exclamation-triangle',
+    rejectProps: {
+      label: 'Hủy',
+      severity: 'secondary',
+      outlined: true
+    },
+    acceptProps: {
+      label: 'Xóa',
+      severity: 'danger'
+    },
+    accept: async () => {
+      try {
+        await DocumentService.delete(id);
+        await getDocumentsByCollection(collectionId);
+
+        toast.add({
+          severity: "success",
+          summary: "Xóa thành công",
+          detail: "Tài liệu đã được xóa.",
+          life: 3000
+        });
+      } catch (error) {
+        console.error("Lỗi xoá tài liệu", error);
+        toast.add({
+          severity: "error",
+          summary: "Lỗi",
+          detail: "Xóa tài liệu thất bại.",
+          life: 3000
+        });
+      }
+    }
+  });
+};
+
 
 
 const columns = ref([
-{
-  field: "name",
-  header: "Tên collection",
-  display: true,
-  renderValue: (rowData) =>
-    h("div", { class: "collection-wrapper" }, [
-      h(
-        "div",
-        {
-          class: "collection-header flex items-center gap-2 p-2 border-round cursor-pointer hover:surface-100",
-          onClick: () => getDocumentsByCollection(rowData.id),
-        },
-        [
-          h("i", {
-            class: `pi ${expandedRows.value[rowData.id] ? "pi-chevron-down" : "pi-chevron-right"} transition-transform transition-duration-300`,
-          }),
-          h(
-            "span",
-            { class: "text-blue-600 font-semibold" },
-            rowData.name
-          ),
-          loadingDocuments.value[rowData.id] &&
-            h(ProgressSpinner, { style: { width: '20px', height: '20px' }})
-        ]
-      ),
-      expandedRows.value[rowData.id] &&
-        h("div", { 
+  {
+    field: "name",
+    header: "Tên collection",
+    display: true,
+    renderValue: (rowData) =>
+      h("div", { class: "collection-wrapper" }, [
+        h(
+          "div",
+          {
+            class: "collection-header flex items-center gap-2 p-2 border-round cursor-pointer hover:surface-100",
+            onClick: () => getDocumentsByCollection(rowData.id),
+          },
+          [
+            h("i", {
+              class: `pi ${expandedRows.value[rowData.id] ? "pi-chevron-down" : "pi-chevron-right"} transition-transform transition-duration-300`,
+            }),
+            h(
+              "span",
+              { class: "text-blue-600 font-semibold" },
+              rowData.name
+            ),
+            loadingDocuments.value[rowData.id] &&
+            h(ProgressSpinner, { style: { width: '20px', height: '20px' } })
+          ]
+        ),
+        expandedRows.value[rowData.id] &&
+        h("div", {
           class: "documents-container pl-4 mt-2 transition-all transition-duration-300"
         }, [
           collectionDocuments.value[rowData.id]?.map(doc =>
-            h("div", { 
-              class: "document-card p-3 mb-2 surface-50 border-round-lg shadow-1" 
+            h("div", {
+              class: "document-card p-3 mb-2 surface-50 border-round-lg shadow-1"
             }, [
               // Dòng tiêu đề + loại file + tên file
-              h("div", { class: "flex justify-content-between align-items-center" }, [
-                h("div", { class: "flex align-items-center gap-2" }, [
+              h("div", { class: "flex justify-between items-center" }, [
+                h("div", { class: "flex items-center gap-2" }, [
                   h("i", { class: getFileIconClass(doc.source_file) }),
                   h("span", { class: "font-semibold" }, doc.title),
                   h("span", { class: "text-sm text-500" }, `(${getFileName(doc.source_file)})`)
                 ]),
+
+                h(Button, {
+                  icon: "pi pi-trash",
+                  class: "p-button-sm",
+                  severity: "danger",
+                  outlined: true,
+                  onClick: () => deleteDocument(doc.id)
+                })
               ]),
               // Dòng info phụ: Ngày + size
               h("div", { class: "mt-2 flex gap-3 text-sm" }, [
@@ -138,13 +189,13 @@ const columns = ref([
                   h("i", { class: "pi pi-file mr-2" }),
                   `${(doc.file_size / 1024).toFixed(1)} KB`
                 ])
-              ]),
-              
+              ])
             ])
           )
+
         ])
-    ])
-},
+      ])
+  },
   {
     field: "description",
     header: "Mô tả",
@@ -245,13 +296,16 @@ const handleBatchDelete = async (names) => {
 </script>
 
 <template>
+  <Toast />
   <div class="collection-container">
     <tableDoc ref="TableBasic" v-model:selection="dataSelection" header="Danh sách collection" :columns="columns"
       :filters="filters" :apiFunction="getAllCollection" :paginator="false" @resetFilter="initFilters">
       <template #header>
         <div class="flex gap-2">
-          <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Thêm collection" size="small" />
-          <Button @click="openDocumentDialog" type="button" icon="pi pi-file" severity="success" label="Tạo document" size="small" />
+          <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Thêm collection"
+            size="small" />
+          <Button @click="openDocumentDialog" type="button" icon="pi pi-file" severity="success" label="Tạo document"
+            size="small" />
         </div>
       </template>
     </tableDoc>
@@ -273,11 +327,12 @@ const handleBatchDelete = async (names) => {
 .p-button.p-button-primary {
   color: white !important;
 }
-.p-button.p-button-success{
-  color: white !important;
-} 
 
-  .collection-wrapper {
+.p-button.p-button-success {
+  color: white !important;
+}
+
+.collection-wrapper {
   overflow: hidden;
 }
 
@@ -305,7 +360,8 @@ const handleBatchDelete = async (names) => {
   border-color: var(--primary-200);
 }
 
-.pi-chevron-down, .pi-chevron-right {
+.pi-chevron-down,
+.pi-chevron-right {
   color: var(--primary-color);
 }
 
