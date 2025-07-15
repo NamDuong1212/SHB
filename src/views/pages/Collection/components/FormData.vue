@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model:visible="visible" modal header="Cập nhật collection" :style="{ width: '80rem' }">
+  <Dialog v-model:visible="visible" modal header="Tạo collection" :style="{ width: '80rem' }">
     <div class="bg-gray-50 p-4 rounded-lg">
       <div class="grid grid-cols-12 gap-4">
         <div class="col-span-6">

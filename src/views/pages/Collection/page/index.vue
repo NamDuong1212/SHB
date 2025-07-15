@@ -8,14 +8,17 @@ import Button from "primevue/button";
 import Tag from "primevue/tag";
 import { h, onBeforeMount, ref } from "vue";
 import FormData from "../components/FormData.vue";
+import DocumentForm from "../components/DocumentForm.vue";
 import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
 
 const dialogRef = ref();
+const documentDialogRef = ref();
 const filters = ref(null);
 const TableBasic = ref();
 const dataSelection = ref([]);
 const modelDialogDelete = ref(false);
+const collections = ref([]);
 const confirm = useConfirm();
 
 const getAllCollection = async (params = {}) => {
@@ -27,7 +30,8 @@ const getAllCollection = async (params = {}) => {
 
     const { data } = await CollectionService.getAll(filteredParams);
     if (data) {
-      return data;
+      collections.value = data; // Store collections for document form
+      return data.collections;
     }
   } catch (error) {
     console.error("Error fetching collections:", error);
@@ -45,7 +49,6 @@ const columns = ref([
         "span",
         {
           class: "text-blue-600 font-semibold cursor-pointer hover:underline",
-          onClick: () => openAddDialog(rowData),
         },
         rowData.name
       ),
@@ -97,6 +100,10 @@ const openAddDialog = (data) => {
   dialogRef.value?.openDialog(data);
 };
 
+const openDocumentDialog = () => {
+  documentDialogRef.value?.openDialog();
+};
+
 const refreshData = () => {
   TableBasic.value?.refresh();
   dataSelection.value = [];
@@ -146,25 +153,40 @@ const handleBatchDelete = async (names) => {
 </script>
 
 <template>
-  <tableDoc ref="TableBasic" v-model:selection="dataSelection" header="Danh sách collection" :columns="columns"
-    :filters="filters" :apiFunction="getAllCollection" :paginator="false" @resetFilter="initFilters">
-    <template #header>
-      <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Thêm mới" size="small" />
-    </template>
-  </tableDoc>
+  <div class="collection-container">
+    <tableDoc ref="TableBasic" v-model:selection="dataSelection" header="Danh sách collection" :columns="columns"
+      :filters="filters" :apiFunction="getAllCollection" :paginator="false" @resetFilter="initFilters">
+      <template #header>
+        <div class="flex gap-2">
+          <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Thêm collection" size="small" />
+          <Button @click="openDocumentDialog" type="button" icon="pi pi-file" severity="success" label="Tạo document" size="small" />
+        </div>
+      </template>
+    </tableDoc>
 
-  <FormData ref="dialogRef" :loadData="refreshData"></FormData>
+    <FormData ref="dialogRef" :loadData="refreshData"></FormData>
+    <DocumentForm ref="documentDialogRef" :collections="collections" @refresh="refreshData"></DocumentForm>
 
-  <ConfirmDialog></ConfirmDialog>
+    <ConfirmDialog></ConfirmDialog>
 
-  <DeleteComps v-model:isOpenDelete="modelDialogDelete" :ids="dataSelection.flatMap((e) => e.name)"
-    @update:isOpenDelete="refreshData()" @confirm="handleBatchDelete"
-    :content="`Bạn có chắc chắn muốn xóa ${dataSelection.length} bản ghi không?`" api="collection">
-  </DeleteComps>
+    <DeleteComps v-model:isOpenDelete="modelDialogDelete" :ids="dataSelection.flatMap((e) => e.name)"
+      @update:isOpenDelete="refreshData()" @confirm="handleBatchDelete"
+      :content="`Bạn có chắc chắn muốn xóa ${dataSelection.length} bản ghi không?`" api="collection">
+    </DeleteComps>
+  </div>
 </template>
+
+
 <style scoped>
 .p-button.p-button-primary {
   color: white !important;
 }
 
+.p-button.p-button-success {
+  color: white !important;
+}
+
+.collection-container {
+  padding: 1rem;
+}
 </style>

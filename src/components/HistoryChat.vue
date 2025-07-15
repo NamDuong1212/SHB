@@ -2,7 +2,7 @@
   <div
     class="col-span-2 bg-gradient-to-br h-[50vh] from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
     <!-- Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-4">
+    <div class="bg-gradient-to-r from-[#28548c] to-[#04c0f4] p-4">
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
           <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,7 +91,7 @@
           Tính năng đang được phát triển
         </p>
         <button
-          class="mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all text-sm font-medium">
+          class="mt-4 px-4 py-2 bg-gradient-to-r from-[#28548c] to-[#04c0f4] text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all text-sm font-medium">
           Bắt đầu trò chuyện
         </button>
       </div>

@@ -1,4 +1,5 @@
 <template>
+  <Toast />
 
   <!-- Heading -->
   <!-- <div style="box-shadow: 0 0 #0000, 0 0 #0000, 0 1px 2px 0 rgb(0 0 0 / 0.05)"></div> -->
@@ -9,7 +10,7 @@
         <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 max-w-6xl mx-auto">
           <div class="flex items-center gap-3">
             <div
-              class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+              class="w-12 h-12 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] flex items-center justify-center shadow-md">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path
@@ -160,7 +161,7 @@
               <!-- AI Message -->
               <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start " v-if="chat.role == 'assistant'">
                 <div
-                  class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex-shrink-0 flex items-center justify-center shadow-md">
+                  class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] flex-shrink-0 flex items-center justify-center shadow-md">
                   <svg stroke="white" fill="white" stroke-width="0" viewBox="0 0 24 24" height="14" width="14"
                     class="md:w-[18px] md:h-[18px]" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -178,7 +179,7 @@
               <!-- User Message -->
               <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start justify-end" v-if="chat.role == 'user'">
                 <div
-                  class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl rounded-tr-none px-3 md:px-6 py-3 md:py-4 shadow-md max-w-[90%] md:max-w-[85%]">
+                  class="bg-gradient-to-r from-[#28548c] to-[#04c0f4] text-white rounded-2xl rounded-tr-none px-3 md:px-6 py-3 md:py-4 shadow-md max-w-[90%] md:max-w-[85%]">
                   <p class="text-sm md:text-md">{{ chat.content }}</p>
                 </div>
                 <div
@@ -216,7 +217,7 @@
             </button>
           </div>
           <button type="submit"
-            class="p-3 shadow-xl md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
+            class="p-3 shadow-xl md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] hover:from-blue-600 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
             :disabled="!user_question.length || !selectedCollection || systemStatus.status === 'unhealthy'"
             :class="{ 'opacity-50': !user_question.length || !selectedCollection || systemStatus.status === 'unhealthy' }">
             <i class="pi pi-send text-sm md:text-lg"></i>
@@ -224,7 +225,7 @@
           <!-- Suggestions Popup -->
           <div v-if="showSuggestions && suggestedPrompts.length > 0 && selectedCollection && systemStatus.status === 'healthy'"
             class="suggestions-popup absolute bottom-full left-0 right-0 mb-2 mx-2 md:mx-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden backdrop-blur-lg bg-white/95 max-w-4xl md:mx-auto">
-            <div class="p-3 md:p-4 border-b border-gray-50 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div class="p-3 md:p-4 border-b border-gray-50 bg-gradient-to-r from-[#28548c] to-[#04c0f4]">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <i class="pi pi-lightbulb text-blue-500 text-base md:text-lg"></i>
@@ -241,7 +242,7 @@
                 <div v-for="(prompt, index) in suggestedPrompts" :key="index" @click="selectSuggestion(prompt)"
                   class="suggestion-item flex items-center gap-2 md:gap-3 p-2 md:p-3 mx-1 md:mx-2 rounded-xl hover:bg-blue-50 cursor-pointer transition-all duration-200 group">
                   <div
-                    class="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center flex-shrink-0 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all">
+                    class="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-r from-[#28548c] to-[#04c0f4] flex items-center justify-center flex-shrink-0 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all">
                     <i
                       class="pi pi-arrow-right text-blue-500 text-xs md:text-sm group-hover:translate-x-0.5 transition-transform"></i>
                   </div>
@@ -662,7 +663,7 @@ const getValueMessage = async (item) => {
 const fetchCollections = async () => {
   try {
     const response = await CollectionService.getAll();
-    Collections.value = response.data;
+    Collections.value = response.data.collections;
     // Tự động chọn collection đầu tiên nếu có
     if (Collections.value.length > 0) {
       selectedCollection.value = Collections.value[0].name;

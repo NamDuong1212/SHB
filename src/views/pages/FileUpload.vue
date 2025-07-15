@@ -133,7 +133,7 @@
             </div>
             <h3 class="font-medium text-gray-700 mb-1">Kéo thả file vào đây</h3>
             <p class="text-sm text-gray-500 mb-3">hoặc click để chọn file</p>
-            <div class="file-specs text-xs text-gray-400">PDF, DOCX, TXT, CSV (tối đa 20MB)</div>
+            <div class="file-specs text-xs text-gray-400">PDF, DOCX, TXT, CSV, XLSX (tối đa 20MB)</div>
           </div>
 
           <div v-else class="preview-container relative w-full">
@@ -174,6 +174,20 @@
                     </svg>
                   </div>
 
+                  <div v-else-if="fileType === 'xlsx'" class="file-icon text-emerald-600 mx-auto mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <rect x="8" y="10" width="2" height="2"></rect>
+                      <rect x="12" y="10" width="2" height="2"></rect>
+                      <rect x="16" y="10" width="2" height="2"></rect>
+                      <rect x="8" y="14" width="2" height="2"></rect>
+                      <rect x="12" y="14" width="2" height="2"></rect>
+                      <rect x="16" y="14" width="2" height="2"></rect>
+                    </svg>
+                  </div>
+
                   <div v-else class="file-icon text-gray-500 mx-auto mb-3">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
                       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -205,7 +219,7 @@
           </div>
 
           <input type="file" class="hidden click-file" @change="UploadFileLocal($event)" 
-                 accept=".pdf,.doc,.docx,.txt,.csv" />
+                 accept=".pdf,.doc,.docx,.txt,.csv,.xlsx" />
         </div>
 
         <div class="upload-status mt-4" v-if="uploadStatus.show">
@@ -274,7 +288,7 @@ const fetchCollections = async () => {
   collectionsLoading.value = true
   try {
     const response = await CollectionService.getAll();
-    Collections.value = response.data;
+    Collections.value = response.data.collections;
     // Tự động chọn collection đầu tiên nếu có và payload chưa có collection
     if (Collections.value.length > 0 && !payload.value.collection_name) {
       payload.value.collection_name = Collections.value[0].name;
@@ -314,7 +328,7 @@ const handleFileDrop = (event) => {
         payload.value.imgPreview = 'placeholder'
       }
     } else {
-      showUploadStatus('File không được hỗ trợ. Chỉ chấp nhận PDF, DOCX, TXT, CSV', 'error')
+      showUploadStatus('File không được hỗ trợ. Chỉ chấp nhận PDF, DOCX, TXT, CSV, XLSX', 'error')
     }
   }
 }
@@ -331,7 +345,7 @@ const UploadFileLocal = (event) => {
         payload.value.imgPreview = 'placeholder';
       }
     } else {
-      showUploadStatus('File không được hỗ trợ. Chỉ chấp nhận PDF, DOCX, TXT, CSV', 'error')
+      showUploadStatus('File không được hỗ trợ. Chỉ chấp nhận PDF, DOCX, TXT, CSV, XLSX', 'error')
     }
   }
 }
@@ -478,7 +492,7 @@ const isValidFileType = (file) => {
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   ];
   
-  const validExtensions = ['.pdf', '.doc', '.docx', '.txt', '.csv'];
+  const validExtensions = ['.pdf', '.doc', '.docx', '.txt', '.csv', '.xlsx'];
   const filename = file.name.toLowerCase();
   
   return validTypes.includes(file.type) || validExtensions.some(ext => filename.endsWith(ext));
@@ -498,6 +512,7 @@ const fileType = computed(() => {
   if (type.includes('word') || type.includes('doc') || filename.endsWith('.doc') || filename.endsWith('.docx')) return 'doc';
   if (type.includes('csv') || filename.endsWith('.csv')) return 'csv';
   if (type.includes('text') || filename.endsWith('.txt')) return 'txt';
+  if (type.includes('excel') || type.includes('sheet') || filename.endsWith('.xlsx')) return 'xlsx';
 
   return 'other';
 })
@@ -508,6 +523,7 @@ const fileExtension = computed(() => {
   return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2);
 });
 </script>
+
 <style>
 .upload-animation {
   animation: bounce 1.5s infinite ease-in-out;
