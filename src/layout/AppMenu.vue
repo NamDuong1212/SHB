@@ -38,10 +38,10 @@ const model = ref([
         icon: "pi pi-fw pi-folder",
         to: "/danh-sach-collection",
       },
-      // {
-      //   label: "Thiết lập hệ thống",
-      //   icon: "pi pi-sliders-h",
-      //   items: [
+      {
+        label: "Thiết lập hệ thống",
+        icon: "pi pi-sliders-h",
+        items: [
       //     {
       //       label: "Quản lý Người dùng",
       //       to: "/users",
@@ -54,12 +54,12 @@ const model = ref([
       //       label: "Quản lý documents",
       //       to: "/files",
       //     },
-      //     {
-      //       label: "Quản lý FAQ",
-      //       to: "/images",
-      //     },
-      //   ],
-      // },
+          {
+            label: "Quản lý FAQ",
+            to: "/images",
+          },
+        ],
+      },
     ],
   },
 ]);

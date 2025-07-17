@@ -45,11 +45,11 @@ const router = createRouter({
                 },
 
                 // === Quản lý FAQ ===
-                {
-                    path: '/danh-sach-faq',
-                    name: 'danh-sach-faq',
-                    component: () => import('@/views/pages/FAQ/page/index.vue')
-                },
+                // {
+                //     path: '/danh-sach-faq',
+                //     name: 'danh-sach-faq',
+                //     component: () => import('@/views/pages/FAQ/page/index.vue')
+                // },
                 {
                     path: '/images',
                     name: 'images',
