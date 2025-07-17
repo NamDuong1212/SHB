@@ -16,6 +16,7 @@ import ProgressSpinner from 'primevue/progressspinner';
 import DocumentService from "@/service/DocumentService";
 import { useToast } from "primevue/usetoast";
 import { useRouter } from "vue-router";
+
 const router = useRouter();
 const toast = useToast();
 const dialogRef = ref();
@@ -29,7 +30,6 @@ const confirm = useConfirm();
 const collectionDocuments = ref({});
 const expandedRows = ref({});
 const loadingDocuments = ref({});
-
 
 const getAllCollection = async (params = {}) => {
   try {
@@ -133,7 +133,6 @@ const deleteDocument = (id, collectionId) => {
   });
 };
 
-
 const columns = ref([
   {
     field: "name",
@@ -164,40 +163,44 @@ const columns = ref([
         h("div", {
           class: "documents-container pl-4 mt-2 transition-all transition-duration-300"
         }, [
-          collectionDocuments.value[rowData.id]?.map(doc =>
-            h("div", {
-              class: "document-card p-3 mb-2 surface-50 border-round-lg shadow-1"
-            }, [
-              // Dòng tiêu đề + loại file + tên file
-              h("div", { class: "flex justify-between items-center" }, [
-                h("div", { class: "flex items-center gap-2" }, [
-                  h("i", { class: getFileIconClass(doc.source_file) }),
-                  h("span", { class: "font-semibold" }, doc.title),
-                  h("span", { class: "text-sm text-500" }, `(${getFileName(doc.source_file)})`)
-                ]),
+          // Thêm container với max-height và scroll
+          h("div", {
+            class: "documents-scroll-container"
+          }, [
+            collectionDocuments.value[rowData.id]?.map(doc =>
+              h("div", {
+                class: "document-card p-3 mb-2 surface-50 border-round-lg shadow-1"
+              }, [
+                // Dòng tiêu đề + loại file + tên file
+                h("div", { class: "flex justify-between items-center" }, [
+                  h("div", { class: "flex items-center gap-2" }, [
+                    h("i", { class: getFileIconClass(doc.source_file) }),
+                    h("span", { class: "font-semibold" }, doc.title),
+                    h("span", { class: "text-sm text-500" }, `(${getFileName(doc.source_file)})`)
+                  ]),
 
-                h(Button, {
-                  icon: "pi pi-trash",
-                  class: "p-button-sm",
-                  severity: "danger",
-                  outlined: true,
-                  onClick: () => deleteDocument(doc.id)
-                })
-              ]),
-              // Dòng info phụ: Ngày + size
-              h("div", { class: "mt-2 flex gap-3 text-sm" }, [
-                h("span", { class: "text-600" }, [
-                  h("i", { class: "pi pi-calendar-times mr-2" }),
-                  new Date(doc.created_at).toLocaleDateString('vi-VN')
+                  h(Button, {
+                    icon: "pi pi-trash",
+                    class: "p-button-sm",
+                    severity: "danger",
+                    outlined: true,
+                    onClick: () => deleteDocument(doc.id)
+                  })
                 ]),
-                h("span", { class: "text-600" }, [
-                  h("i", { class: "pi pi-file mr-2" }),
-                  `${(doc.file_size / 1024).toFixed(1)} KB`
+                // Dòng info phụ: Ngày + size
+                h("div", { class: "mt-2 flex gap-3 text-sm" }, [
+                  h("span", { class: "text-600" }, [
+                    h("i", { class: "pi pi-calendar-times mr-2" }),
+                    new Date(doc.created_at).toLocaleDateString('vi-VN')
+                  ]),
+                  h("span", { class: "text-600" }, [
+                    h("i", { class: "pi pi-file mr-2" }),
+                    `${(doc.file_size / 1024).toFixed(1)} KB`
+                  ])
                 ])
               ])
-            ])
-          )
-
+            )
+          ])
         ])
       ])
   },
@@ -327,7 +330,6 @@ const handleBatchDelete = async (names) => {
   </div>
 </template>
 
-
 <style scoped>
 .p-button.p-button-primary {
   color: white !important;
@@ -337,8 +339,13 @@ const handleBatchDelete = async (names) => {
   color: white !important;
 }
 
+.collection-container {
+  height: 100vh;
+  overflow: auto;
+}
+
 .collection-wrapper {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .collection-header {
@@ -354,9 +361,37 @@ const handleBatchDelete = async (names) => {
   margin-left: 10px;
 }
 
+/* Container với scroll cho documents */
+.documents-scroll-container {
+  max-height: 400px; /* Giới hạn chiều cao */
+  overflow-y: auto; /* Cho phép scroll dọc */
+  overflow-x: hidden; /* Ẩn scroll ngang */
+  padding-right: 8px; /* Tạo khoảng cách cho scrollbar */
+}
+
+/* Custom scrollbar */
+.documents-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.documents-scroll-container::-webkit-scrollbar-track {
+  background: var(--surface-200);
+  border-radius: 3px;
+}
+
+.documents-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 3px;
+}
+
+.documents-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-600);
+}
+
 .document-card {
   transition: all 0.2s ease;
   border: 1px solid var(--surface-200);
+  flex-shrink: 0; /* Ngăn card bị co lại */
 }
 
 .document-card:hover {
@@ -382,5 +417,22 @@ const handleBatchDelete = async (names) => {
 .p-progress-spinner {
   width: 20px !important;
   height: 20px !important;
+}
+
+/* Đảm bảo table có thể scroll */
+:deep(.p-datatable-wrapper) {
+  overflow: visible;
+}
+
+:deep(.p-datatable-tbody) {
+  overflow: visible;
+}
+
+:deep(.p-datatable-tbody tr) {
+  overflow: visible;
+}
+
+:deep(.p-datatable-tbody td) {
+  overflow: visible;
 }
 </style>
