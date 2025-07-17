@@ -91,7 +91,7 @@ const getFileName = (path) => {
 
 const deleteDocument = (id, collectionId) => {
   confirm.require({
-    message: `Bạn có chắc chắn muốn xóa document này không?`,
+    message: `Bạn có chắc chắn muốn xóa tài liệu này không?`,
     header: 'Xác nhận xóa',
     icon: 'pi pi-exclamation-triangle',
     rejectProps: {
@@ -106,7 +106,12 @@ const deleteDocument = (id, collectionId) => {
     accept: async () => {
       try {
         await DocumentService.delete(id);
-        await getDocumentsByCollection(collectionId);
+        
+        // Cập nhật UI bằng cách xóa document khỏi mảng documents
+        Object.keys(collectionDocuments.value).forEach(collectionId => {
+          collectionDocuments.value[collectionId] = collectionDocuments.value[collectionId]
+            .filter(doc => doc.id !== id);
+        });
 
         toast.add({
           severity: "success",
@@ -114,6 +119,7 @@ const deleteDocument = (id, collectionId) => {
           detail: "Tài liệu đã được xóa.",
           life: 3000
         });
+
       } catch (error) {
         console.error("Lỗi xoá tài liệu", error);
         toast.add({
@@ -126,7 +132,6 @@ const deleteDocument = (id, collectionId) => {
     }
   });
 };
-
 
 
 const columns = ref([

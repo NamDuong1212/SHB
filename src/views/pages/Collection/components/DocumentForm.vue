@@ -1,6 +1,5 @@
 
 <template>
-  <Toast />
   <Dialog 
     v-model:visible="visible" 
     modal 
@@ -187,10 +186,11 @@
 import { computed, ref, onMounted } from 'vue'
 import http from '@/service/http'
 import CollectionService from '@/service/CollectionService'
-import { useToast } from 'primevue'
 
+// Emits
 const emit = defineEmits(['refresh', 'created'])
-const toast = useToast()
+
+// Reactive data
 const visible = ref(false)
 const collectionsLoading = ref(false)
 const isDropping = ref(false)
@@ -215,6 +215,7 @@ const uploadStatus = ref({
   severity: 'info'
 })
 
+// Computed properties
 const isFormValid = computed(() => {
   return formData.value.file && 
          formData.value.doc_title.trim() && 
@@ -400,13 +401,6 @@ const createDocument = async () => {
     return
   }
 
-  visible.value = false;
-  toast.add({
-    severity: "info",
-    summary: "Đang tải lên",
-    detail: "File đang được tải lên, vui lòng chờ ít phút...",
-    life: 0 
-  });
   let uploadInterval = null
   
   try {
@@ -419,12 +413,14 @@ const createDocument = async () => {
       severity: 'info'
     }
 
+    // Simulate upload progress
     uploadInterval = setInterval(() => {
       if (uploadStatus.value.progress < 90) {
         uploadStatus.value.progress += 10
       }
     }, 200)
 
+    // Create FormData
     const formDataToSend = new FormData()
     formDataToSend.append('file', formData.value.file)
     formDataToSend.append('doc_title', formData.value.doc_title)
@@ -433,6 +429,7 @@ const createDocument = async () => {
       formDataToSend.append('description', formData.value.description)
     }
 
+    // Call API
     const response = await http.post('/doc/', formDataToSend, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -481,10 +478,12 @@ const showUploadStatus = (message, severity = 'info') => {
   }, 3000)
 }
 
+// Initialize collections when component mounts
 onMounted(() => {
   fetchCollections()
 })
 
+// Expose methods for parent component
 defineExpose({
   openDialog
 })
