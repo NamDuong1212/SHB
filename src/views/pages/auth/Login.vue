@@ -40,7 +40,7 @@ const login = async () => {
 
       setTimeout(() => {
         router.push("/");
-      }, 1000;
+      }, 1000);
     } else {
       throw new Error("Không nhận được access token");
     }
