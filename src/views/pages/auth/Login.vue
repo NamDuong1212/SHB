@@ -19,11 +19,18 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 // Phương thức đăng nhập
-const login = async () => {
+const login = async (event) => {
+  // Ngăn chặn form submit mặc định
+  if (event) {
+    event.preventDefault();
+  }
+  
   submit.value = true;
   if (!username.value || !password.value) return;
 
   isLoading.value = true;
+  loginFail.value = false; // Reset trạng thái lỗi
+  
   try {
     const data = await AuthService.login(username.value, password.value);
 
@@ -47,19 +54,36 @@ const login = async () => {
 
   } catch (error) {
     loginFail.value = true;
+    
+    // Xử lý lỗi chi tiết hơn
+    let errorMessage = "Đăng nhập thất bại";
+    if (error.response?.data?.detail) {
+      errorMessage = error.response.data.detail;
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     toast.add({
       severity: 'error',
       summary: 'Đăng nhập thất bại',
-      detail: error.response?.data?.message || error.message,
-      life: 2000
+      detail: errorMessage,
+      life: 3000
     });
+    
+    console.error('Login error:', error);
   } finally {
     isLoading.value = false;
   }
 };
 
-
-
+// Xử lý khi nhấn Enter
+const handleKeyPress = (event) => {
+  if (event.key === 'Enter') {
+    login(event);
+  }
+};
 </script>
 
 <template>
@@ -69,24 +93,43 @@ const login = async () => {
     <div class="relative w-1/2 min-h-screen flex items-center">
       <div class="w-full flex mt-60 flex-col h-[75vh] max-w-[60%] mx-auto">
         <img class="w-52 absolute top-10" src="../../../assets/img/Logo_Original-1.png" alt="Logo" />
-        <div class="flex flex-col gap-4 md:gap-5 mt-6 md:mt-8">
+        
+        <!-- Wrap trong form để xử lý submit đúng cách -->
+        <form @submit.prevent="login" class="flex flex-col gap-4 md:gap-5 mt-6 md:mt-8">
           <div class="flex flex-col gap-2">
             <h2 class="m-0"><strong>Đăng nhập</strong></h2>
             <h5 class="text-zinc-900 font-medium text-base m-0">
               Xin chào bạn, đăng nhập để tiếp tục!
             </h5>
           </div>
+          
           <div>
             <FloatLabel variant="in">
-              <InputText id="text" v-model="username" class="h-14 w-full !text-lg" :invalid="submit && !username" />
-              <label class="text-normal" for="email">Username</label>
+              <InputText 
+                id="text" 
+                v-model="username" 
+                class="h-14 w-full !text-lg" 
+                :invalid="submit && !username"
+                @keypress="handleKeyPress"
+                :disabled="isLoading"
+              />
+              <label class="text-normal" for="text">Username</label>
             </FloatLabel>
-            <small class="text-red-500" v-if="!password && submit">Vui lòng nhập username</small>
+            <small class="text-red-500" v-if="!username && submit">Vui lòng nhập username</small>
           </div>
+          
           <div>
             <FloatLabel variant="in" class="mt-1">
-              <Password fluid id="password" v-model="password" :invalid="submit && !password" class="h-14 !text-lg"
-                toggleMask>
+              <Password 
+                fluid 
+                id="password" 
+                v-model="password" 
+                :invalid="submit && !password" 
+                class="h-14 !text-lg"
+                toggleMask
+                @keypress="handleKeyPress"
+                :disabled="isLoading"
+              >
                 <template #footer>
                   <p class="mt-2">Yêu cầu mật khẩu</p>
                   <ul class="pl-2 ml-2 mt-0 list-disc list-inside" style="line-height: 1.5">
@@ -102,8 +145,19 @@ const login = async () => {
             <small class="text-red-500" v-if="!password && submit">Vui lòng nhập mật khẩu</small>
           </div>
 
-          <Button :loading="isLoading" label="Đăng nhập" class="w-full h-12 md:h-14 !text-base md:!text-lg mt-1"
-            @click="login" />
+          <!-- Hiển thị thông báo lỗi nếu có -->
+          <div v-if="loginFail" class="text-red-500 text-sm bg-red-50 p-3 rounded">
+            Tên đăng nhập hoặc mật khẩu không đúng. Vui lòng thử lại.
+          </div>
+
+          <Button 
+            :loading="isLoading" 
+            label="Đăng nhập" 
+            class="w-full h-12 md:h-14 !text-base md:!text-lg mt-1"
+            type="submit"
+            :disabled="isLoading"
+          />
+          
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <Checkbox v-model="checked" inputId="remember" name="remember" binary size="large" />
@@ -111,6 +165,7 @@ const login = async () => {
             </div>
             <router-link to="/" class="text-primary text-base font-light hover:underline">Quên mật khẩu?</router-link>
           </div>
+          
           <div class="flex items-center gap-2">
             <hr class="w-full" />
             <span class="text-zinc-400 text-lg">Hoặc</span>
@@ -121,7 +176,7 @@ const login = async () => {
             Bạn chưa có tài khoản?
             <router-link to="/auth/signup" class="text-primary font-medium hover:underline">Đăng ký ngay</router-link>
           </div>
-        </div>
+        </form>
       </div>
     </div>
     <div class="w-1/2 flex justify-center">
