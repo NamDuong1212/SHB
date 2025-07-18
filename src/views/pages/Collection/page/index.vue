@@ -310,9 +310,9 @@ const handleBatchDelete = async (names) => {
       :filters="filters" :apiFunction="getAllCollection" :paginator="false" @resetFilter="initFilters">
       <template #header>
         <div class="flex gap-2">
-          <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Thêm collection"
+          <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Tạo collection"
             size="small" />
-          <Button @click="openDocumentDialog" type="button" icon="pi pi-file" severity="success" label="Tạo document"
+          <Button @click="openDocumentDialog" type="button" icon="pi pi-file" severity="success" label="Thêm document"
             size="small" />
         </div>
       </template>
