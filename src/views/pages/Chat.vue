@@ -820,7 +820,7 @@ const confirmDelete = async () => {
 const clearChat = async () => {
   messages.value = []
   try {
-    const res = await http.delete(`/history`)
+    const res = await http.delete(`/history/`)
     proxy.$notify('S', 'Xóa thành công!', toast)
   } catch (error) {
     proxy.$notify('E', error, toast)
