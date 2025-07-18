@@ -674,7 +674,7 @@ const getValueMessage = async (item) => {
 const fetchCollections = async () => {
   try {
     const response = await CollectionService.getAll();
-    Collections.value = response.data.collections;
+    Collections.value = response.data.data;
     // Tự động chọn collection đầu tiên nếu có
     if (Collections.value.length > 0) {
       selectedCollection.value = Collections.value[0].name;

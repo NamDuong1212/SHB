@@ -40,8 +40,8 @@ const getAllCollection = async (params = {}) => {
 
     const { data } = await CollectionService.getAll(filteredParams);
     if (data) {
-      collections.value = data; // Store collections for document form
-      return data.collections;
+      collections.value = data.data; // Store collections for document form
+      return data.data;
     }
   } catch (error) {
     console.error("Error fetching collections:", error);
