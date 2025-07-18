@@ -3,10 +3,11 @@
 
   <!-- Heading -->
   <!-- <div style="box-shadow: 0 0 #0000, 0 0 #0000, 0 1px 2px 0 rgb(0 0 0 / 0.05)"></div> -->
-  <div class="grid bg-gradient-to-br grid-cols-12 gap-2 lg:gap-4">
+  <div class="grid bg-gradient-to-br gap-2 lg:gap-4">
     <div class="chat-container col-span-12 lg:col-span-10 relative flex flex-col h-screen ">
       <!-- Header -->
-      <div class="chat-header rounded-xl p-3 md:p-4 mx-2 md:mx-0 shadow-xl col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div
+        class="chat-header rounded-xl p-3 md:p-4 mx-2 md:mx-0 shadow-xl col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 max-w-6xl mx-auto">
           <div class="flex items-center gap-3">
             <div
@@ -23,11 +24,8 @@
                 <h2 class="font-bold text-lg lg:text-2xl mb-0">FOXAI BOT</h2>
                 <!-- Status Indicator -->
                 <div class="flex items-center gap-1.5">
-                  <div 
-                    class="w-2 h-2 rounded-full transition-all duration-300"
-                    :class="getStatusColor()"
-                    v-tooltip.top="getStatusTooltip()"
-                  ></div>
+                  <div class="w-2 h-2 rounded-full transition-all duration-300" :class="getStatusColor()"
+                    v-tooltip.top="getStatusTooltip()"></div>
                   <span class="text-xs font-medium hidden sm:inline" :class="getStatusTextColor()">
                     {{ getStatusText() }}
                   </span>
@@ -74,17 +72,8 @@
 
             <div class="flex gap-2 justify-end sm:justify-start">
               <!-- Refresh Status Button -->
-              <Button 
-                icon="pi pi-refresh" 
-                size="small" 
-                severity="info" 
-                text 
-                rounded 
-                @click="checkChatStatus"
-                :loading="statusLoading"
-                v-tooltip.top="'Kiểm tra trạng thái hệ thống'" 
-                class="flex-shrink-0" 
-              />
+              <Button icon="pi pi-refresh" size="small" severity="info" text rounded @click="checkChatStatus"
+                :loading="statusLoading" v-tooltip.top="'Kiểm tra trạng thái hệ thống'" class="flex-shrink-0" />
               <Button icon="pi pi-trash" size="small" severity="danger" text rounded @click="showDeleteDialog"
                 v-tooltip.top="'Xóa cuộc trò chuyện'" class="flex-shrink-0" />
             </div>
@@ -118,48 +107,57 @@
             </span>
           </div>
         </div>
-
+         <!-- Suggestion Cards -->
         <ScrollPanel style="height: calc(100vh - 180px); width: 100%; " :dt="{
           bar: {
             background: ''
           }
         }" class="max-w-6xl mx-auto" ref="scrollPanel">
           <!-- Suggestion Cards -->
-          <div class="mb-6 md:mb-8 mt-2" v-if="CardBox.length > 0">
-            <h3 class="text-base md:text-lg font-medium text-gray-700 mb-3 px-2 md:px-0">Gợi ý cho bạn</h3>
-            <Carousel :value="CardBox" :numVisible="3" :numScroll="1" :responsiveOptions="carouselResponsiveOptions"
-              class="custom-carousel" :showIndicators="true" :showNavigators="true">
-              <template #item="{ data }">
-                <div class="card-item p-2">
-                  <Card
-                    class="border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 h-full rounded-xl overflow-hidden">
-                    <template #header>
-                      <div class="relative">
-                        <img :alt="data.title" :src="data.image_url" class="w-full h-36 object-cover" />
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                        <div class="absolute bottom-3 left-4 text-white font-bold text-xl">{{ data.title }}</div>
+          <!-- <div class="mb-6 md:mb-8 mt-2" v-if="CardBox.length > 0">
+        <h3 class="text-base md:text-lg font-medium text-gray-700 mb-3 px-2 md:px-0">
+          <i class="pi pi-star text-yellow-500 mr-2"></i>
+          Gợi ý cho bạn
+        </h3>
+        <Carousel :value="CardBox" :numVisible="3" :numScroll="1" :responsiveOptions="carouselResponsiveOptions"
+          class="custom-carousel" :showIndicators="true" :autoplayInterval="5000" :circular="true">
+          <template #item="{ data }">
+            <div class="card-item p-2">
+              <Card class="suggestion-card h-full">
+                <template #header>
+                  <div class="relative overflow-hidden rounded-t-xl">
+                    <img :alt="data.title" :src="data.image_url"
+                      class="w-full h-40 object-cover transform hover:scale-110 transition-transform duration-300"
+                      @error="handleImageError" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                    <div class="absolute bottom-3 left-4 text-white">
+                      <h4 class="font-bold text-xl mb-1">{{ data.title }}</h4>
+                      <span class="text-sm opacity-80">{{ data.items.length }} câu hỏi</span>
+                    </div>
+                  </div>
+                </template>
+                <template #content>
+                  <div class="suggestion-items space-y-2">
+                    <div v-for="(item, index) in data.items" :key="index" @click="getValueMessage(item)"
+                      class="suggestion-item">
+                      <div
+                        class="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-blue-50 cursor-pointer transition-all duration-200">
+                        <i class="pi pi-angle-right text-blue-500"></i>
+                        <span class="text-sm text-gray-700 hover:text-blue-700 line-clamp-1">{{ item }}</span>
                       </div>
-                    </template>
-                    <template #content>
-                      <div class="suggestion-items">
-                        <div @click="getValueMessage(item)" v-for="item in data.items"
-                          class="py-2 px-3 my-1 rounded-lg bg-gray-50 hover:bg-blue-50 cursor-pointer transition-colors duration-200 flex items-center group">
-                          <i
-                            class="pi pi-chevron-right text-blue-500 mr-2 text-xs group-hover:translate-x-1 transition-transform"></i>
-                          <p class="text-gray-700 text-sm">{{ item }}</p>
-                        </div>
-                      </div>
-                    </template>
-                  </Card>
-                </div>
-              </template>
-            </Carousel>
-          </div>
+                    </div>
+                  </div>
+                </template>
+              </Card>
+            </div>
+          </template>
+        </Carousel>
+      </div> -->
           <!-- Messages -->
           <div class="space-y-4 md:space-y-6 px-1 md:px-2 mb-60 lg:mb-40">
             <div v-for="(chat, index) in messages" :key="index">
               <!-- AI Message -->
-              <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start " v-if="chat.role == 'assistant'">
+              <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start" v-if="chat.role == 'assistant'">
                 <div
                   class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] flex-shrink-0 flex items-center justify-center shadow-md">
                   <svg stroke="white" fill="white" stroke-width="0" viewBox="0 0 24 24" height="14" width="14"
@@ -169,18 +167,28 @@
                     </path>
                   </svg>
                 </div>
-                <div
-                  class="rounded-2xl rounded-tl-none px-3 md:px-6 py-3 md:py-4 shadow-md border border-gray-100 max-w-[90%] md:max-w-[85%] col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div v-html="chat.content" class="markdown-content text-sm md:text-md leading-relaxed">
+                <div class="flex-1">
+                  <div
+                    class="rounded-2xl rounded-tl-none px-3 md:px-6 py-3 md:py-4 shadow-md border border-gray-100 max-w-[90%] md:max-w-[85%] col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div v-html="chat.content" class="markdown-content text-sm md:text-md leading-relaxed"></div>
+                  </div>
+                  <div class="text-xs mt-1 ml-2" v-if="chat.timestamp">
+                    {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
                   </div>
                 </div>
               </div>
 
+
               <!-- User Message -->
               <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start justify-end" v-if="chat.role == 'user'">
-                <div
-                  class="bg-gradient-to-r from-[#28548c] to-[#04c0f4] text-white rounded-2xl rounded-tr-none px-3 md:px-6 py-3 md:py-4 shadow-md max-w-[90%] md:max-w-[85%]">
-                  <p class="text-sm md:text-md">{{ chat.content }}</p>
+                <div class="flex-1 flex flex-col items-end">
+                  <div
+                    class="bg-gradient-to-r from-[#28548c] to-[#04c0f4] text-white rounded-2xl rounded-tr-none px-3 md:px-6 py-3 md:py-4 shadow-md max-w-[90%] md:max-w-[85%]">
+                    <p class="text-sm md:text-md">{{ chat.content }}</p>
+                  </div>
+                  <div class="text-xs mt-1 mr-2" v-if="chat.timestamp">
+                    {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
+                  </div>
                 </div>
                 <div
                   class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center shadow-md">
@@ -202,6 +210,7 @@
         </ScrollPanel>
       </div>
 
+
       <!-- Input Area -->
       <div class="chat-input fixed bottom-0 left-0 right-0  p-3 md:p-4 lg:p-5 z-40">
         <form class="flex items-center gap-2 md:gap-3 w-full max-w-4xl mx-auto" @submit="submitChat">
@@ -212,7 +221,8 @@
               :disabled="!selectedCollection || systemStatus.status === 'unhealthy'" />
             <button type="button" @click="showSuggestions = !showSuggestions"
               class="absolute  right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors"
-              v-tooltip.top="'Hiển thị gợi ý câu hỏi'" :disabled="!selectedCollection || systemStatus.status === 'unhealthy'">
+              v-tooltip.top="'Hiển thị gợi ý câu hỏi'"
+              :disabled="!selectedCollection || systemStatus.status === 'unhealthy'">
               <i class="pi pi-lightbulb text-base md:text-lg" :class="{ 'text-blue-500': showSuggestions }"></i>
             </button>
           </div>
@@ -223,7 +233,8 @@
             <i class="pi pi-send text-sm md:text-lg"></i>
           </button>
           <!-- Suggestions Popup -->
-          <div v-if="showSuggestions && suggestedPrompts.length > 0 && selectedCollection && systemStatus.status === 'healthy'"
+          <div
+            v-if="showSuggestions && suggestedPrompts.length > 0 && selectedCollection && systemStatus.status === 'healthy'"
             class="suggestions-popup absolute bottom-full left-0 right-0 mb-2 mx-2 md:mx-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden backdrop-blur-lg bg-white/95 max-w-4xl md:mx-auto">
             <div class="p-3 md:p-4 border-b border-gray-50 bg-gradient-to-r from-[#28548c] to-[#04c0f4]">
               <div class="flex items-center justify-between">
@@ -282,9 +293,9 @@
       </div>
 
     </div>
-    <div class="hidden lg:block lg:col-span-2">
+    <!-- <div class="hidden lg:block lg:col-span-2">
       <HistoryChat></HistoryChat>
-    </div>
+    </div> -->
   </div>
 
   <!-- Dialog xác nhận xóa -->
@@ -348,10 +359,10 @@ onMounted(() => {
   // Thêm event listener cho việc click bên ngoài
   document.addEventListener('click', handleClickOutside);
   document.addEventListener('keydown', handleKeyDown);
-  
+
   // Kiểm tra trạng thái hệ thống khi component mount
   checkChatStatus();
-  
+
   // Thiết lập interval kiểm tra trạng thái mỗi 30 giây
   statusCheckInterval.value = setInterval(checkChatStatus, 30000);
 });
@@ -370,16 +381,16 @@ const checkChatStatus = async () => {
   try {
     statusLoading.value = true;
     const response = await http.get('/chat/status');
-    
+
     systemStatus.value = {
       status: response.data.status || 'unknown',
       message: response.data.message || 'Không có thông tin trạng thái',
       lastChecked: new Date().toISOString()
     };
-    
+
     // Log để debug
     console.log('Chat Status:', systemStatus.value);
-    
+
   } catch (error) {
     console.error('Error checking chat status:', error);
     systemStatus.value = {
@@ -432,36 +443,36 @@ const getStatusText = () => {
 };
 
 const getStatusTooltip = () => {
-  const lastChecked = systemStatus.value.lastChecked 
+  const lastChecked = systemStatus.value.lastChecked
     ? new Date(systemStatus.value.lastChecked).toLocaleTimeString('vi-VN')
     : 'Chưa kiểm tra';
-    
+
   return `${systemStatus.value.message} (Cập nhật: ${lastChecked})`;
 };
 
 
-const carouselResponsiveOptions = [
+const carouselResponsiveOptions = ref([
   {
     breakpoint: '1400px',
     numVisible: 3,
     numScroll: 1
   },
   {
-    breakpoint: '1024px',
-    numVisible: 1,
-    numScroll: 1
-  },
-  {
-    breakpoint: '768px',
+    breakpoint: '1199px',
     numVisible: 2,
     numScroll: 1
   },
   {
-    breakpoint: '560px',
+    breakpoint: '767px',
     numVisible: 1,
     numScroll: 1
   }
-];
+]);
+
+// Add image error handler
+const handleImageError = (event) => {
+  event.target.src = '/path/to/fallback-image.png'; // Add a fallback image
+};
 
 // Đổi từ selectedCollections sang selectedCollection (string)
 const selectedCollection = ref('')
@@ -575,7 +586,7 @@ const submitChat = async (e) => {
 
 const getCard = async () => {
   try {
-    const res = await http.get('/fastapi/cards/');
+    const res = await http.get('cards/');
     CardBox.value = res.data.items;
   } catch (error) {
     console.error("Không thể tải cards:", error);
@@ -677,27 +688,27 @@ const fetchChatHistory = async () => {
   loading.value = true
   try {
     const res = await http.get(`history/`)
-    
+
     // Cập nhật để xử lý response format mới
     const historyMessages = res.data.messages || []
-    
+
     HistoryMessChat.value = historyMessages.map(el => ({
       ...el,
       // Chỉ parse markdown cho assistant messages
       content: el.role === 'assistant' ? marked.parse(el.content) : el.content,
       timestamp: el.timestamp || new Date().toISOString()
     }))
-    
+
     console.log('Chat history loaded:', HistoryMessChat.value);
-    
+
     // Gán trực tiếp thay vì spread để tránh duplicate
     messages.value = [...HistoryMessChat.value]
-    
+
     // Scroll xuống cuối sau khi load xong
     nextTick(() => {
       scrollToBottom()
     })
-    
+
   } catch (error) {
     console.error('Error fetching chat history:', error);
     proxy.$notify('E', 'Không thể tải lịch sử chat', toast)
@@ -1385,5 +1396,81 @@ const handleClickOutside = (event) => {
     contain: layout !important;
     overflow: hidden !important;
   }
+}
+
+.suggestion-card {
+  @apply border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 rounded-xl overflow-hidden;
+  background: linear-gradient(to bottom, #ffffff, #f8fafc);
+}
+
+.suggestion-card :deep(.p-card-body) {
+  padding: 1rem;
+}
+
+.suggestion-card :deep(.p-card-content) {
+  padding: 0;
+}
+
+.suggestion-items {
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 #f8fafc;
+}
+
+.suggestion-items::-webkit-scrollbar {
+  width: 4px;
+}
+
+.suggestion-items::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.suggestion-items::-webkit-scrollbar-thumb {
+  background-color: #e2e8f0;
+  border-radius: 20px;
+}
+
+.suggestion-item {
+  transform: translateX(0);
+  transition: all 0.2s ease;
+}
+
+.suggestion-item:hover {
+  transform: translateX(4px);
+}
+
+/* Custom Carousel Styling */
+.custom-carousel :deep(.p-carousel-indicators) {
+  padding: 1rem 0;
+}
+
+.custom-carousel :deep(.p-carousel-indicator button) {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.custom-carousel :deep(.p-carousel-indicator.p-highlight button) {
+  background: #3b82f6;
+  transform: scale(1.2);
+}
+
+.custom-carousel :deep(.p-carousel-prev),
+.custom-carousel :deep(.p-carousel-next) {
+  background: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  transition: all 0.2s ease;
+}
+
+.custom-carousel :deep(.p-carousel-prev:hover),
+.custom-carousel :deep(.p-carousel-next:hover) {
+  background: #3b82f6;
+  color: white;
 }
 </style>
