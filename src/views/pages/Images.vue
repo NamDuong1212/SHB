@@ -219,7 +219,7 @@ const editingCardId = ref(null)
 const fetchAllImages = async () => {
   isLoading.value = true
   try {
-    const res = await http.get(`cards`)
+    const res = await http.get(`cards/`)
     Images.value = res.data.items.sort((a, b) => a.order - b.order)
     console.log(res);
   } catch (error) {
@@ -318,7 +318,7 @@ const saveMedia = async () => {
     if (isEditMode.value) {
       res = await http.put(`/cards/${editingCardId.value}`, formData);
     } else {
-      res = await http.post('/cards', formData);
+      res = await http.post('/cards/', formData);
     }
     
     if (res.data) {
