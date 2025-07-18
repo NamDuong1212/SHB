@@ -107,7 +107,7 @@
             </span>
           </div>
         </div>
-         <!-- Suggestion Cards -->
+        <!-- Suggestion Cards -->
         <ScrollPanel style="height: calc(100vh - 180px); width: 100%; " :dt="{
           bar: {
             background: ''
@@ -336,7 +336,43 @@ import http from "@/service/http";
 import { useAuthStore } from "@/stores/useAuth";
 import { marked } from 'marked';
 import { useToast } from "primevue";
-import { computed, getCurrentInstance, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, getCurrentInstance, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from "vue";
+// Thêm vào đầu file, sau các import
+const CACHE_KEY = 'selected_collection_cache';
+const CACHE_DURATION = 10 * 60 * 1000; // 10 phút tính bằng milliseconds
+
+// Hàm tiện ích để xử lý cache
+const cacheUtils = {
+  setCache(value) {
+    const cache = {
+      value,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  },
+
+  getCache() {
+    const cache = localStorage.getItem(CACHE_KEY);
+    if (!cache) return null;
+
+    const { value, timestamp } = JSON.parse(cache);
+    const now = Date.now();
+
+    // Kiểm tra xem cache có hết hạn chưa
+    if (now - timestamp > CACHE_DURATION) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+
+    return value;
+  },
+
+  clearCache() {
+    localStorage.removeItem(CACHE_KEY);
+  }
+};
+
+
 
 const toast = useToast();
 const { proxy } = getCurrentInstance();
@@ -344,6 +380,11 @@ const CardBox = ref([]);
 const scrollPanel = ref(null);
 const loading = ref(false);
 const loadingType = ref("chat");
+// watch(selectedCollection, (newValue) => {
+//   if (newValue) {
+//     cacheUtils.setCache(newValue);
+//   }
+// });
 const store = useAuthStore()
 
 // Quản lý kiếm tra status của bot
@@ -509,10 +550,17 @@ onBeforeMount(() => {
   getCard()
   fetchCollections()
   fetchChatHistory()
+  const cachedCollection = cacheUtils.getCache();
+  if (!cachedCollection) {
+    cacheUtils.clearCache();
+  }
 })
 
 const onCollectionChange = () => {
   console.log('Collection changed to:', selectedCollection.value);
+
+  // Lưu vào cache khi thay đổi
+  cacheUtils.setCache(selectedCollection.value);
 };
 
 
@@ -673,14 +721,22 @@ const getValueMessage = async (item) => {
 
 const fetchCollections = async () => {
   try {
+    // Kiểm tra cache trước
+    const cachedCollection = cacheUtils.getCache();
     const response = await CollectionService.getAll();
     Collections.value = response.data.data;
-    // Tự động chọn collection đầu tiên nếu có
-    if (Collections.value.length > 0) {
+    if (cachedCollection && Collections.value.some(c => c.name === cachedCollection)) {
+      selectedCollection.value = cachedCollection;
+      console.log('Đã load collection từ cache:', cachedCollection);
+    }
+    else if (Collections.value.length > 0) {
       selectedCollection.value = Collections.value[0].name;
+      cacheUtils.setCache(selectedCollection.value);
     }
   } catch (error) {
     console.error("Không thể tải collections:", error);
+    // Xóa cache nếu có lỗi
+    cacheUtils.clearCache();
   }
 };
 
@@ -688,7 +744,6 @@ const fetchChatHistory = async () => {
   loading.value = true
   try {
     const res = await http.get(`history/`)
-
     // Cập nhật để xử lý response format mới
     const historyMessages = res.data.messages || []
 
