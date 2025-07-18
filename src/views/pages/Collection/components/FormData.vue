@@ -63,7 +63,8 @@ const saveData = async () => {
       proxy.$notify("S", "Thao tác thành công!", toast);
       visible.value = false;
       funClearPayload();
-      emits("loadData");
+      // Gọi emit để refresh bảng
+      emits("loadData"); 
     }
   } catch (error) {
     if (error.isValidate) {
@@ -73,7 +74,6 @@ const saveData = async () => {
     }
   }
 };
-
 const funClearPayload = () => {
   payload.value = JSON.parse(clearPayload);
 };

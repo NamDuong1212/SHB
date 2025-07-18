@@ -318,7 +318,8 @@ const handleBatchDelete = async (names) => {
       </template>
     </tableDoc>
 
-    <FormData ref="dialogRef" :loadData="refreshData"></FormData>
+    <FormData ref="dialogRef" @loadData="refreshData"></FormData>
+  <!-- ...existing code... -->
     <DocumentForm ref="documentDialogRef" :collections="collections" @refresh="refreshData"></DocumentForm>
 
     <ConfirmDialog></ConfirmDialog>
