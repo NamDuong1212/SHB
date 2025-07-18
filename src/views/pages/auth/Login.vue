@@ -35,12 +35,12 @@ const login = async () => {
         severity: 'success',
         summary: 'Thành công',
         detail: 'Đăng nhập thành công',
-        life: 3000
+        life: 2000
       });
 
       setTimeout(() => {
         router.push("/");
-      }, 3000);
+      }, 1000;
     } else {
       throw new Error("Không nhận được access token");
     }
@@ -51,7 +51,7 @@ const login = async () => {
       severity: 'error',
       summary: 'Đăng nhập thất bại',
       detail: error.response?.data?.message || error.message,
-      life: 3000
+      life: 2000
     });
   } finally {
     isLoading.value = false;
