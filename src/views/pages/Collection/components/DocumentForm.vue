@@ -264,7 +264,7 @@ const fetchCollections = async () => {
   collectionsLoading.value = true
   try {
     const response = await CollectionService.getAll()
-    Collections.value = response.data.collections
+    Collections.value = response.data.data
     
     // Tự động chọn collection đầu tiên nếu có và form chưa có collection
     if (Collections.value.length > 0 && !formData.value.collection_name) {
