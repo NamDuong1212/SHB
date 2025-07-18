@@ -219,7 +219,7 @@ const columns = ref([
         "div",
         { class: "flex gap-2" },
         [
-          h(
+          rowData.name!=="foxai" && h(
             Button,
             {
               icon: "pi pi-trash",
