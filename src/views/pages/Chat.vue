@@ -172,13 +172,13 @@
                     class="rounded-2xl rounded-tl-none px-3 md:px-6 py-3 md:py-4 shadow-md border border-gray-100 max-w-[90%] md:max-w-[85%] col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div v-html="chat.content" class="markdown-content text-sm md:text-md leading-relaxed"></div>
                   </div>
+                  <div class="p-4">
                   <div class="text-xs mt-1 ml-2" v-if="chat.timestamp">
                     {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
+                    </div>
                   </div>
                 </div>
               </div>
-
-
               <!-- User Message -->
               <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start justify-end" v-if="chat.role == 'user'">
                 <div class="flex-1 flex flex-col items-end">
@@ -186,8 +186,10 @@
                     class="bg-gradient-to-r from-[#28548c] to-[#04c0f4] text-white rounded-2xl rounded-tr-none px-3 md:px-6 py-3 md:py-4 shadow-md max-w-[90%] md:max-w-[85%]">
                     <p class="text-sm md:text-md">{{ chat.content }}</p>
                   </div>
+                  <div class="p-4">
                   <div class="text-xs mt-1 mr-2" v-if="chat.timestamp">
                     {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
+                  </div>
                   </div>
                 </div>
                 <div

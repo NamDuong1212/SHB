@@ -9,7 +9,7 @@ export default class CollectionService {
     }
 
     static async delete(name) {
-        return http.delete(`${this.api}/${name}`);
+        return http.delete(`${this.api}${name}`);
     }
 
     static async create(data) {
