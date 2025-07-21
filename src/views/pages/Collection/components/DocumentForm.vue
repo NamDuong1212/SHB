@@ -1,15 +1,32 @@
-
 <template>
   <Dialog 
-    v-model:visible="visible" 
-    modal 
-    header="Tạo document mới" 
-    :style="{ width: '50rem' }"
-    class="document-form-dialog modern-dialog" 
-    :closable="false"
-    @hide="resetForm"
-  >
-    <div class="p-4">
+  v-model:visible="visible" 
+  :modal="false"
+  :dismissableMask="!uploadStatus.uploading"
+  :closeOnEscape="!uploadStatus.uploading"
+  :draggable="!isMinimized"
+  :style="dialogStyle"
+  class="document-form-dialog" 
+  :closable="!uploadStatus.uploading"
+  @hide="resetForm"
+>
+    <!-- Custom Header -->
+    <template #header>
+      <div class="flex justify-between items-center w-full">
+        <span class="text-xl font-medium">Tạo document mới</span>
+        <Button
+          v-if="uploadStatus.uploading"
+          type="button"
+          :icon="isMinimized ? 'pi pi-window-maximize' : 'pi pi-window-minimize'"
+          class="p-button-text p-button-sm"
+          @click="isMinimized = !isMinimized"
+          v-tooltip.left="isMinimized ? 'Phóng to' : 'Thu nhỏ'"
+        />
+      </div>
+    </template>
+
+    <!-- Main Content -->
+    <div v-if="!isMinimized" class="p-4">
       <!-- Form Fields -->
       <div class="space-y-4 mb-6">
         <!-- Document Title -->
@@ -68,7 +85,6 @@
             />
           </div>
           <small v-if="errors.collection_name" class="p-error">{{ errors.collection_name }}</small>
-          <small v-else class="text-gray-500 mt-1">Chọn collection để phân loại tài liệu</small>
         </div>
         
         <!-- Description -->
@@ -87,8 +103,11 @@
 
       <!-- Upload Area -->
       <div
-        class="upload-area relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-all duration-300 cursor-pointer mb-6"
-        :class="uploadAreaClasses" 
+        class="upload-area relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-all duration-300 cursor-pointer"
+        :class="{ 
+          'border-primary-500 bg-primary-50': isDropping,
+          'border-gray-300 hover:border-primary-500 hover:bg-gray-50': !isDropping 
+        }"
         @dragenter.prevent="isDropping = true" 
         @dragleave.prevent="isDropping = false"
         @dragover.prevent="isDropping = true" 
@@ -97,7 +116,7 @@
       >
         <!-- Upload Prompt -->
         <div v-if="!formData.imgPreview" class="text-center">
-          <UploadIcon :is-dropping="isDropping" />
+          <i class="pi pi-upload text-4xl mb-4" :class="{ 'upload-animation': isDropping }"></i>
           <h3 class="font-medium text-gray-700 mb-1">Kéo thả file vào đây</h3>
           <p class="text-sm text-gray-500 mb-3">hoặc click để chọn file</p>
           <div class="text-xs text-gray-400">PDF, DOCX, TXT, CSV, XLSX (tối đa 20MB)</div>
@@ -106,34 +125,27 @@
         <!-- File Preview -->
         <div v-else class="preview-container relative w-full">
           <div class="preview-wrapper relative rounded-lg overflow-hidden shadow-md mx-auto max-w-sm">
-            <!-- Image Preview -->
-            <div v-if="isImageFile" class="preview-image">
-              <img :src="formData.imgPreview" class="w-full object-cover max-h-56" alt="Preview" />
-            </div>
-
-            <!-- File Preview -->
-            <div v-else class="file-preview-box p-6 bg-gray-50 flex items-center justify-center min-h-[200px]">
+            <!-- Preview Content -->
+            <div class="file-preview-box p-6 bg-gray-50 flex items-center justify-center min-h-[200px]">
               <div class="text-center">
-                <FileIcon :file-type="fileType" />
-                <p class="text-lg font-bold mt-3">{{ fileExtension.toUpperCase() }}</p>
+                <i :class="[fileIconClass, 'text-4xl mb-3']"></i>
+                <p class="text-lg font-bold file-extension">{{ fileExtension.toUpperCase() }}</p>
               </div>
             </div>
 
             <!-- Remove Button -->
-            <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-40 transition-all flex items-center justify-center">
-              <button 
-                @click.stop="resetPreview"
-                class="opacity-0 hover:opacity-100 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-all duration-300"
-              >
-                <i class="pi pi-times"></i>
-              </button>
-            </div>
+            <button 
+              @click.stop="resetPreview"
+              class="remove-preview-btn absolute top-2 right-2 opacity-0 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-all duration-300"
+            >
+              <i class="pi pi-times"></i>
+            </button>
           </div>
           
           <!-- File Info -->
           <div class="text-center mt-3">
             <p class="text-sm font-medium text-gray-700">{{ formData.file?.name }}</p>
-            <p class="text-xs text-gray-500">{{ formData.file ? formatFileSize(formData.file.size) : '' }}</p>
+            <p class="text-xs text-gray-500">{{ formatFileSize(formData.file?.size) }}</p>
           </div>
         </div>
 
@@ -141,12 +153,12 @@
           type="file" 
           ref="fileInput"
           class="hidden" 
-          @change="handleFileSelect($event)" 
+          @change="handleFileSelect" 
           accept=".pdf,.doc,.docx,.txt,.csv,.xlsx" 
         />
       </div>
 
-      <div v-if="errors.file" class="mb-4">
+      <div v-if="errors.file" class="mt-2">
         <small class="p-error">{{ errors.file }}</small>
       </div>
 
@@ -156,7 +168,25 @@
         <Message :severity="uploadStatus.severity" :closable="false">{{ uploadStatus.message }}</Message>
       </div>
     </div>
+
+    <!-- Minimized View -->
+    <div v-else class="p-4">
+      <div class="text-center mb-3">
+        <h3 class="text-lg font-medium mb-2">{{ formData.doc_title }}</h3>
+        <p class="text-sm text-gray-600 mb-2">
+          Collection: {{ formData.collection_name }}
+        </p>
+        <p class="text-sm text-gray-500">
+          {{ formData.file?.name }} ({{ formatFileSize(formData.file?.size) }})
+        </p>
+      </div>
+      <ProgressBar :value="uploadStatus.progress" class="mb-2" />
+      <Message :severity="uploadStatus.severity" class="text-sm">
+        {{ uploadStatus.message }}
+      </Message>
+    </div>
     
+    <!-- Footer -->
     <template #footer>
       <div class="flex justify-end gap-3">
         <Button 
@@ -171,11 +201,11 @@
         <Button 
           size="small" 
           type="button" 
-          label="Tạo document" 
+          :label="uploadStatus.uploading ? 'Đang tạo...' : 'Tạo document'"
           icon="pi pi-check" 
           @click="createDocument"
           :loading="uploadStatus.uploading" 
-          :disabled="!isFormValid"
+          :disabled="!isFormValid || uploadStatus.uploading"
         />
       </div>
     </template>
@@ -187,7 +217,6 @@ import { computed, ref, onMounted } from 'vue'
 import http from '@/service/http'
 import CollectionService from '@/service/CollectionService'
 
-// Emits
 const emit = defineEmits(['refresh', 'created'])
 
 // Reactive data
@@ -196,7 +225,18 @@ const collectionsLoading = ref(false)
 const isDropping = ref(false)
 const fileInput = ref(null)
 const Collections = ref([])
+const dialogStyle = computed(() => ({
+  width: isMinimized.value ? '300px' : '50rem',
+  margin: isMinimized.value ? '0' : 'auto',
+  position: 'fixed',
+  bottom: isMinimized.value ? '20px' : 'auto',
+  right: isMinimized.value ? '20px' : '50%',
+  transform: isMinimized.value ? 'none' : 'translateX(50%)',
+  transition: 'all 0.3s ease-in-out',
+  zIndex: 1000
+}))
 
+const isMinimized = ref(false)
 const formData = ref({
   doc_title: '',
   collection_name: '',
@@ -215,7 +255,7 @@ const uploadStatus = ref({
   severity: 'info'
 })
 
-// Computed properties
+
 const isFormValid = computed(() => {
   return formData.value.file && 
          formData.value.doc_title.trim() && 
@@ -264,7 +304,7 @@ const fetchCollections = async () => {
   collectionsLoading.value = true
   try {
     const response = await CollectionService.getAll()
-    Collections.value = response.data.collections
+    Collections.value = response.data.data
     
     // Tự động chọn collection đầu tiên nếu có và form chưa có collection
     if (Collections.value.length > 0 && !formData.value.collection_name) {
@@ -401,6 +441,7 @@ const createDocument = async () => {
     return
   }
 
+  isMinimized.value = true
   let uploadInterval = null
   
   try {
@@ -409,7 +450,7 @@ const createDocument = async () => {
       show: true,
       uploading: true,
       progress: 0,
-      message: 'Đang tạo document...',
+      message: 'Đang tải lên document...',
       severity: 'info'
     }
 
@@ -444,9 +485,18 @@ const createDocument = async () => {
       emit('created', response.data)
       emit('refresh')
 
+      uploadStatus.value = {
+      show: true,
+      uploading: false,
+      progress: 100,
+      message: `Document "${formData.value.doc_title}" đã được tạo thành công!`,
+      severity: 'success'
+    }
+
       setTimeout(() => {
-        visible.value = false
-      }, 1000)
+      visible.value = false
+      isMinimized.value = false // Reset minimized state
+    }, 2000)
     }
   } catch (error) {
     console.error('Error creating document:', error)
@@ -460,6 +510,13 @@ const createDocument = async () => {
       showUploadStatus('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.', 'error')
     } else {
       showUploadStatus('Có lỗi xảy ra khi tạo document', 'error')
+    }
+    uploadStatus.value = {
+      show: true,
+      uploading: false,
+      progress: 0,
+      message: 'Có lỗi xảy ra khi tạo document',
+      severity: 'error'
     }
   }
 }
@@ -549,5 +606,38 @@ defineExpose({
   color: #ef4444;
   font-size: 0.75rem;
   margin-top: 0.25rem;
+}
+
+.document-form-dialog {
+  transition: all 0.3s ease-in-out;
+}
+
+:deep(.p-dialog) {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+:deep(.p-dialog-mask) {
+  background-color: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+
+:deep(.p-dialog-header),
+:deep(.p-dialog-content),
+:deep(.p-dialog-footer) {
+  background-color: white;
+}
+
+.minimized-view {
+  opacity: 0.95;
+}
+
+.minimized-view:hover {
+  opacity: 1;
+}
+
+/* Ensure dialog content is scrollable if needed */
+:deep(.p-dialog-content) {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
 }
 </style>

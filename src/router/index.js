@@ -20,28 +20,33 @@ const router = createRouter({
                     component: () => import('@/views/Dashboard.vue')
                 },
                 // === Thiết lập hệ thống ===
-                {
-                    path: '/co-cau-to-chuc',
-                    name: 'co-cau-to-chuc',
-                    component: () => import('@/views/pages/ThietLapHeThong/CoCauToChuc/CoCauToChuc/page/index.vue')
-                },
+                // {
+                //     path: '/co-cau-to-chuc',
+                //     name: 'co-cau-to-chuc',
+                //     component: () => import('@/views/pages/ThietLapHeThong/CoCauToChuc/CoCauToChuc/page/index.vue')
+                // },
 
                 // === Quản lý người dùng ===
-                {
-                    path: '/danh-muc-nguoi-dung',
-                    name: 'danh-muc-nguoi-dung',
-                    component: () => import('@/views/pages/QuanLyNguoiDung/page/index.vue')
-                },
-                {
-                    path: '/danh-muc-vai-tro',
-                    name: 'danh-muc-vai-tro',
-                    component: () => import('@/views/pages/QuanLyVaiTro/page/index.vue')
-                },
+                // {
+                //     path: '/danh-muc-nguoi-dung',
+                //     name: 'danh-muc-nguoi-dung',
+                //     component: () => import('@/views/pages/QuanLyNguoiDung/page/index.vue')
+                // },
+                // {
+                //     path: '/danh-muc-vai-tro',
+                //     name: 'danh-muc-vai-tro',
+                //     component: () => import('@/views/pages/QuanLyVaiTro/page/index.vue')
+                // },
                 // === Quản lý collection ===
                 {
                     path: '/danh-sach-collection',
                     name: 'danh-sach-collection',
                     component: () => import('@/views/pages/Collection/page/index.vue')
+                },
+                {
+                    path:'/test-file',
+                    name: 'test-file',
+                    component: () => import('@/views/pages/TestFile.vue')
                 },
 
                 // === Quản lý FAQ ===

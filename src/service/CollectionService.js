@@ -5,11 +5,11 @@ export default class CollectionService {
     static api = "collection/";
 
     static async getAll(params = {}) {
-        return http.get(this.api, { params });
+        return http.get(`${this.api}/all`, { params });
     }
 
     static async delete(name) {
-        return http.delete(`${this.api}/${name}`);
+        return http.delete(`${this.api}${name}`);
     }
 
     static async create(data) {

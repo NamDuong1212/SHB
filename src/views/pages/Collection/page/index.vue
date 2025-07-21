@@ -11,7 +11,6 @@ import FormData from "../components/FormData.vue";
 import DocumentForm from "../components/DocumentForm.vue";
 import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
-import { get } from "lodash";
 import ProgressSpinner from 'primevue/progressspinner';
 import DocumentService from "@/service/DocumentService";
 import { useToast } from "primevue/usetoast";
@@ -33,15 +32,14 @@ const loadingDocuments = ref({});
 
 const getAllCollection = async (params = {}) => {
   try {
-    // Remove pagination parameters and only keep filtering params if needed
     const filteredParams = {};
     if (params.Search) filteredParams.Search = params.Search;
     if (params.isActive) filteredParams.isActive = params.isActive;
 
     const { data } = await CollectionService.getAll(filteredParams);
     if (data) {
-      collections.value = data; // Store collections for document form
-      return data.collections;
+      collections.value = data.data;
+      return data.data;
     }
   } catch (error) {
     console.error("Error fetching collections:", error);
@@ -89,7 +87,25 @@ const getFileName = (path) => {
   return path.split('/').pop();
 };
 
-const deleteDocument = (id, collectionId) => {
+const downloadDocument = (doc) => {
+  if (doc.download_link) {
+    const a = document.createElement('a');
+    a.href = doc.download_link;
+    a.download = getFileName(doc.source_file);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } else {
+    toast.add({
+      severity: "error",
+      summary: "Lỗi",
+      detail: "Không có đường dẫn tải về cho tài liệu này.",
+      life: 3000
+    });
+  }
+};
+
+const deleteDocument = (id) => {
   confirm.require({
     message: `Bạn có chắc chắn muốn xóa tài liệu này không?`,
     header: 'Xác nhận xóa',
@@ -106,7 +122,7 @@ const deleteDocument = (id, collectionId) => {
     accept: async () => {
       try {
         await DocumentService.delete(id);
-        
+
         // Cập nhật UI bằng cách xóa document khỏi mảng documents
         Object.keys(collectionDocuments.value).forEach(collectionId => {
           collectionDocuments.value[collectionId] = collectionDocuments.value[collectionId]
@@ -119,7 +135,6 @@ const deleteDocument = (id, collectionId) => {
           detail: "Tài liệu đã được xóa.",
           life: 3000
         });
-
       } catch (error) {
         console.error("Lỗi xoá tài liệu", error);
         toast.add({
@@ -160,48 +175,56 @@ const columns = ref([
           ]
         ),
         expandedRows.value[rowData.id] &&
-        h("div", {
-          class: "documents-container pl-4 mt-2 transition-all transition-duration-300"
-        }, [
-          // Thêm container với max-height và scroll
-          h("div", {
-            class: "documents-scroll-container"
-          }, [
-            collectionDocuments.value[rowData.id]?.map(doc =>
-              h("div", {
-                class: "document-card p-3 mb-2 surface-50 border-round-lg shadow-1"
-              }, [
-                // Dòng tiêu đề + loại file + tên file
-                h("div", { class: "flex justify-between items-center" }, [
-                  h("div", { class: "flex items-center gap-2" }, [
-                    h("i", { class: getFileIconClass(doc.source_file) }),
-                    h("span", { class: "font-semibold" }, doc.title),
-                    h("span", { class: "text-sm text-500" }, `(${getFileName(doc.source_file)})`)
-                  ]),
+        h(
+          "div",
+          {
+            class: "documents-container pl-4 mt-2 transition-all transition-duration-300"
+          },
+          [
+            h(
+              "div",
+              {
+                class: "documents-scroll-container"
+              },
+              [
+                collectionDocuments.value[rowData.id]?.map((doc) =>
+                  h(
+                    "div",
+                    {
+                      class: "document-card p-3 mb-2 surface-50 border-round-lg shadow-1"
+                    },
+                    [
+                      // Dòng tiêu đề + loại file + tên file
+                      h("div", { class: "flex justify-between items-center" }, [
+                        h("div", { class: "flex items-center gap-2" }, [
+                          h("i", { class: getFileIconClass(doc.source_file) }),
+                          h("span", { class: "font-semibold cursor-pointer hover:underline", onClick: () => downloadDocument(doc) }, doc.title),
+                          h("span", { class: "text-sm text-500" }, `(${getFileName(doc.source_file)})`)
+                        ]),
 
-                  h(Button, {
-                    icon: "pi pi-trash",
-                    class: "p-button-sm",
-                    severity: "danger",
-                    outlined: true,
-                    onClick: () => deleteDocument(doc.id)
-                  })
-                ]),
-                // Dòng info phụ: Ngày + size
-                h("div", { class: "mt-2 flex gap-3 text-sm" }, [
-                  h("span", { class: "text-600" }, [
-                    h("i", { class: "pi pi-calendar-times mr-2" }),
-                    new Date(doc.created_at).toLocaleDateString('vi-VN')
-                  ]),
-                  h("span", { class: "text-600" }, [
-                    h("i", { class: "pi pi-file mr-2" }),
-                    `${(doc.file_size / 1024).toFixed(1)} KB`
-                  ])
-                ])
+                        h(Button, {
+                          icon: "pi pi-trash",
+                          class: "p-button-sm",
+                          severity: "danger",
+                          outlined: true,
+                          onClick: () => deleteDocument(doc.id)
+                        })
+                      ]),
+                      // Dòng info phụ: Ngày + size
+                      h("div", { class: "mt-2 flex gap-3 text-sm" }, [
+                        h("span", { class: "text-600" }, [
+                          h("i", { class: "pi pi-calendar-times mr-2" }),
+                          new Date(doc.created_at).toLocaleDateString('vi-VN')
+                        ]),
+                        h("span", { class: "text-600" }, [
+                          h("i", { class: "pi pi-file mr-2" }),
+                          `${(doc.file_size / 1024).toFixed(1)} KB`
+                        ])
+                      ])
+                    ])
+                )
               ])
-            )
           ])
-        ])
       ])
   },
   {
@@ -219,7 +242,7 @@ const columns = ref([
         "div",
         { class: "flex gap-2" },
         [
-          h(
+          rowData.name !== "foxai" && h(
             Button,
             {
               icon: "pi pi-trash",
@@ -310,15 +333,15 @@ const handleBatchDelete = async (names) => {
       :filters="filters" :apiFunction="getAllCollection" :paginator="false" @resetFilter="initFilters">
       <template #header>
         <div class="flex gap-2">
-          <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Thêm collection"
+          <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Tạo collection"
             size="small" />
-          <Button @click="openDocumentDialog" type="button" icon="pi pi-file" severity="success" label="Tạo document"
+          <Button @click="openDocumentDialog" type="button" icon="pi pi-file" severity="success" label="Thêm document"
             size="small" />
         </div>
       </template>
     </tableDoc>
 
-    <FormData ref="dialogRef" :loadData="refreshData"></FormData>
+    <FormData ref="dialogRef" @loadData="refreshData"></FormData>
     <DocumentForm ref="documentDialogRef" :collections="collections" @refresh="refreshData"></DocumentForm>
 
     <ConfirmDialog></ConfirmDialog>
@@ -361,14 +384,6 @@ const handleBatchDelete = async (names) => {
   margin-left: 10px;
 }
 
-/* Container với scroll cho documents */
-.documents-scroll-container {
-  max-height: 400px; /* Giới hạn chiều cao */
-  overflow-y: auto; /* Cho phép scroll dọc */
-  overflow-x: hidden; /* Ẩn scroll ngang */
-  padding-right: 8px; /* Tạo khoảng cách cho scrollbar */
-}
-
 /* Custom scrollbar */
 .documents-scroll-container::-webkit-scrollbar {
   width: 6px;
@@ -391,7 +406,8 @@ const handleBatchDelete = async (names) => {
 .document-card {
   transition: all 0.2s ease;
   border: 1px solid var(--surface-200);
-  flex-shrink: 0; /* Ngăn card bị co lại */
+  flex-shrink: 0;
+  /* Ngăn card bị co lại */
 }
 
 .document-card:hover {

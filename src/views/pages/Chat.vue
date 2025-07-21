@@ -107,7 +107,7 @@
             </span>
           </div>
         </div>
-         <!-- Suggestion Cards -->
+        <!-- Suggestion Cards -->
         <ScrollPanel style="height: calc(100vh - 180px); width: 100%; " :dt="{
           bar: {
             background: ''
@@ -172,13 +172,13 @@
                     class="rounded-2xl rounded-tl-none px-3 md:px-6 py-3 md:py-4 shadow-md border border-gray-100 max-w-[90%] md:max-w-[85%] col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div v-html="chat.content" class="markdown-content text-sm md:text-md leading-relaxed"></div>
                   </div>
+                  <div class="p-4">
                   <div class="text-xs mt-1 ml-2" v-if="chat.timestamp">
                     {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
+                    </div>
                   </div>
                 </div>
               </div>
-
-
               <!-- User Message -->
               <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start justify-end" v-if="chat.role == 'user'">
                 <div class="flex-1 flex flex-col items-end">
@@ -186,8 +186,10 @@
                     class="bg-gradient-to-r from-[#28548c] to-[#04c0f4] text-white rounded-2xl rounded-tr-none px-3 md:px-6 py-3 md:py-4 shadow-md max-w-[90%] md:max-w-[85%]">
                     <p class="text-sm md:text-md">{{ chat.content }}</p>
                   </div>
+                  <div class="p-4">
                   <div class="text-xs mt-1 mr-2" v-if="chat.timestamp">
                     {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
+                  </div>
                   </div>
                 </div>
                 <div
@@ -228,8 +230,8 @@
           </div>
           <button type="submit"
             class="p-3 shadow-xl md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] hover:from-[#28548c] hover:to-[#04c0f4] text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
-            :disabled="!user_question.length || !selectedCollection || systemStatus.status === 'unhealthy'"
-            :class="{ 'opacity-50': !user_question.length || !selectedCollection || systemStatus.status === 'unhealthy' }">
+            :disabled="!user_question.length || !selectedCollection || systemStatus.status === 'unhealthy' || isStreaming"
+            :class="{ 'opacity-50': !user_question.length || !selectedCollection || systemStatus.status === 'unhealthy' || isStreaming }">
             <i class="pi pi-send text-sm md:text-lg"></i>
           </button>
           <!-- Suggestions Popup -->
@@ -336,7 +338,45 @@ import http from "@/service/http";
 import { useAuthStore } from "@/stores/useAuth";
 import { marked } from 'marked';
 import { useToast } from "primevue";
-import { computed, getCurrentInstance, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, getCurrentInstance, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from "vue";
+// Thêm vào đầu file, sau các import
+const CACHE_KEY = 'selected_collection_cache';
+const CACHE_DURATION = 10 * 60 * 1000; // 10 phút tính bằng milliseconds
+
+const isStreaming = ref(false);
+
+// Hàm tiện ích để xử lý cache
+const cacheUtils = {
+  setCache(value) {
+    const cache = {
+      value,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  },
+
+  getCache() {
+    const cache = localStorage.getItem(CACHE_KEY);
+    if (!cache) return null;
+
+    const { value, timestamp } = JSON.parse(cache);
+    const now = Date.now();
+
+    // Kiểm tra xem cache có hết hạn chưa
+    if (now - timestamp > CACHE_DURATION) {
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+
+    return value;
+  },
+
+  clearCache() {
+    localStorage.removeItem(CACHE_KEY);
+  }
+};
+
+
 
 const toast = useToast();
 const { proxy } = getCurrentInstance();
@@ -344,6 +384,11 @@ const CardBox = ref([]);
 const scrollPanel = ref(null);
 const loading = ref(false);
 const loadingType = ref("chat");
+// watch(selectedCollection, (newValue) => {
+//   if (newValue) {
+//     cacheUtils.setCache(newValue);
+//   }
+// });
 const store = useAuthStore()
 
 // Quản lý kiếm tra status của bot
@@ -380,28 +425,56 @@ onBeforeUnmount(() => {
 const checkChatStatus = async () => {
   try {
     statusLoading.value = true;
-    const response = await http.get('/chat/status');
+    const { message, status, pipeline_info } = (await http.get('/chat/status')).data;
+
+    const severityMap = {
+      healthy: 'success',
+      degraded: 'warn',
+      unhealthy: 'error'
+    };
+    const toastSeverity = severityMap[status] || 'info';
+
+    const statusLabelMap = {
+      healthy: 'Bình thường',
+      degraded: 'Hạn chế',
+      unhealthy: 'Lỗi'
+    };
+    const statusLabel = statusLabelMap[status] || 'Không xác định';
+    const detail = [
+      message,
+    ].join(' | ');
 
     systemStatus.value = {
-      status: response.data.status || 'unknown',
-      message: response.data.message || 'Không có thông tin trạng thái',
+      status,
+      message,
       lastChecked: new Date().toISOString()
     };
 
-    // Log để debug
-    console.log('Chat Status:', systemStatus.value);
+    toast.add({
+      severity: toastSeverity,
+      summary: `Trạng thái hệ thống: ${statusLabel}`,
+      detail,
+      life: 2000
+    });
 
   } catch (error) {
-    console.error('Error checking chat status:', error);
+    console.error('Lỗi khi kiểm tra trạng thái chat:', error);
     systemStatus.value = {
       status: 'unhealthy',
       message: 'Không thể kết nối đến hệ thống chat',
       lastChecked: new Date().toISOString()
     };
+    toast.add({
+      severity: 'error',
+      summary: 'Trạng thái hệ thống: Lỗi',
+      detail: systemStatus.value.message,
+      life: 2000
+    });
   } finally {
     statusLoading.value = false;
   }
 };
+
 
 const getStatusColor = () => {
   switch (systemStatus.value.status) {
@@ -509,18 +582,25 @@ onBeforeMount(() => {
   getCard()
   fetchCollections()
   fetchChatHistory()
+  const cachedCollection = cacheUtils.getCache();
+  if (!cachedCollection) {
+    cacheUtils.clearCache();
+  }
 })
 
 const onCollectionChange = () => {
   console.log('Collection changed to:', selectedCollection.value);
+
+  // Lưu vào cache khi thay đổi
+  cacheUtils.setCache(selectedCollection.value);
 };
 
 
 const submitChat = async (e) => {
   e.preventDefault();
-  if (!user_question.value.trim() || !selectedCollection.value) return;
 
-  // Nếu hệ thống status là unhealthy, hiển thị thông báo và không gửi yêu cầu
+  // Kiểm tra các điều kiện
+  if (!user_question.value.trim() || !selectedCollection.value || isStreaming.value) return;
   if (systemStatus.value.status === 'unhealthy') {
     proxy.$notify('W', 'Hệ thống đang gặp sự cố, vui lòng thử lại sau', toast);
     return;
@@ -528,6 +608,7 @@ const submitChat = async (e) => {
 
   loading.value = true;
   loadingType.value = "chat";
+  isStreaming.value = true;
 
   if (systemStatus.value.status === 'degraded') {
     proxy.$notify('W', 'Hệ thống đang hoạt động hạn chế, phản hồi có thể chậm hơn', toast);
@@ -571,6 +652,7 @@ const submitChat = async (e) => {
       scrollToBottom();
     }
 
+
   } catch (error) {
     loading.value = false;
     console.error("Chat API Error:", error);
@@ -581,7 +663,9 @@ const submitChat = async (e) => {
   } finally {
     scrollToBottom();
     loading.value = false;
+    isStreaming.value = false;
   }
+
 };
 
 const getCard = async () => {
@@ -605,8 +689,8 @@ function scrollToBottom() {
 }
 
 const getValueMessage = async (item) => {
-  if (!selectedCollection.value) {
-    proxy.$notify('W', 'Vui lòng chọn collection trước khi gửi tin nhắn', toast);
+  if (!selectedCollection.value || isStreaming.value) {
+    proxy.$notify('W', 'Vui lòng đợi câu trả lời hiện tại hoàn thành', toast);
     return;
   }
 
@@ -635,6 +719,8 @@ const getValueMessage = async (item) => {
   scrollToBottom();
   loading.value = true;
   loadingType.value = "skeleton";
+
+  isStreaming.value = true;
 
   try {
     const response = await http.post("/chat/internal", data);
@@ -668,19 +754,28 @@ const getValueMessage = async (item) => {
   } finally {
     scrollToBottom();
     loading.value = false;
+    isStreaming.value = false;
   }
 };
 
 const fetchCollections = async () => {
   try {
+    // Kiểm tra cache trước
+    const cachedCollection = cacheUtils.getCache();
     const response = await CollectionService.getAll();
-    Collections.value = response.data.collections;
-    // Tự động chọn collection đầu tiên nếu có
-    if (Collections.value.length > 0) {
+    Collections.value = response.data.data;
+    if (cachedCollection && Collections.value.some(c => c.name === cachedCollection)) {
+      selectedCollection.value = cachedCollection;
+      console.log('Đã load collection từ cache:', cachedCollection);
+    }
+    else if (Collections.value.length > 0) {
       selectedCollection.value = Collections.value[0].name;
+      cacheUtils.setCache(selectedCollection.value);
     }
   } catch (error) {
     console.error("Không thể tải collections:", error);
+    // Xóa cache nếu có lỗi
+    cacheUtils.clearCache();
   }
 };
 
@@ -688,7 +783,6 @@ const fetchChatHistory = async () => {
   loading.value = true
   try {
     const res = await http.get(`history/`)
-
     // Cập nhật để xử lý response format mới
     const historyMessages = res.data.messages || []
 
@@ -728,7 +822,7 @@ const confirmDelete = async () => {
 const clearChat = async () => {
   messages.value = []
   try {
-    const res = await http.delete(`/history`)
+    const res = await http.delete(`/history/`)
     proxy.$notify('S', 'Xóa thành công!', toast)
   } catch (error) {
     proxy.$notify('E', error, toast)
