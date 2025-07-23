@@ -39,6 +39,11 @@ const model = ref([
         to: "/danh-sach-collection",
       },
       {
+        label: "Test Upload File",
+        icon: "pi pi-fw pi-file",
+        to: "/test-file",
+      },
+      {
         label: "Thiết lập hệ thống",
         icon: "pi pi-sliders-h",
         items: [
