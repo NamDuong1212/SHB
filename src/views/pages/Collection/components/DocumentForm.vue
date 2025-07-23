@@ -302,8 +302,8 @@ const fileIconClass = computed(() => {
 const fetchCollections = async () => {
   collectionsLoading.value = true
   try {
-    const response = await CollectionService.getAll()
-    Collections.value = response.data.data
+    const response = await CollectionService.getByUser()
+    Collections.value = response.data
     
     // Tự động chọn collection đầu tiên nếu có và form chưa có collection
     if (Collections.value.length > 0 && !formData.value.collection_name) {

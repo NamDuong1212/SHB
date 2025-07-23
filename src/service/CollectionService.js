@@ -11,6 +11,9 @@ export default class CollectionService {
     static async delete(name) {
         return http.delete(`${this.api}${name}`);
     }
+    static async getByUser(params = {}) {
+        return http.get(`${this.api}`, { params });
+    }
 
     static async create(data) {
         return await http.post(`${this.api}`, data);
