@@ -43,11 +43,11 @@ const router = createRouter({
                     name: 'danh-sach-collection',
                     component: () => import('@/views/pages/Collection/page/index.vue')
                 },
-                {
-                    path:'/test-file',
-                    name: 'test-file',
-                    component: () => import('@/views/pages/TestFile.vue')
-                },
+                // {
+                //     path:'/test-file',
+                //     name: 'test-file',
+                //     component: () => import('@/views/pages/TestFile.vue')
+                // },
 
                 // === Quản lý FAQ ===
                 // {

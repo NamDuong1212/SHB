@@ -234,6 +234,18 @@ const columns = ref([
     renderValue: (rowData) => h("span", {}, rowData.description || ""),
   },
   {
+    field:"username",
+    header: "Người tạo",
+    display: true,
+    renderValue: (rowData) => h("span", {}, rowData.username || "Không xác định"),
+  },
+  {
+    field:"created_at",
+    header: "Ngày tạo",
+    display: true,
+    renderValue: (rowData) => h("span", {}, new Date(rowData.created_at).toLocaleDateString('vi-VN')),
+  },
+  {
     field: "actions",
     header: "Thao tác",
     display: true,

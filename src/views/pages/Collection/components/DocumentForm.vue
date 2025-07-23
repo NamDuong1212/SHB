@@ -504,18 +504,36 @@ const createDocument = async () => {
       clearInterval(uploadInterval)
     }
     
+    let errorMessage = 'Có lỗi xảy ra khi tạo document'
+    
     if (error.response?.status === 401) {
-      showUploadStatus('Không có quyền truy cập. Vui lòng đăng nhập lại.', 'error')
+      errorMessage = 'Không có quyền truy cập. Vui lòng đăng nhập lại.'
     } else if (error.response?.status === 422) {
-      showUploadStatus('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.', 'error')
-    } else {
-      showUploadStatus('Có lỗi xảy ra khi tạo document', 'error')
+      errorMessage = 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.'
+    } else if (error.response?.status === 404) {
+      const responseData = error.response?.data
+      if (responseData && responseData.detail && responseData.detail.includes('Collection') && responseData.detail.includes('not found')) {
+        errorMessage = 'Bạn không có quyền thêm tài liệu vào collection này'
+      } else {
+        errorMessage = 'Không tìm thấy tài nguyên yêu cầu'
+      }
+    } else if (error.response?.status === 403) {
+      errorMessage = 'Bạn không có quyền thêm tài liệu vào collection này'
+    } else if (error.response?.data?.detail) {
+      const detail = error.response.data.detail
+      if (detail.includes('Collection') && detail.includes('not found')) {
+        errorMessage = 'Bạn không có quyền thêm tài liệu vào collection này'
+      } else {
+        errorMessage = detail
+      }
     }
+    
+    showUploadStatus(errorMessage, 'error')
     uploadStatus.value = {
       show: true,
       uploading: false,
       progress: 0,
-      message: 'Có lỗi xảy ra khi tạo document',
+      message: errorMessage,
       severity: 'error'
     }
   }
