@@ -2,6 +2,7 @@
 import { useLayout } from "@/layout/composables/layout";
 import { updatePreset } from "@primeuix/themes";
 import { onMounted } from "vue";
+import GlobalDocumentForm from '@/components/GlobalDocumentForm.vue';
 
 const { layoutConfig } = useLayout();
 
@@ -20,9 +21,9 @@ const gradientPalette = {
 };
 
 updatePreset({
-  semantic: {
-    primary: gradientPalette,
-    colorScheme: {
+    semantic: {
+      primary: gradientPalette,
+      colorScheme: {
       light: {
         primary: {
           color: "linear-gradient(to right, #04c0f4, #28548c)",
@@ -59,6 +60,7 @@ updatePreset({
 
 <template>
   <router-view />
+  <GlobalDocumentForm />
 </template>
 
 <style scoped></style>

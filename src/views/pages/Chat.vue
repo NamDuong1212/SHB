@@ -173,8 +173,8 @@
                     <div v-html="chat.content" class="markdown-content text-sm md:text-md leading-relaxed"></div>
                   </div>
                   <div class="p-4">
-                  <div class="text-xs mt-1 ml-2" v-if="chat.timestamp">
-                    {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
+                    <div class="text-xs mt-1 ml-2" v-if="chat.timestamp">
+                      {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
                     </div>
                   </div>
                 </div>
@@ -187,9 +187,9 @@
                     <p class="text-sm md:text-md">{{ chat.content }}</p>
                   </div>
                   <div class="p-4">
-                  <div class="text-xs mt-1 mr-2" v-if="chat.timestamp">
-                    {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
-                  </div>
+                    <div class="text-xs mt-1 mr-2" v-if="chat.timestamp">
+                      {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
+                    </div>
                   </div>
                 </div>
                 <div

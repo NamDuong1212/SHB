@@ -8,7 +8,7 @@ import Button from "primevue/button";
 import Tag from "primevue/tag";
 import { h, onBeforeMount, ref } from "vue";
 import FormData from "../components/FormData.vue";
-import DocumentForm from "../components/DocumentForm.vue";
+import GlobalDocumentForm from "@/components/GlobalDocumentForm.vue";
 import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
 import ProgressSpinner from 'primevue/progressspinner';
@@ -354,7 +354,7 @@ const handleBatchDelete = async (names) => {
     </tableDoc>
 
     <FormData ref="dialogRef" @loadData="refreshData"></FormData>
-    <DocumentForm ref="documentDialogRef" :collections="collections" @refresh="refreshData"></DocumentForm>
+    <GlobalDocumentForm ref="documentDialogRef" :collections="collections" @refresh="refreshData"></GlobalDocumentForm>
 
     <ConfirmDialog></ConfirmDialog>
 
