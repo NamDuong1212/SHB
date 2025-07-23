@@ -15,7 +15,6 @@
       <div class="flex justify-between items-center w-full">
         <span class="text-xl font-medium">Tạo document mới</span>
         <Button
-          v-if="uploadStatus.uploading"
           type="button"
           :icon="isMinimized ? 'pi pi-window-maximize' : 'pi pi-window-minimize'"
           class="p-button-text p-button-sm"
@@ -180,8 +179,8 @@
           {{ formData.file?.name }} ({{ formatFileSize(formData.file?.size) }})
         </p>
       </div>
-      <ProgressBar :value="uploadStatus.progress" class="mb-2" />
-      <Message :severity="uploadStatus.severity" class="text-sm">
+      <ProgressBar v-if="uploadStatus.uploading" :value="uploadStatus.progress" class="mb-2" />
+      <Message v-if="uploadStatus.show" :severity="uploadStatus.severity" class="text-sm">
         {{ uploadStatus.message }}
       </Message>
     </div>
@@ -322,12 +321,14 @@ const fetchCollections = async () => {
 
 const openDialog = () => {
   visible.value = true
+  isMinimized.value = false // Reset minimize state when opening
   resetForm()
   fetchCollections()
 }
 
 const closeDialog = () => {
   visible.value = false
+  isMinimized.value = false // Reset minimize state when closing
 }
 
 const resetForm = () => {
@@ -495,7 +496,7 @@ const createDocument = async () => {
 
       setTimeout(() => {
       visible.value = false
-      isMinimized.value = false // Reset minimized state
+      isMinimized.value = false // Reset minimized state when closing
     }, 2000)
     }
   } catch (error) {
