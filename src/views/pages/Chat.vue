@@ -1,8 +1,6 @@
 <template>
   <Toast />
 
-  <!-- Heading -->
-  <!-- <div style="box-shadow: 0 0 #0000, 0 0 #0000, 0 1px 2px 0 rgb(0 0 0 / 0.05)"></div> -->
   <div class="grid bg-gradient-to-br gap-2 lg:gap-4">
     <div class="chat-container col-span-12 lg:col-span-10 relative flex flex-col h-screen ">
       <!-- Header -->
@@ -24,10 +22,10 @@
                 <h2 class="font-bold text-lg lg:text-2xl mb-0">FOXAI BOT</h2>
                 <!-- Status Indicator -->
                 <div class="flex items-center gap-1.5">
-                  <div class="w-2 h-2 rounded-full transition-all duration-300" :class="getStatusColor()"
-                    v-tooltip.top="getStatusTooltip()"></div>
-                  <span class="text-xs font-medium hidden sm:inline" :class="getStatusTextColor()">
-                    {{ getStatusText() }}
+                  <div class="w-2 h-2 rounded-full transition-all duration-300" :class="statusColor"
+                    v-tooltip.top="statusTooltip"></div>
+                  <span class="text-xs font-medium hidden sm:inline" :class="statusTextColor">
+                    {{ statusText }}
                   </span>
                 </div>
               </div>
@@ -331,21 +329,18 @@
 </template>
 
 <script setup>
-import HistoryChat from "@/components/HistoryChat.vue";
 import SkeletonLoading from "@/components/SkeletonLoading.vue";
 import CollectionService from "@/service/CollectionService";
 import http from "@/service/http";
-import { useAuthStore } from "@/stores/useAuth";
 import { marked } from 'marked';
 import { useToast } from "primevue";
-import { computed, getCurrentInstance, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from "vue";
-// Thêm vào đầu file, sau các import
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from "vue";
+
+// Cache constants
 const CACHE_KEY = 'selected_collection_cache';
 const CACHE_DURATION = 10 * 60 * 1000; // 10 phút tính bằng milliseconds
 
-const isStreaming = ref(false);
-
-// Hàm tiện ích để xử lý cache
+// Utility for localStorage cache
 const cacheUtils = {
   setCache(value) {
     const cache = {
@@ -362,12 +357,10 @@ const cacheUtils = {
     const { value, timestamp } = JSON.parse(cache);
     const now = Date.now();
 
-    // Kiểm tra xem cache có hết hạn chưa
     if (now - timestamp > CACHE_DURATION) {
       localStorage.removeItem(CACHE_KEY);
       return null;
     }
-
     return value;
   },
 
@@ -376,22 +369,13 @@ const cacheUtils = {
   }
 };
 
-
-
+// PrimeVue Toast
 const toast = useToast();
-const { proxy } = getCurrentInstance();
-const CardBox = ref([]);
+
+// Reactive State Variables
+const isStreaming = ref(false);
 const scrollPanel = ref(null);
 const loading = ref(false);
-const loadingType = ref("chat");
-// watch(selectedCollection, (newValue) => {
-//   if (newValue) {
-//     cacheUtils.setCache(newValue);
-//   }
-// });
-const store = useAuthStore()
-
-// Quản lý kiếm tra status của bot
 const systemStatus = ref({
   status: 'unknown', // 'healthy', 'degraded', 'unhealthy', 'unknown'
   message: 'Đang kiểm tra trạng thái hệ thống...',
@@ -399,158 +383,8 @@ const systemStatus = ref({
 });
 const statusLoading = ref(false);
 const statusCheckInterval = ref(null);
-
-onMounted(() => {
-  // Thêm event listener cho việc click bên ngoài
-  document.addEventListener('click', handleClickOutside);
-  document.addEventListener('keydown', handleKeyDown);
-
-  // Kiểm tra trạng thái hệ thống khi component mount
-  checkChatStatus();
-
-  // Thiết lập interval kiểm tra trạng thái mỗi 30 giây
-  statusCheckInterval.value = setInterval(checkChatStatus, 30000);
-});
-
-// Cleanup khi component bị destroy
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside);
-  document.removeEventListener('keydown', handleKeyDown);
-
-  if (statusCheckInterval.value) {
-    clearInterval(statusCheckInterval.value);
-  }
-});
-
-const checkChatStatus = async () => {
-  try {
-    statusLoading.value = true;
-    const { message, status, pipeline_info } = (await http.get('/chat/status')).data;
-
-    const severityMap = {
-      healthy: 'success',
-      degraded: 'warn',
-      unhealthy: 'error'
-    };
-    const toastSeverity = severityMap[status] || 'info';
-
-    const statusLabelMap = {
-      healthy: 'Bình thường',
-      degraded: 'Hạn chế',
-      unhealthy: 'Lỗi'
-    };
-    const statusLabel = statusLabelMap[status] || 'Không xác định';
-    const detail = [
-      message,
-    ].join(' | ');
-
-    systemStatus.value = {
-      status,
-      message,
-      lastChecked: new Date().toISOString()
-    };
-
-    toast.add({
-      severity: toastSeverity,
-      summary: `Trạng thái hệ thống: ${statusLabel}`,
-      detail,
-      life: 2000
-    });
-
-  } catch (error) {
-    console.error('Lỗi khi kiểm tra trạng thái chat:', error);
-    systemStatus.value = {
-      status: 'unhealthy',
-      message: 'Không thể kết nối đến hệ thống chat',
-      lastChecked: new Date().toISOString()
-    };
-    toast.add({
-      severity: 'error',
-      summary: 'Trạng thái hệ thống: Lỗi',
-      detail: systemStatus.value.message,
-      life: 2000
-    });
-  } finally {
-    statusLoading.value = false;
-  }
-};
-
-
-const getStatusColor = () => {
-  switch (systemStatus.value.status) {
-    case 'healthy':
-      return 'bg-green-400 shadow-green-400/50 animate-pulse';
-    case 'degraded':
-      return 'bg-orange-400 shadow-orange-400/50 animate-pulse';
-    case 'unhealthy':
-      return 'bg-red-400 shadow-red-400/50 animate-pulse';
-    default:
-      return 'bg-yellow-400 shadow-yellow-400/50 animate-pulse';
-  }
-};
-
-
-const getStatusTextColor = () => {
-  switch (systemStatus.value.status) {
-    case 'healthy':
-      return 'text-green-600';
-    case 'degraded':
-      return 'text-orange-600';
-    case 'unhealthy':
-      return 'text-red-600';
-    default:
-      return 'text-yellow-600';
-  }
-};
-const getStatusText = () => {
-  switch (systemStatus.value.status) {
-    case 'healthy':
-      return 'Hoạt động';
-    case 'degraded':
-      return 'Hạn chế';
-    case 'unhealthy':
-      return 'Gặp sự cố';
-    default:
-      return 'Đang kiểm tra';
-  }
-};
-
-const getStatusTooltip = () => {
-  const lastChecked = systemStatus.value.lastChecked
-    ? new Date(systemStatus.value.lastChecked).toLocaleTimeString('vi-VN')
-    : 'Chưa kiểm tra';
-
-  return `${systemStatus.value.message} (Cập nhật: ${lastChecked})`;
-};
-
-
-const carouselResponsiveOptions = ref([
-  {
-    breakpoint: '1400px',
-    numVisible: 3,
-    numScroll: 1
-  },
-  {
-    breakpoint: '1199px',
-    numVisible: 2,
-    numScroll: 1
-  },
-  {
-    breakpoint: '767px',
-    numVisible: 1,
-    numScroll: 1
-  }
-]);
-
-// Add image error handler
-const handleImageError = (event) => {
-  event.target.src = '/path/to/fallback-image.png'; // Add a fallback image
-};
-
-// Đổi từ selectedCollections sang selectedCollection (string)
-const selectedCollection = ref('')
-const Collections = ref([])
-const HistoryMessChat = ref([])
+const selectedCollection = ref('');
+const Collections = ref([]);
 const messages = ref([]);
 const user_question = ref("");
 const showDeleteConfirmDialog = ref(false);
@@ -578,104 +412,85 @@ const suggestedPrompts = ref([
   }
 ]);
 
+// Carousel responsive options (if CardBox is re-enabled)
+const carouselResponsiveOptions = ref([
+  { breakpoint: '1400px', numVisible: 3, numScroll: 1 },
+  { breakpoint: '1199px', numVisible: 2, numScroll: 1 },
+  { breakpoint: '767px', numVisible: 1, numScroll: 1 }
+]);
+
+// Computed properties for system status display
+const statusColor = computed(() => {
+  switch (systemStatus.value.status) {
+    case 'healthy': return 'bg-green-400 shadow-green-400/50 animate-pulse';
+    case 'degraded': return 'bg-orange-400 shadow-orange-400/50 animate-pulse';
+    case 'unhealthy': return 'bg-red-400 shadow-red-400/50 animate-pulse';
+    default: return 'bg-yellow-400 shadow-yellow-400/50 animate-pulse';
+  }
+});
+
+const statusTextColor = computed(() => {
+  switch (systemStatus.value.status) {
+    case 'healthy': return 'text-green-600';
+    case 'degraded': return 'text-orange-600';
+    case 'unhealthy': return 'text-red-600';
+    default: return 'text-yellow-600';
+  }
+});
+
+const statusText = computed(() => {
+  switch (systemStatus.value.status) {
+    case 'healthy': return 'Hoạt động';
+    case 'degraded': return 'Hạn chế';
+    case 'unhealthy': return 'Gặp sự cố';
+    default: return 'Đang kiểm tra';
+  }
+});
+
+const statusTooltip = computed(() => {
+  const lastChecked = systemStatus.value.lastChecked
+    ? new Date(systemStatus.value.lastChecked).toLocaleTimeString('vi-VN')
+    : 'Chưa kiểm tra';
+  return `${systemStatus.value.message} (Cập nhật: ${lastChecked})`;
+});
+
+// Watchers
+watch(selectedCollection, (newValue) => {
+  if (newValue) {
+    cacheUtils.setCache(newValue);
+    console.log('Collection changed and cached:', newValue);
+  } else {
+    cacheUtils.clearCache(); // Clear cache if selectedCollection becomes null/empty
+    console.log('Selected collection cleared, cache cleared.');
+  }
+});
+
+// Lifecycle Hooks
 onBeforeMount(() => {
-  getCard()
-  fetchCollections()
-  fetchChatHistory()
-  const cachedCollection = cacheUtils.getCache();
-  if (!cachedCollection) {
-    cacheUtils.clearCache();
+  // getCard(); // Re-enable if you use the CardBox carousel
+  fetchCollections();
+  fetchChatHistory();
+});
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+  document.addEventListener('keydown', handleKeyDown);
+  checkChatStatus();
+  statusCheckInterval.value = setInterval(checkChatStatus, 30000);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('keydown', handleKeyDown);
+  if (statusCheckInterval.value) {
+    clearInterval(statusCheckInterval.value);
   }
-})
+});
 
-const onCollectionChange = () => {
-  console.log('Collection changed to:', selectedCollection.value);
-
-  // Lưu vào cache khi thay đổi
-  cacheUtils.setCache(selectedCollection.value);
+// Methods
+const handleImageError = (event) => {
+  event.target.src = '/path/to/fallback-image.png'; // Fallback image for carousel
 };
-
-
-const submitChat = async (e) => {
-  e.preventDefault();
-
-  // Kiểm tra các điều kiện
-  if (!user_question.value.trim() || !selectedCollection.value || isStreaming.value) return;
-  if (systemStatus.value.status === 'unhealthy') {
-    proxy.$notify('W', 'Hệ thống đang gặp sự cố, vui lòng thử lại sau', toast);
-    return;
-  }
-
-  loading.value = true;
-  loadingType.value = "chat";
-  isStreaming.value = true;
-
-  if (systemStatus.value.status === 'degraded') {
-    proxy.$notify('W', 'Hệ thống đang hoạt động hạn chế, phản hồi có thể chậm hơn', toast);
-  }
-
-  messages.value.push({
-    role: "user",
-    content: user_question.value,
-  });
-
-  const data = {
-    message: user_question.value,
-    collection: selectedCollection.value
-  };
-
-  const userQuestion = user_question.value;
-  user_question.value = "";
-  scrollToBottom();
-
-  try {
-    const response = await http.post("/chat/internal", data);
-    const botResponse = response.data;
-    const answerRaw = botResponse.content || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
-
-    loading.value = false;
-
-    const assistantMessage = {
-      role: "assistant",
-      content: "",
-      timestamp: botResponse.timestamp || new Date().toISOString()
-    };
-    messages.value.push(assistantMessage);
-
-    // Test // Tốc độ gõ chữ với tốc độ chậm hơn nếu hệ thống đang degraded (mặc định là 10 nhưng sẽ giảm xuống 20 nếu degraded)
-    const typingSpeed = systemStatus.value.status === 'degraded' ? 20 : 10;
-    let currentText = "";
-    for (let i = 0; i < answerRaw.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, typingSpeed));
-      currentText += answerRaw[i];
-      messages.value[messages.value.length - 1].content = marked.parse(currentText);
-      scrollToBottom();
-    }
-
-
-  } catch (error) {
-    loading.value = false;
-    console.error("Chat API Error:", error);
-    messages.value.push({
-      role: "assistant",
-      content: marked.parse("❌ Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng thử lại."),
-    });
-  } finally {
-    scrollToBottom();
-    loading.value = false;
-    isStreaming.value = false;
-  }
-
-};
-
-const getCard = async () => {
-  try {
-    const res = await http.get('cards/');
-    CardBox.value = res.data.items;
-  } catch (error) {
-    console.error("Không thể tải cards:", error);
-  }
-}
 
 function scrollToBottom() {
   nextTick(() => {
@@ -685,56 +500,85 @@ function scrollToBottom() {
         scrollableContent.scrollTop = scrollableContent.scrollHeight;
       }
     }
-  })
+  });
 }
 
-const getValueMessage = async (item) => {
+const checkChatStatus = async () => {
+  statusLoading.value = true;
+  try {
+    const { message, status } = (await http.get('/chat/status')).data;
+
+    const severityMap = { healthy: 'success', degraded: 'warn', unhealthy: 'error' };
+    const statusLabelMap = { healthy: 'Bình thường', degraded: 'Hạn chế', unhealthy: 'Lỗi' };
+
+    systemStatus.value = { status, message, lastChecked: new Date().toISOString() };
+
+    toast.add({
+      severity: severityMap[status] || 'info',
+      summary: `Trạng thái hệ thống: ${statusLabelMap[status] || 'Không xác định'}`,
+      detail: message,
+      life: 2000
+    });
+  } catch (error) {
+    console.error('Lỗi khi kiểm tra trạng thái chat:', error);
+    systemStatus.value = {
+      status: 'unhealthy',
+      message: 'Không thể kết nối đến hệ thống chat',
+      lastChecked: new Date().toISOString()
+    };
+    toast.add({
+      severity: 'error',
+      summary: 'Trạng thái hệ thống: Lỗi',
+      detail: 'Không thể kết nối đến hệ thống chat. Vui lòng kiểm tra lại kết nối.',
+      life: 3000
+    });
+  } finally {
+    statusLoading.value = false;
+  }
+};
+
+// Core function to send chat messages and handle AI response
+const sendChatMessage = async (messageContent) => {
+  // Basic pre-check validation (redundant with submitChat's checks, but good for direct calls)
   if (!selectedCollection.value || isStreaming.value) {
-    proxy.$notify('W', 'Vui lòng đợi câu trả lời hiện tại hoàn thành', toast);
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng đợi câu trả lời hiện tại hoàn thành hoặc chọn một Collection.', life: 3000 });
     return;
   }
-
-  // Nếu hệ thống có status unhealthy, hiển thị thông báo và không gửi yêu cầu
   if (systemStatus.value.status === 'unhealthy') {
-    proxy.$notify('W', 'Hệ thống đang gặp sự cố, vui lòng thử lại sau', toast);
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Hệ thống đang gặp sự cố, vui lòng thử lại sau.', life: 3000 });
     return;
   }
-
-  // Cảnh báo nếu hệ thống đang có status degraded
   if (systemStatus.value.status === 'degraded') {
-    proxy.$notify('W', 'Hệ thống đang hoạt động hạn chế, phản hồi có thể chậm hơn', toast);
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Hệ thống đang hoạt động hạn chế, phản hồi có thể chậm hơn.', life: 3000 });
   }
+
+  loading.value = true;
+  isStreaming.value = true;
 
   messages.value.push({
     role: "user",
-    content: item,
+    content: messageContent,
+    timestamp: new Date().toISOString() // Add timestamp for user messages
   });
+  scrollToBottom();
 
-  const data = {
-    message: item,
+  const requestData = {
+    message: messageContent,
     collection: selectedCollection.value
   };
 
-  user_question.value = "";
-  scrollToBottom();
-  loading.value = true;
-  loadingType.value = "skeleton";
-
-  isStreaming.value = true;
-
   try {
-    const response = await http.post("/chat/internal", data);
+    const response = await http.post("/chat/internal", requestData);
     const botResponse = response.data;
     const answerRaw = botResponse.content || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
 
-    loading.value = false;
-
     const assistantMessage = {
       role: "assistant",
-      content: "",
+      content: "", // Content will be streamed
       timestamp: botResponse.timestamp || new Date().toISOString()
     };
     messages.value.push(assistantMessage);
+
     const typingSpeed = systemStatus.value.status === 'degraded' ? 20 : 10;
     let currentText = "";
     for (let i = 0; i < answerRaw.length; i++) {
@@ -743,121 +587,144 @@ const getValueMessage = async (item) => {
       messages.value[messages.value.length - 1].content = marked.parse(currentText);
       scrollToBottom();
     }
-
   } catch (error) {
-    loading.value = false;
     console.error("Chat API Error:", error);
     messages.value.push({
       role: "assistant",
       content: marked.parse("❌ Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng thử lại."),
+      timestamp: new Date().toISOString()
     });
+    toast.add({ severity: 'error', summary: 'Lỗi Chatbot', detail: error.response?.data?.message || 'Không thể gửi yêu cầu đến Chatbot. Vui lòng thử lại.', life: 3000 });
   } finally {
-    scrollToBottom();
     loading.value = false;
     isStreaming.value = false;
+    scrollToBottom();
   }
 };
 
-const fetchCollections = async () => {
-  try {
-    // Kiểm tra cache trước
-    const cachedCollection = cacheUtils.getCache();
-    const response = await CollectionService.getAll();
-    Collections.value = response.data.data;
-    if (cachedCollection && Collections.value.some(c => c.name === cachedCollection)) {
-      selectedCollection.value = cachedCollection;
-      console.log('Đã load collection từ cache:', cachedCollection);
-    }
-    else if (Collections.value.length > 0) {
-      selectedCollection.value = Collections.value[0].name;
-      cacheUtils.setCache(selectedCollection.value);
-    }
-  } catch (error) {
-    console.error("Không thể tải collections:", error);
-    // Xóa cache nếu có lỗi
-    cacheUtils.clearCache();
-  }
+const submitChat = async (e) => {
+  e.preventDefault();
+  if (!user_question.value.trim()) return; // Don't send empty messages
+
+  const question = user_question.value;
+  user_question.value = ""; // Clear input immediately
+  await sendChatMessage(question);
 };
 
-const fetchChatHistory = async () => {
-  loading.value = true
-  try {
-    const res = await http.get(`history/`)
-    // Cập nhật để xử lý response format mới
-    const historyMessages = res.data.messages || []
+// Re-enable if CardBox carousel is used
+// const getCard = async () => {
+//   try {
+//     const res = await http.get('cards/');
+//     CardBox.value = res.data.items;
+//   } catch (error) {
+//     console.error("Không thể tải cards:", error);
+//   }
+// };
 
-    HistoryMessChat.value = historyMessages.map(el => ({
-      ...el,
-      // Chỉ parse markdown cho assistant messages
-      content: el.role === 'assistant' ? marked.parse(el.content) : el.content,
-      timestamp: el.timestamp || new Date().toISOString()
-    }))
-
-    console.log('Chat history loaded:', HistoryMessChat.value);
-
-    // Gán trực tiếp thay vì spread để tránh duplicate
-    messages.value = [...HistoryMessChat.value]
-
-    // Scroll xuống cuối sau khi load xong
-    nextTick(() => {
-      scrollToBottom()
-    })
-
-  } catch (error) {
-    console.error('Error fetching chat history:', error);
-    proxy.$notify('E', 'Không thể tải lịch sử chat', toast)
-  } finally {
-    loading.value = false
-  }
-}
-const showDeleteDialog = () => {
-  showDeleteConfirmDialog.value = true;
-};
-
-const confirmDelete = async () => {
-  showDeleteConfirmDialog.value = false;
-  await clearChat();
-};
-
-const clearChat = async () => {
-  messages.value = []
-  try {
-    const res = await http.delete(`/history/`)
-    proxy.$notify('S', 'Xóa thành công!', toast)
-  } catch (error) {
-    proxy.$notify('E', error, toast)
-  }
-};
-
-// Xử lý popup gợi ý
-const selectSuggestion = (prompt) => {
-  showSuggestions.value = false;
-  // Tự động focus vào input
+const getValueMessage = async (item) => {
+  user_question.value = item; // Set the input value to the suggested item
+  await sendChatMessage(item); // Send the message
+  showSuggestions.value = false; // Hide suggestions after selection
   nextTick(() => {
     const input = document.querySelector('input[placeholder*="Nhập câu hỏi"]');
     if (input) input.focus();
   });
 };
 
-// Xử lý sự kiện bàn phím
+const fetchCollections = async () => {
+  try {
+    const cachedCollection = cacheUtils.getCache();
+    const response = await CollectionService.getAll();
+    Collections.value = response.data.data;
+
+    if (cachedCollection && Collections.value.some(c => c.name === cachedCollection)) {
+      selectedCollection.value = cachedCollection;
+    } else if (Collections.value.length > 0) {
+      selectedCollection.value = Collections.value[0].name;
+    }
+  } catch (error) {
+    console.error("Không thể tải collections:", error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải danh sách collection. Vui lòng thử lại.', life: 3000 });
+    cacheUtils.clearCache(); // Clear cache if collection loading fails
+  }
+};
+
+const onCollectionChange = () => {
+  // Watcher will handle caching, this function can be used for other side effects if needed.
+  console.log('Collection changed to:', selectedCollection.value);
+};
+
+const fetchChatHistory = async () => {
+  loading.value = true;
+  try {
+    const res = await http.get(`history/`);
+    const historyMessages = res.data.messages || [];
+
+    // 1. Map và xử lý dữ liệu như cũ
+    const mappedMessages = historyMessages.map(el => ({
+      ...el,
+      content: el.role === 'assistant' ? marked.parse(el.content) : el.content,
+      timestamp: el.timestamp || new Date().toISOString()
+    }));
+
+    mappedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    messages.value = mappedMessages;
+
+    console.log('Chat history loaded and sorted:', messages.value);
+
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải lịch sử chat.', life: 3000 });
+  } finally {
+    loading.value = false;
+    scrollToBottom();
+  }
+};
+
+const showDeleteDialog = () => {
+  showDeleteConfirmDialog.value = true;
+};
+
+const confirmDelete = async () => {
+  showDeleteConfirmDialog.value = false;
+  messages.value = []; // Clear UI immediately
+  try {
+    await http.delete(`/history/`);
+    toast.add({ severity: 'success', summary: 'Thành công', detail: 'Xóa cuộc trò chuyện thành công!', life: 3000 });
+  } catch (error) {
+    console.error('Error clearing chat history:', error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: error.response?.data?.message || 'Không thể xóa lịch sử chat.', life: 3000 });
+  }
+};
+
+const selectSuggestion = (prompt) => {
+  user_question.value = prompt.title;
+  showSuggestions.value = false;
+  // Focus on the input after selection
+  nextTick(() => {
+    const input = document.querySelector('input[placeholder*="Nhập câu hỏi"]');
+    if (input) input.focus();
+  });
+};
+
 const handleKeyDown = (event) => {
   if (event.key === 'Escape') {
     showSuggestions.value = false;
   }
-  if (event.key === 'Tab' && !showSuggestions.value && user_question.value.trim() === '') {
-    event.preventDefault();
-    showSuggestions.value = true;
-  }
+  // Optional: Tab to open suggestions if input is empty
+  // if (event.key === 'Tab' && !showSuggestions.value && user_question.value.trim() === '') {
+  //   event.preventDefault();
+  //   showSuggestions.value = true;
+  // }
 };
 
-// Xử lý focus vào input
 const handleInputFocus = () => {
   if (user_question.value.trim() === '') {
     showSuggestions.value = true;
   }
 };
 
-// Xử lý click bên ngoài để đóng popup
 const handleClickOutside = (event) => {
   const popup = document.querySelector('.suggestions-popup');
   const input = document.querySelector('input[placeholder*="Nhập câu hỏi"]');
@@ -869,6 +736,7 @@ const handleClickOutside = (event) => {
 </script>
 
 <style scoped>
+/* Markdown content styling */
 .markdown-content :deep(p) {
   margin-bottom: 1rem;
   line-height: 1.6;
@@ -909,6 +777,8 @@ const handleClickOutside = (event) => {
   color: #2563eb;
 }
 
+/* Custom Carousel Styling (if re-enabled) */
+/*
 .custom-carousel :deep(.p-carousel-indicators) {
   margin-top: 0.75rem;
 }
@@ -925,80 +795,53 @@ const handleClickOutside = (event) => {
   transform: scale(1.2);
 }
 
-.custom-spinner :deep(.p-progress-spinner-circle) {
-  stroke: #3b82f6;
-  stroke-width: 4;
+.custom-carousel :deep(.p-carousel-prev),
+.custom-carousel :deep(.p-carousel-next) {
+  background: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  transition: all 0.2s ease;
 }
 
-/* Thay đổi background từ hình ảnh sang gradient */
+.custom-carousel :deep(.p-carousel-prev:hover),
+.custom-carousel :deep(.p-carousel-next:hover) {
+  background: #3b82f6;
+  color: white;
+}
+*/
+
+/* General gradient background */
 .bg-gradient-to-br {
   background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
 }
 
-/* Custom styling cho Collection Selector */
-.collection-selector :deep(.p-multiselect) {
+/* Custom styling for Collection Selector (PrimeVue Select component) */
+.collection-selector :deep(.p-dropdown) {
   border-radius: 0.75rem;
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
+  padding: 0.5rem;
+  /* Adjust padding for visual alignment */
 }
 
-.collection-selector :deep(.p-multiselect:hover) {
+.collection-selector :deep(.p-dropdown:hover) {
   transform: translateY(-1px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
 }
 
-.collection-selector :deep(.p-multiselect-label) {
-
+.collection-selector :deep(.p-dropdown-label) {
   font-weight: 500;
-}
-
-.collection-selector :deep(.p-multiselect-token) {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  color: white;
+  padding: 0;
   border: none;
-  border-radius: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  margin: 0.125rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  background: transparent;
 }
 
-.collection-selector :deep(.p-multiselect-token-icon) {
-  color: rgba(255, 255, 255, 0.8);
-  margin-left: 0.5rem;
-}
-
-.collection-selector :deep(.p-multiselect-token-icon:hover) {
-  color: white;
-}
-
-
-
-/* Custom styling cho Clear Button */
-.clear-btn {
-  position: relative;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-}
-
-.clear-btn::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 0;
-  height: 0;
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  z-index: -1;
-}
-
-.clear-btn:hover::after {
-  width: 120%;
-  height: 120%;
+.collection-selector :deep(.p-dropdown-trigger) {
+  width: 2rem;
+  /* Ensure trigger icon is not too wide */
 }
 
 /* Suggestions Popup Styles */
@@ -1039,7 +882,7 @@ const handleClickOutside = (event) => {
   left: 100%;
 }
 
-/* Viewport constraints - Đảm bảo không overflow */
+/* Viewport constraints - Ensure no overflow */
 .chat-container {
   max-width: 100vw;
   overflow-x: hidden;
@@ -1058,7 +901,6 @@ const handleClickOutside = (event) => {
   max-width: 100vw;
   box-sizing: border-box;
   contain: layout style;
-  /* Giới hạn padding khi zoom */
   padding: clamp(0.75rem, 2vw, 1.25rem) clamp(0.75rem, 3vw, 1.25rem);
 }
 
@@ -1071,22 +913,18 @@ const handleClickOutside = (event) => {
 .chat-input input {
   min-width: 0;
   flex: 1;
-  /* Giới hạn font size và padding khi zoom */
   font-size: clamp(0.875rem, 1.5vw, 1rem) !important;
   padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.25rem) !important;
-  /* Override Tailwind classes */
   padding-left: clamp(1rem, 3vw, 1.25rem) !important;
   padding-right: clamp(2.5rem, 6vw, 3rem) !important;
 }
 
 .chat-input button[type="submit"] {
-  /* Giới hạn size của send button */
   width: clamp(3rem, 8vw, 3.5rem) !important;
   height: clamp(3rem, 8vw, 3.5rem) !important;
   padding: clamp(0.75rem, 2vw, 1rem) !important;
 }
 
-/* Lightbulb button inside input */
 .chat-input .absolute button {
   padding: clamp(0.5rem, 1.5vw, 0.75rem) !important;
   right: clamp(0.75rem, 2vw, 1rem) !important;
@@ -1100,7 +938,7 @@ const handleClickOutside = (event) => {
   font-size: clamp(0.875rem, 1.5vw, 1rem) !important;
 }
 
-/* Đảm bảo scroll panel không overflow */
+/* Ensure scroll panel does not overflow */
 :deep(.p-scrollpanel) {
   max-width: 100%;
   box-sizing: border-box;
@@ -1139,22 +977,15 @@ const handleClickOutside = (event) => {
     right: 0;
   }
 
-  /* Ẩn text dài trên mobile */
-  .collection-selector .p-multiselect-label {
+  .collection-selector .p-dropdown-label {
     font-size: 0.875rem;
   }
 
-  /* Tối ưu message layout cho mobile */
   .markdown-content {
     font-size: 0.875rem;
     line-height: 1.5;
     word-wrap: break-word;
     overflow-wrap: break-word;
-  }
-
-  /* Tối ưu carousel cho mobile */
-  .custom-carousel .p-carousel-item {
-    padding: 0.25rem;
   }
 }
 
@@ -1173,12 +1004,10 @@ const handleClickOutside = (event) => {
     height: 1.25rem;
   }
 
-  /* Giảm khoảng cách giữa messages */
   .space-y-4>*+* {
     margin-top: 0.75rem;
   }
 
-  /* Tối ưu input area */
   .chat-input {
     bottom: 1rem;
     padding: 0.5rem;
@@ -1194,12 +1023,6 @@ const handleClickOutside = (event) => {
     width: 100%;
   }
 
-  .confirm-btn {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-  }
-
-  /* Ultra compact cho màn hình rất nhỏ */
   .markdown-content {
     font-size: 0.8125rem;
   }
@@ -1222,18 +1045,15 @@ const handleClickOutside = (event) => {
   }
 }
 
-/* Zoom handling - Tối ưu cho các tỷ lệ zoom khác nhau */
+/* Zoom handling - Optimize for different zoom levels */
 @media (min-resolution: 2dppx) {
   .chat-input input {
     font-size: 16px !important;
-    /* Prevent zoom on iOS */
   }
 }
 
-/* Zoom levels - Điều chỉnh cho các mức zoom */
 @media (min-width: 1200px) {
   .chat-input {
-    /* Giảm padding trên màn hình lớn */
     padding: 1rem 1.5rem;
   }
 
@@ -1248,7 +1068,6 @@ const handleClickOutside = (event) => {
   }
 }
 
-/* High zoom detection via viewport width */
 @media (max-width: 600px) and (min-height: 600px) {
   .chat-input {
     padding: 0.5rem 0.75rem !important;
@@ -1277,7 +1096,6 @@ const handleClickOutside = (event) => {
   }
 }
 
-/* Ultra high zoom - khi viewport rất nhỏ */
 @media (max-width: 400px) {
   .chat-input {
     padding: 0.375rem 0.5rem !important;
@@ -1297,14 +1115,12 @@ const handleClickOutside = (event) => {
   }
 }
 
-/* Very large screens */
 @media (min-width: 1440px) {
   .suggestions-popup {
     max-width: 1200px;
   }
 }
 
-/* Very small screens và zoom cao */
 @media (max-width: 320px),
 (max-height: 480px) {
   .suggestions-popup {
@@ -1327,8 +1143,8 @@ const handleClickOutside = (event) => {
   }
 }
 
-/* Animation cho MultiSelect dropdown */
-.collection-selector :deep(.p-multiselect-panel) {
+/* Animation for Select dropdown */
+.collection-selector :deep(.p-dropdown-panel) {
   border-radius: 0.75rem;
   border: 2px solid #e5e7eb;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -1340,10 +1156,9 @@ const handleClickOutside = (event) => {
   box-sizing: border-box;
 }
 
-/* Đảm bảo không có horizontal scroll */
-.collection-selector :deep(.p-multiselect-panel),
-.collection-selector :deep(.p-multiselect-items),
-.collection-selector :deep(.p-multiselect-items-wrapper) {
+.collection-selector :deep(.p-dropdown-panel),
+.collection-selector :deep(.p-dropdown-items),
+.collection-selector :deep(.p-dropdown-items-wrapper) {
   overflow-x: hidden !important;
   word-wrap: break-word;
   word-break: break-word;
@@ -1361,26 +1176,26 @@ const handleClickOutside = (event) => {
   }
 }
 
-.collection-selector :deep(.p-multiselect-item) {
+.collection-selector :deep(.p-dropdown-item) {
   padding: 0.75rem 1rem;
   transition: all 0.2s ease;
   border-radius: 0.5rem;
   margin: 0.25rem;
 }
 
-.collection-selector :deep(.p-multiselect-item:hover) {
+.collection-selector :deep(.p-dropdown-item:hover) {
   background: linear-gradient(135deg, #dbeafe, #bfdbfe);
   transform: translateX(4px);
 }
 
-.collection-selector :deep(.p-multiselect-item.p-highlight) {
+.collection-selector :deep(.p-dropdown-item.p-highlight) {
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: white;
 }
 
-/* Mobile responsive cho MultiSelect dropdown - FIX OVERFLOW */
+/* Mobile responsive for Select dropdown - FIX OVERFLOW */
 @media (max-width: 768px) {
-  .collection-selector :deep(.p-multiselect-panel) {
+  .collection-selector :deep(.p-dropdown-panel) {
     position: fixed !important;
     top: auto !important;
     left: 0.5rem !important;
@@ -1394,12 +1209,12 @@ const handleClickOutside = (event) => {
     box-sizing: border-box !important;
   }
 
-  .collection-selector :deep(.p-multiselect-items-wrapper) {
+  .collection-selector :deep(.p-dropdown-items-wrapper) {
     overflow-x: hidden !important;
     max-width: 100% !important;
   }
 
-  .collection-selector :deep(.p-multiselect-item) {
+  .collection-selector :deep(.p-dropdown-item) {
     padding: 0.875rem 0.75rem !important;
     font-size: 0.875rem !important;
     white-space: nowrap !important;
@@ -1409,8 +1224,7 @@ const handleClickOutside = (event) => {
     box-sizing: border-box !important;
   }
 
-  .collection-selector :deep(.p-multiselect-item-text),
-  .collection-selector :deep(.p-multiselect-item .p-checkbox-label) {
+  .collection-selector :deep(.p-dropdown-item-text) {
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
@@ -1418,12 +1232,12 @@ const handleClickOutside = (event) => {
     display: block !important;
   }
 
-  .collection-selector :deep(.p-multiselect-filter-container) {
+  .collection-selector :deep(.p-dropdown-filter-container) {
     padding: 0.5rem !important;
     max-width: 100% !important;
   }
 
-  .collection-selector :deep(.p-multiselect-filter) {
+  .collection-selector :deep(.p-dropdown-filter) {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -1431,7 +1245,7 @@ const handleClickOutside = (event) => {
 }
 
 @media (max-width: 480px) {
-  .collection-selector :deep(.p-multiselect-panel) {
+  .collection-selector :deep(.p-dropdown-panel) {
     left: 0.25rem !important;
     right: 0.25rem !important;
     width: calc(100vw - 0.5rem) !important;
@@ -1439,21 +1253,20 @@ const handleClickOutside = (event) => {
     max-height: min(40vh, 250px) !important;
   }
 
-  .collection-selector :deep(.p-multiselect-item) {
+  .collection-selector :deep(.p-dropdown-item) {
     padding: 0.75rem 0.5rem !important;
     font-size: 0.8125rem !important;
     margin: 0.125rem 0 !important;
   }
 
-  .collection-selector :deep(.p-multiselect-item-text),
-  .collection-selector :deep(.p-multiselect-item .p-checkbox-label) {
+  .collection-selector :deep(.p-dropdown-item-text) {
     max-width: calc(100vw - 3rem) !important;
   }
 }
 
-/* Ultra small screens - đảm bảo không overflow */
+/* Ultra small screens - ensure no overflow */
 @media (max-width: 360px) {
-  .collection-selector :deep(.p-multiselect-panel) {
+  .collection-selector :deep(.p-dropdown-panel) {
     left: 0.125rem !important;
     right: 0.125rem !important;
     width: calc(100vw - 0.25rem) !important;
@@ -1461,110 +1274,32 @@ const handleClickOutside = (event) => {
     max-height: min(35vh, 200px) !important;
   }
 
-  .collection-selector :deep(.p-multiselect-item) {
+  .collection-selector :deep(.p-dropdown-item) {
     padding: 0.625rem 0.375rem !important;
     font-size: 0.75rem !important;
   }
 
-  .collection-selector :deep(.p-multiselect-item-text),
-  .collection-selector :deep(.p-multiselect-item .p-checkbox-label) {
+  .collection-selector :deep(.p-dropdown-item-text) {
     max-width: calc(100vw - 2rem) !important;
   }
 }
 
 /* Force viewport containment for dropdown */
 @media (max-width: 768px) {
-  body:has(.collection-selector .p-multiselect-panel:not(.p-hidden)) {
+  body:has(.collection-selector .p-dropdown-panel:not(.p-hidden)) {
     overflow-x: hidden !important;
   }
 
-  .collection-selector :deep(.p-multiselect-panel) * {
+  .collection-selector :deep(.p-dropdown-panel) * {
     max-width: 100% !important;
     box-sizing: border-box !important;
   }
 
-  /* Đảm bảo không có element nào vượt quá viewport */
-  .collection-selector :deep(.p-multiselect-panel .p-multiselect-item),
-  .collection-selector :deep(.p-multiselect-panel .p-multiselect-header),
-  .collection-selector :deep(.p-multiselect-panel .p-multiselect-filter-container) {
+  .collection-selector :deep(.p-dropdown-panel .p-dropdown-item),
+  .collection-selector :deep(.p-dropdown-panel .p-dropdown-header),
+  .collection-selector :deep(.p-dropdown-panel .p-dropdown-filter-container) {
     contain: layout !important;
     overflow: hidden !important;
   }
-}
-
-.suggestion-card {
-  @apply border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 rounded-xl overflow-hidden;
-  background: linear-gradient(to bottom, #ffffff, #f8fafc);
-}
-
-.suggestion-card :deep(.p-card-body) {
-  padding: 1rem;
-}
-
-.suggestion-card :deep(.p-card-content) {
-  padding: 0;
-}
-
-.suggestion-items {
-  max-height: 200px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #e2e8f0 #f8fafc;
-}
-
-.suggestion-items::-webkit-scrollbar {
-  width: 4px;
-}
-
-.suggestion-items::-webkit-scrollbar-track {
-  background: #f8fafc;
-}
-
-.suggestion-items::-webkit-scrollbar-thumb {
-  background-color: #e2e8f0;
-  border-radius: 20px;
-}
-
-.suggestion-item {
-  transform: translateX(0);
-  transition: all 0.2s ease;
-}
-
-.suggestion-item:hover {
-  transform: translateX(4px);
-}
-
-/* Custom Carousel Styling */
-.custom-carousel :deep(.p-carousel-indicators) {
-  padding: 1rem 0;
-}
-
-.custom-carousel :deep(.p-carousel-indicator button) {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #e2e8f0;
-  transition: all 0.3s ease;
-}
-
-.custom-carousel :deep(.p-carousel-indicator.p-highlight button) {
-  background: #3b82f6;
-  transform: scale(1.2);
-}
-
-.custom-carousel :deep(.p-carousel-prev),
-.custom-carousel :deep(.p-carousel-next) {
-  background: white;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  transition: all 0.2s ease;
-}
-
-.custom-carousel :deep(.p-carousel-prev:hover),
-.custom-carousel :deep(.p-carousel-next:hover) {
-  background: #3b82f6;
-  color: white;
 }
 </style>
