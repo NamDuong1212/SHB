@@ -8,6 +8,11 @@ export default class CollectionService {
         return http.get(finalUrl);
     }
 
+    static async getAllForDropdown() {
+        const finalUrl = `${this.api}?page=1&page_size=100`;
+        return http.get(finalUrl);
+    }
+
     static async delete(id) {
         return http.delete(`${this.api}/${id}`);
     }
@@ -26,6 +31,6 @@ export default class CollectionService {
     }
     
     static async getDocumentsByCollection(id) {
-        return await http.get(`/doc/collection/${id}`);
+        return await http.get(`/v1/collections/${id}/documents`);
     }
 }

@@ -21,17 +21,6 @@
         <div v-if="!documentFormStore.isMinimized" class="p-4">
             <!-- Form Fields -->
             <div class="space-y-4 mb-6">
-                <!-- Document Title -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Tiêu đề tài liệu *
-                    </label>
-                    <InputText v-model="documentFormStore.formData.doc_title" placeholder="Nhập tiêu đề tài liệu"
-                        class="w-full" :class="{ 'p-invalid': documentFormStore.errors.doc_title }" />
-                    <small v-if="documentFormStore.errors.doc_title" class="p-error">
-                        {{ documentFormStore.errors.doc_title }}
-                    </small>
-                </div>
 
                 <!-- Collection -->
                 <div>
@@ -39,41 +28,19 @@
                         Collection *
                     </label>
                     <div class="flex gap-2">
-                        <Select v-model="documentFormStore.formData.collection_name"
-                            :options="documentFormStore.collections" optionLabel="name" optionValue="name"
+                        <Select v-model="documentFormStore.formData.collection_id"
+                            :options="documentFormStore.collections" optionLabel="collection_name" optionValue="id"
                             placeholder="Chọn collection..." class="flex-1"
                             :loading="documentFormStore.collectionsLoading"
-                            :class="{ 'p-invalid': documentFormStore.errors.collection_name }">
-                            <template #value="{ value }">
-                                <div v-if="value" class="flex items-center gap-2">
-                                    <i class="pi pi-folder text-blue-500 text-sm"></i>
-                                    <span>{{ value }}</span>
-                                </div>
-                                <span v-else class="text-gray-500">Chọn collection...</span>
-                            </template>
-                            <template #option="{ option }">
-                                <div class="flex items-center gap-2 p-2">
-                                    <i class="pi pi-folder text-blue-500 text-sm"></i>
-                                    <span>{{ option.name }}</span>
-                                </div>
-                            </template>
+                            :class="{ 'p-invalid': documentFormStore.errors.collection_id }">
+                            <Button type="button" icon="pi pi-refresh" size="small" severity="secondary"
+                                @click="fetchCollections" :loading="documentFormStore.collectionsLoading"
+                                v-tooltip.top="'Làm mới danh sách collection'" outlined />
                         </Select>
-                        <Button type="button" icon="pi pi-refresh" size="small" severity="secondary"
-                            @click="fetchCollections" :loading="documentFormStore.collectionsLoading"
-                            v-tooltip.top="'Làm mới danh sách collection'" outlined />
                     </div>
-                    <small v-if="documentFormStore.errors.collection_name" class="p-error">
-                        {{ documentFormStore.errors.collection_name }}
+                    <small v-if="documentFormStore.errors.collection_id" class="p-error">
+                        {{ documentFormStore.errors.collection_id }}
                     </small>
-                </div>
-
-                <!-- Description -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Mô tả
-                    </label>
-                    <Textarea v-model="documentFormStore.formData.description" placeholder="Nhập mô tả tài liệu"
-                        rows="3" class="w-full" />
                 </div>
             </div>
 
@@ -138,7 +105,6 @@
         <!-- Minimized View -->
         <div v-else class="p-4">
             <div class="text-center mb-3">
-                <h3 class="text-lg font-medium mb-2">{{ documentFormStore.formData.doc_title }}</h3>
                 <p class="text-sm text-gray-600 mb-2">
                     Collection: {{ documentFormStore.formData.collection_name }}
                 </p>
@@ -163,7 +129,7 @@
                 <Button size="small" type="button"
                     :label="documentFormStore.uploadStatus.uploading ? 'Đang tạo...' : 'Tạo document'"
                     icon="pi pi-check" @click="createDocument" :loading="documentFormStore.uploadStatus.uploading"
-                    :disabled="!documentFormStore.isFormValid || documentFormStore.uploadStatus.uploading" />
+                     />
             </div>
         </template>
     </Dialog>
@@ -240,22 +206,21 @@ const fileIconClass = computed(() => {
 })
 
 const fetchCollections = async () => {
-    documentFormStore.collectionsLoading = true
+    documentFormStore.collectionsLoading = true;
     try {
-        const response = await CollectionService.getByUser()
-        documentFormStore.setCollections(response.data)
+        const response = await CollectionService.getAllForDropdown();
+        const collections = response.data.info.data.collections;
+        documentFormStore.setCollections(collections);
 
-        // Tự động chọn collection đầu tiên nếu có và form chưa có collection
-        if (response.data.length > 0 && !documentFormStore.formData.collection_name) {
-            documentFormStore.setFormData({ collection_name: response.data[0].name })
+        if (collections.length > 0 && !documentFormStore.formData.collection_id) {
+            documentFormStore.setFormData({ collection_id: collections[0].id });
         }
 
-        showUploadStatus('Làm mới danh sách collection thành công', 'success')
     } catch (error) {
-        console.error('Không thể tải collections:', error)
-        showUploadStatus('Không thể tải danh sách collection', 'error')
+        console.error('Không thể tải collections:', error);
+        showUploadStatus('Không thể tải danh sách collection', 'error');
     } finally {
-        documentFormStore.collectionsLoading = false
+        documentFormStore.collectionsLoading = false;
     }
 }
 
@@ -278,12 +243,8 @@ const handleCancel = () => {
 const validateForm = () => {
     const errors = {}
 
-    if (!documentFormStore.formData.doc_title.trim()) {
-        errors.doc_title = 'Tiêu đề tài liệu là bắt buộc'
-    }
-
-    if (!documentFormStore.formData.collection_name) {
-        errors.collection_name = 'Vui lòng chọn collection'
+    if (!documentFormStore.formData.collection_id) {
+        errors.collection_id = 'Vui lòng chọn collection'
     }
 
     if (!documentFormStore.formData.file) {
@@ -293,7 +254,6 @@ const validateForm = () => {
     documentFormStore.setErrors(errors)
     return Object.keys(errors).length === 0
 }
-
 const openFileDialog = () => {
     fileInput.value?.click()
 }
@@ -399,23 +359,22 @@ const createDocument = async () => {
 
         const formDataToSend = new FormData()
         formDataToSend.append('file', documentFormStore.formData.file)
-        formDataToSend.append('doc_title', documentFormStore.formData.doc_title)
-        formDataToSend.append('collection_name', documentFormStore.formData.collection_name)
-        if (documentFormStore.formData.description) {
-            formDataToSend.append('description', documentFormStore.formData.description)
-        }
+        formDataToSend.append('collection_id', documentFormStore.formData.collection_id)
 
-        const response = await http.post('/doc/', formDataToSend, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
+
+        const response = await http.post(
+            `v1/collections/${documentFormStore.formData.collection_id}/documents`,
+            formDataToSend,
+            {
+                headers: { 'Content-Type': 'multipart/form-data' }
             }
-        })
+        );
 
         clearInterval(uploadInterval)
         documentFormStore.setUploadStatus({ progress: 100 })
 
         if (response.data) {
-            showUploadStatus(`Document "${documentFormStore.formData.doc_title}" đã được tạo thành công!`, 'success')
+            showUploadStatus(`Document đã được tạo thành công!`, 'success')
             emit('created', response.data)
             emit('refresh')
 
@@ -423,7 +382,7 @@ const createDocument = async () => {
                 show: true,
                 uploading: false,
                 progress: 100,
-                message: `Document "${documentFormStore.formData.doc_title}" đã được tạo thành công!`,
+                message: `Document đã được tạo thành công!`,
                 severity: 'success'
             })
 

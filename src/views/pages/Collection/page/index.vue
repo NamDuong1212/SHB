@@ -56,9 +56,14 @@ const getDocumentsByCollection = async (id) => {
   try {
     loadingDocuments.value[id] = true;
     const { data } = await CollectionService.getDocumentsByCollection(id);
-    if (data) {
-      collectionDocuments.value[id] = data.documents;
+
+    if (data && data.info && data.info.data && data.info.data.documents) {
+      collectionDocuments.value[id] = data.info.data.documents;
       expandedRows.value[id] = !expandedRows.value[id];
+    } else {
+      collectionDocuments.value[id] = []; 
+      expandedRows.value[id] = !expandedRows.value[id];
+      console.warn("No documents found or unexpected response structure for collection:", id);
     }
   } catch (error) {
     console.error(`Error fetching documents for collection ${id}:`, error);
@@ -199,12 +204,11 @@ const columns = ref([
                       class: "document-card p-3 mb-2 surface-50 border-round-lg shadow-1"
                     },
                     [
-                      // Dòng tiêu đề + loại file + tên file
                       h("div", { class: "flex justify-between items-center" }, [
                         h("div", { class: "flex items-center gap-2" }, [
-                          h("i", { class: getFileIconClass(doc.source_file) }),
-                          h("span", { class: "font-semibold cursor-pointer hover:underline", onClick: () => downloadDocument(doc) }, doc.title),
-                          h("span", { class: "text-sm text-500" }, `(${getFileName(doc.source_file)})`)
+                          h("i", { class: getFileIconClass(doc.storage_path) }),
+                          h("span", { class: "font-semibold cursor-pointer hover:underline", onClick: () => downloadDocument(doc) }, doc.doc_name),
+                          h("span", { class: "text-sm text-500" }, `(${getFileName(doc.storage_path)})`)
                         ]),
 
                         h(Button, {
@@ -215,16 +219,12 @@ const columns = ref([
                           onClick: () => deleteDocument(doc.id)
                         })
                       ]),
-                      // Dòng info phụ: Ngày + size
                       h("div", { class: "mt-2 flex gap-3 text-sm" }, [
                         h("span", { class: "text-600" }, [
                           h("i", { class: "pi pi-calendar-times mr-2" }),
                           new Date(doc.created_at).toLocaleDateString('vi-VN')
                         ]),
-                        h("span", { class: "text-600" }, [
-                          h("i", { class: "pi pi-file mr-2" }),
-                          `${(doc.file_size / 1024).toFixed(1)} KB`
-                        ])
+
                       ])
                     ])
                 )
@@ -266,7 +266,8 @@ const columns = ref([
               size: "small",
               severity: "danger",
               outlined: true,
-              onClick: () => deleteCollection(rowData.id),
+
+              onClick: () => deleteCollection(rowData.collection_name),
             }
           ),
         ]
