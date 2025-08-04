@@ -3,7 +3,7 @@ import { ConditionalOperator, GridifyQueryBuilder } from 'gridify-client';
 export default function buildGridifyQueryFromPrimeVueFilters(primevueFilters, options = {}) {
     const {
         page = 1,
-        pageSize = 10,
+        page_size = 10, // Giữ nguyên là page_size
         orderBy = null,
     } = options;
 
@@ -26,7 +26,7 @@ export default function buildGridifyQueryFromPrimeVueFilters(primevueFilters, op
         between: "between",
     };
 
-    const builder = new GridifyQueryBuilder().setPage(page).setPageSize(pageSize);
+    const builder = new GridifyQueryBuilder().setPage(page).setPageSize(page_size);
 
     if (orderBy?.field) {
         builder.addOrderBy(orderBy.field, orderBy.asc ?? true);
@@ -79,5 +79,14 @@ export default function buildGridifyQueryFromPrimeVueFilters(primevueFilters, op
         }
     });
 
-    return builder.build();
+    const queryAsObject = builder.build(); // Đây là một object, ví dụ { page: 1, pageSize: 10, filter: '...' }
+    
+    // Đổi tên key pageSize thành page_size nếu gridify-client trả về pageSize
+    if (queryAsObject.pageSize) {
+        queryAsObject.page_size = queryAsObject.pageSize;
+        delete queryAsObject.pageSize;
+    }
+
+    // Trả về một URLSearchParams object
+    return new URLSearchParams(queryAsObject);
 }

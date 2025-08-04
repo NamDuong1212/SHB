@@ -9,7 +9,7 @@ const loading = ref(false);
 
 const paginator = ref({
   page: 1,
-  pageSize: 20,
+  page_size: 20,
   total: 0,
   orderBy: { field: "id", asc: true },
 });
@@ -35,7 +35,7 @@ onBeforeMount(() => {
 });
 
 const changePaginator = (event) => {
-  paginator.value.pageSize = event.rows;
+  paginator.value.page_size = event.rows;
   paginator.value.page = event.page + 1;
   const query = renderFilter(paginator.value, event.filters);
 };
@@ -47,7 +47,7 @@ const changeFilter = (event) => {
 const renderFilter = (paginator, filters) => {
   const query = buildGridifyQueryFromPrimeVueFilters(filters, {
     page: paginator.page,
-    pageSize: paginator.pageSize,
+    page_size: paginator.page_size,
     orderBy: paginator.orderBy,
   });
   return query;

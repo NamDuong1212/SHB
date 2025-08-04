@@ -7,36 +7,32 @@ import { useRouter } from "vue-router";
 
 const toast = useToast();
 const { proxy } = getCurrentInstance();
-const username = ref("");
+const account = ref("");
 const password = ref("");
 const isLoading = ref(false);
 const submit = ref(false);
 const loginFail = ref(false);
 const checked = ref(false);
 
-// Lấy router để chuyển hướng sau khi đăng nhập
 const router = useRouter();
 const authStore = useAuthStore();
 
-// Phương thức đăng nhập
 const login = async (event) => {
-  // Ngăn chặn form submit mặc định
   if (event) {
     event.preventDefault();
   }
-  
+
   submit.value = true;
-  if (!username.value || !password.value) return;
+  if (!account.value || !password.value) return;
 
   isLoading.value = true;
-  loginFail.value = false; // Reset trạng thái lỗi
-  
-  try {
-    const data = await AuthService.login(username.value, password.value);
+  loginFail.value = false;
 
-    if (data?.access_token) {
-      authStore.login(data.user || null, data.access_token);
-      loginFail.value = false;
+  try {
+    const authInfo = await AuthService.login(account.value, password.value);
+
+    if (authInfo?.access_token) {
+      authStore.login(authInfo);
 
       toast.add({
         severity: 'success',
@@ -48,15 +44,15 @@ const login = async (event) => {
       setTimeout(() => {
         router.push("/");
       }, 1000);
+
     } else {
-      throw new Error("Không nhận được access token");
+      throw new Error("Không nhận được access token từ server");
     }
 
   } catch (error) {
     loginFail.value = true;
-    
-    // Xử lý lỗi chi tiết hơn
-    let errorMessage = "Đăng nhập thất bại";
+
+    let errorMessage = "Tên đăng nhập hoặc mật khẩu không đúng.";
     if (error.response?.data?.detail) {
       errorMessage = error.response.data.detail;
     } else if (error.response?.data?.message) {
@@ -71,19 +67,19 @@ const login = async (event) => {
       detail: errorMessage,
       life: 3000
     });
-    
+
     console.error('Login error:', error);
   } finally {
     isLoading.value = false;
   }
 };
 
-// Xử lý khi nhấn Enter
 const handleKeyPress = (event) => {
   if (event.key === 'Enter') {
     login(event);
   }
 };
+
 </script>
 
 <template>
@@ -93,7 +89,7 @@ const handleKeyPress = (event) => {
     <div class="relative w-1/2 min-h-screen flex items-center">
       <div class="w-full flex mt-60 flex-col h-[75vh] max-w-[60%] mx-auto">
         <img class="w-52 absolute top-10" src="../../../assets/img/Logo_Original-1.png" alt="Logo" />
-        
+
         <!-- Wrap trong form để xử lý submit đúng cách -->
         <form @submit.prevent="login" class="flex flex-col gap-4 md:gap-5 mt-6 md:mt-8">
           <div class="flex flex-col gap-2">
@@ -102,34 +98,20 @@ const handleKeyPress = (event) => {
               Xin chào bạn, đăng nhập để tiếp tục!
             </h5>
           </div>
-          
+
           <div>
             <FloatLabel variant="in">
-              <InputText 
-                id="text" 
-                v-model="username" 
-                class="h-14 w-full !text-lg" 
-                :invalid="submit && !username"
-                @keypress="handleKeyPress"
-                :disabled="isLoading"
-              />
-              <label class="text-normal" for="text">Username</label>
+              <InputText id="text" v-model="account" class="h-14 w-full !text-lg" :invalid="submit && !account"
+                @keypress="handleKeyPress" :disabled="isLoading" />
+              <label class="text-normal" for="text">Email</label>
             </FloatLabel>
-            <small class="text-red-500" v-if="!username && submit">Vui lòng nhập username</small>
+            <small class="text-red-500" v-if="!account && submit">Vui lòng nhập email</small>
           </div>
-          
+
           <div>
             <FloatLabel variant="in" class="mt-1">
-              <Password 
-                fluid 
-                id="password" 
-                v-model="password" 
-                :invalid="submit && !password" 
-                class="h-14 !text-lg"
-                toggleMask
-                @keypress="handleKeyPress"
-                :disabled="isLoading"
-              >
+              <Password fluid id="password" v-model="password" :invalid="submit && !password" class="h-14 !text-lg"
+                toggleMask @keypress="handleKeyPress" :disabled="isLoading">
                 <template #footer>
                   <p class="mt-2">Yêu cầu mật khẩu</p>
                   <ul class="pl-2 ml-2 mt-0 list-disc list-inside" style="line-height: 1.5">
@@ -150,14 +132,9 @@ const handleKeyPress = (event) => {
             Tên đăng nhập hoặc mật khẩu không đúng. Vui lòng thử lại.
           </div>
 
-          <Button 
-            :loading="isLoading" 
-            label="Đăng nhập" 
-            class="w-full h-12 md:h-14 !text-base md:!text-lg mt-1"
-            type="submit"
-            :disabled="isLoading"
-          />
-          
+          <Button :loading="isLoading" label="Đăng nhập" class="w-full h-12 md:h-14 !text-base md:!text-lg mt-1"
+            type="submit" :disabled="isLoading" />
+
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <Checkbox v-model="checked" inputId="remember" name="remember" binary size="large" />
@@ -165,7 +142,7 @@ const handleKeyPress = (event) => {
             </div>
             <router-link to="/" class="text-primary text-base font-light hover:underline">Quên mật khẩu?</router-link>
           </div>
-          
+
           <div class="flex items-center gap-2">
             <hr class="w-full" />
             <span class="text-zinc-400 text-lg">Hoặc</span>

@@ -30,23 +30,28 @@ const collectionDocuments = ref({});
 const expandedRows = ref({});
 const loadingDocuments = ref({});
 
+
 const getAllCollection = async (params = {}) => {
   try {
-    const filteredParams = {};
-    if (params.Search) filteredParams.Search = params.Search;
-    if (params.isActive) filteredParams.isActive = params.isActive;
+    const { data } = await CollectionService.getAll(params);
 
-    const { data } = await CollectionService.getAll(filteredParams);
-    if (data) {
-      collections.value = data.data;
-      return data.data;
+    if (data && data.info && data.info.data) {
+      const responseData = data.info.data;
+
+      collections.value = responseData.collections;
+
+      return {
+        data: responseData.collections,
+        total: responseData.total
+      };
     }
+    return { data: [], total: 0 };
+
   } catch (error) {
     console.error("Error fetching collections:", error);
-    return [];
+    return { data: [], total: 0 };
   }
 };
-
 const getDocumentsByCollection = async (id) => {
   try {
     loadingDocuments.value[id] = true;
@@ -150,7 +155,7 @@ const deleteDocument = (id) => {
 
 const columns = ref([
   {
-    field: "name",
+    field: "collection_name",
     header: "Tên collection",
     display: true,
     renderValue: (rowData) =>
@@ -168,7 +173,7 @@ const columns = ref([
             h(
               "span",
               { class: "text-blue-600 font-semibold" },
-              rowData.name
+              rowData.collection_name
             ),
             loadingDocuments.value[rowData.id] &&
             h(ProgressSpinner, { style: { width: '20px', height: '20px' } })
@@ -234,13 +239,13 @@ const columns = ref([
     renderValue: (rowData) => h("span", {}, rowData.description || ""),
   },
   {
-    field:"username",
+    field: "username",
     header: "Người tạo",
     display: true,
     renderValue: (rowData) => h("span", {}, rowData.username || "Không xác định"),
   },
   {
-    field:"created_at",
+    field: "created_at",
     header: "Ngày tạo",
     display: true,
     renderValue: (rowData) => h("span", {}, new Date(rowData.created_at).toLocaleDateString('vi-VN')),
@@ -261,7 +266,7 @@ const columns = ref([
               size: "small",
               severity: "danger",
               outlined: true,
-              onClick: () => deleteCollection(rowData.name),
+              onClick: () => deleteCollection(rowData.id),
             }
           ),
         ]
@@ -317,9 +322,30 @@ const deleteCollection = (name) => {
       try {
         await CollectionService.delete(name);
         refreshData();
+        toast.add({
+          severity: "success",
+          summary: "Xóa thành công",
+          detail: `Collection "${name}" đã được xóa.`,
+          life: 3000
+        });
         console.log(`Collection ${name} deleted successfully`);
       } catch (error) {
         console.error("Error deleting collection:", error);
+
+        let errorMessage = "Xóa collection thất bại.";
+
+        if (error.response?.data?.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        toast.add({
+          severity: "error",
+          summary: "Lỗi",
+          detail: errorMessage,
+          life: 5000
+        });
       }
     }
   });
@@ -328,12 +354,44 @@ const deleteCollection = (name) => {
 const handleBatchDelete = async (names) => {
   try {
     const deletePromises = names.map(name => CollectionService.delete(name));
-    await Promise.all(deletePromises);
+    const results = await Promise.allSettled(deletePromises);
+
+    const successCount = results.filter(result => result.status === 'fulfilled').length;
+    const failedCount = results.filter(result => result.status === 'rejected').length;
 
     refreshData();
-    console.log(`${names.length} collections deleted successfully`);
+
+    if (successCount > 0) {
+      toast.add({
+        severity: "success",
+        summary: "Xóa thành công",
+        detail: `${successCount} collection đã được xóa thành công.`,
+        life: 3000
+      });
+    }
+
+    if (failedCount > 0) {
+      const errorMessages = results
+        .filter(result => result.status === 'rejected')
+        .map(result => result.reason?.response?.data?.detail || result.reason?.message || 'Lỗi không xác định')
+        .filter((message, index, array) => array.indexOf(message) === index); // Loại bỏ duplicate
+
+      toast.add({
+        severity: "error",
+        summary: "Lỗi",
+        detail: `${failedCount} collection xóa thất bại: ${errorMessages.join(', ')}`,
+        life: 5000
+      });
+    }
+
   } catch (error) {
     console.error("Error deleting collections:", error);
+    toast.add({
+      severity: "error",
+      summary: "Lỗi",
+      detail: "Có lỗi xảy ra khi xóa collections.",
+      life: 3000
+    });
   }
 };
 </script>
@@ -342,7 +400,7 @@ const handleBatchDelete = async (names) => {
   <Toast />
   <div class="collection-container">
     <tableDoc ref="TableBasic" v-model:selection="dataSelection" header="Danh sách collection" :columns="columns"
-      :filters="filters" :apiFunction="getAllCollection" :paginator="false" @resetFilter="initFilters">
+      :filters="filters" :apiFunction="getAllCollection" :paginator="true" @resetFilter="initFilters">
       <template #header>
         <div class="flex gap-2">
           <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Tạo collection"
@@ -358,7 +416,7 @@ const handleBatchDelete = async (names) => {
 
     <ConfirmDialog></ConfirmDialog>
 
-    <DeleteComps v-model:isOpenDelete="modelDialogDelete" :ids="dataSelection.flatMap((e) => e.name)"
+    <DeleteComps v-model:isOpenDelete="modelDialogDelete" :ids="dataSelection.flatMap((e) => e.collection_name)"
       @update:isOpenDelete="refreshData()" @confirm="handleBatchDelete"
       :content="`Bạn có chắc chắn muốn xóa ${dataSelection.length} bản ghi không?`" api="collection">
     </DeleteComps>

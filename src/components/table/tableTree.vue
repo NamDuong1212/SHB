@@ -9,7 +9,7 @@ const filters1 = ref(null);
 
 const paginator = ref({
   page: 1,
-  pageSize: 20,
+  page_size: 20,
   total: 1000000,
   orderBy: { field: "id", asc: true },
 });

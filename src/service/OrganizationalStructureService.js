@@ -46,7 +46,7 @@ export default class OrgsTrucService {
     return http.delete(`${this.api}/${id}`);
   }
 
-  static async getOrgLevels(Page = 1, PageSize = 10, Search = "") {
-    return http.get(`Organizational?Page=${Page}&${PageSize}&Search=${Search}`);
+  static async getOrgLevels(Page = 1, page_size = 10, Search = "") {
+    return http.get(`Organizational?Page=${Page}&${page_size}&Search=${Search}`);
   }
 }

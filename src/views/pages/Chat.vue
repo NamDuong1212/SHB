@@ -460,14 +460,12 @@ watch(selectedCollection, (newValue) => {
     cacheUtils.setCache(newValue);
     console.log('Collection changed and cached:', newValue);
   } else {
-    cacheUtils.clearCache(); // Clear cache if selectedCollection becomes null/empty
+    cacheUtils.clearCache(); 
     console.log('Selected collection cleared, cache cleared.');
   }
 });
 
-// Lifecycle Hooks
 onBeforeMount(() => {
-  // getCard(); // Re-enable if you use the CardBox carousel
   fetchCollections();
   fetchChatHistory();
 });
@@ -537,9 +535,7 @@ const checkChatStatus = async () => {
   }
 };
 
-// Core function to send chat messages and handle AI response
 const sendChatMessage = async (messageContent) => {
-  // Basic pre-check validation (redundant with submitChat's checks, but good for direct calls)
   if (!selectedCollection.value || isStreaming.value) {
     toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng đợi câu trả lời hiện tại hoàn thành hoặc chọn một Collection.', life: 3000 });
     return;
@@ -558,7 +554,7 @@ const sendChatMessage = async (messageContent) => {
   messages.value.push({
     role: "user",
     content: messageContent,
-    timestamp: new Date().toISOString() // Add timestamp for user messages
+    timestamp: new Date().toISOString()
   });
   scrollToBottom();
 
@@ -569,12 +565,15 @@ const sendChatMessage = async (messageContent) => {
 
   try {
     const response = await http.post("/chat/internal", requestData);
+    
+    loading.value = false; 
+
     const botResponse = response.data;
     const answerRaw = botResponse.content || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
 
     const assistantMessage = {
       role: "assistant",
-      content: "", // Content will be streamed
+      content: "",
       timestamp: botResponse.timestamp || new Date().toISOString()
     };
     messages.value.push(assistantMessage);
@@ -589,6 +588,7 @@ const sendChatMessage = async (messageContent) => {
     }
   } catch (error) {
     console.error("Chat API Error:", error);
+    loading.value = false; 
     messages.value.push({
       role: "assistant",
       content: marked.parse("❌ Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng thử lại."),
@@ -596,7 +596,6 @@ const sendChatMessage = async (messageContent) => {
     });
     toast.add({ severity: 'error', summary: 'Lỗi Chatbot', detail: error.response?.data?.message || 'Không thể gửi yêu cầu đến Chatbot. Vui lòng thử lại.', life: 3000 });
   } finally {
-    loading.value = false;
     isStreaming.value = false;
     scrollToBottom();
   }

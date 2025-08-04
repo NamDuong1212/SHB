@@ -5,9 +5,9 @@
         <div class="col-span-6">
           <div class="flex flex-col gap-2">
             <label class="font-medium text-gray-700">Tên collection <sup class="text-red-500">*</sup></label>
-            <InputText v-model="payload.name" class="w-full" placeholder="Nhập tên collection " size="small" />
-            <small class="text-red-500" v-if="messages.name">{{
-              messages.name
+            <InputText v-model="payload.collection_name" class="w-full" placeholder="Nhập tên collection " size="small" />
+            <small class="text-red-500" v-if="messages.collection_name">{{
+              messages.collection_name
             }}</small>
           </div>
         </div>
@@ -44,7 +44,7 @@ const toast = useToast();
 
 onMounted(() => { });
 const visible = ref(false);
-const payload = ref({ name: null, description: null });
+const payload = ref({ collection_name: null, description: null, collection_style: 'string', creativity_level: 0.1 });
 const clearPayload = JSON.stringify(payload.value);
 const messages = ref({});
 const openDialog = async (data = null) => {
