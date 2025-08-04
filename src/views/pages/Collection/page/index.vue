@@ -45,7 +45,6 @@ const getAllCollection = async (params = {}) => {
     return { data: [], total: 0 };
 
   } catch (error) {
-    console.error("Error fetching collections:", error);
     return { data: [], total: 0 };
   }
 };
@@ -58,12 +57,10 @@ const getDocumentsByCollection = async (id) => {
       collectionDocuments.value[id] = data.info.data.documents;
       expandedRows.value[id] = !expandedRows.value[id];
     } else {
-      collectionDocuments.value[id] = []; 
+      collectionDocuments.value[id] = [];
       expandedRows.value[id] = !expandedRows.value[id];
-      console.warn("No documents found or unexpected response structure for collection:", id);
     }
   } catch (error) {
-    console.error(`Error fetching documents for collection ${id}:`, error);
   } finally {
     loadingDocuments.value[id] = false;
   }
@@ -142,7 +139,6 @@ const deleteDocument = (id) => {
           life: 3000
         });
       } catch (error) {
-        console.error("Lỗi xoá tài liệu", error);
         toast.add({
           severity: "error",
           summary: "Lỗi",
@@ -254,15 +250,14 @@ const columns = ref([
         "div",
         { class: "flex gap-2" },
         [
-          rowData.name !== "foxai" && h(
+          rowData.collection_name !== "foxai" && h(
             Button,
             {
               icon: "pi pi-trash",
               size: "small",
               severity: "danger",
               outlined: true,
-
-              onClick: () => deleteCollection(rowData.collection_name),
+              onClick: () => deleteCollection(rowData),
             }
           ),
         ]
@@ -300,9 +295,9 @@ const delteItems = () => {
   modelDialogDelete.value = true;
 };
 
-const deleteCollection = (name) => {
+const deleteCollection = (collection) => {
   confirm.require({
-    message: `Bạn có chắc chắn muốn xóa collection "${name}" không?`,
+    message: `Bạn có chắc chắn muốn xóa collection "${collection.collection_name}" không?`,
     header: 'Xác nhận xóa',
     icon: 'pi pi-exclamation-triangle',
     rejectProps: {
@@ -316,17 +311,15 @@ const deleteCollection = (name) => {
     },
     accept: async () => {
       try {
-        await CollectionService.delete(name);
+        await CollectionService.delete(collection.id);
         refreshData();
         toast.add({
           severity: "success",
           summary: "Xóa thành công",
-          detail: `Collection "${name}" đã được xóa.`,
+          detail: `Collection "${collection.collection_name}" đã được xóa.`,
           life: 3000
         });
-        console.log(`Collection ${name} deleted successfully`);
       } catch (error) {
-        console.error("Error deleting collection:", error);
 
         let errorMessage = "Xóa collection thất bại.";
 
@@ -347,9 +340,9 @@ const deleteCollection = (name) => {
   });
 };
 
-const handleBatchDelete = async (names) => {
+const handleBatchDelete = async (ids) => {
   try {
-    const deletePromises = names.map(name => CollectionService.delete(name));
+    const deletePromises = ids.map(id => CollectionService.delete(id));
     const results = await Promise.allSettled(deletePromises);
 
     const successCount = results.filter(result => result.status === 'fulfilled').length;
@@ -369,8 +362,14 @@ const handleBatchDelete = async (names) => {
     if (failedCount > 0) {
       const errorMessages = results
         .filter(result => result.status === 'rejected')
-        .map(result => result.reason?.response?.data?.detail || result.reason?.message || 'Lỗi không xác định')
-        .filter((message, index, array) => array.indexOf(message) === index); // Loại bỏ duplicate
+        .map(result => {
+          const detail = result.reason?.response?.data?.detail;
+          if (Array.isArray(detail)) {
+            return detail.map(d => d.msg).join('. ');
+          }
+          return detail || result.reason?.message || 'Lỗi không xác định'
+        })
+        .filter((message, index, array) => array.indexOf(message) === index);
 
       toast.add({
         severity: "error",
@@ -381,7 +380,6 @@ const handleBatchDelete = async (names) => {
     }
 
   } catch (error) {
-    console.error("Error deleting collections:", error);
     toast.add({
       severity: "error",
       summary: "Lỗi",
@@ -412,7 +410,7 @@ const handleBatchDelete = async (names) => {
 
     <ConfirmDialog></ConfirmDialog>
 
-    <DeleteComps v-model:isOpenDelete="modelDialogDelete" :ids="dataSelection.flatMap((e) => e.collection_name)"
+    <DeleteComps v-model:isOpenDelete="modelDialogDelete" :ids="dataSelection.map((e) => e.id)"
       @update:isOpenDelete="refreshData()" @confirm="handleBatchDelete"
       :content="`Bạn có chắc chắn muốn xóa ${dataSelection.length} bản ghi không?`" api="collection">
     </DeleteComps>

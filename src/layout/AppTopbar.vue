@@ -24,9 +24,6 @@ const items = ref([
   },
 ]);
 
-// Debug để kiểm tra items
-console.log('Menu items:', items.value);
-
 // Tối ưu toggle menu với debounce
 let toggleTimeout = null;
 const optimizedToggleMenu = () => {
