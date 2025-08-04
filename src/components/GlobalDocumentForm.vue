@@ -1,8 +1,8 @@
 <template>
     <Dialog v-model:visible="documentFormStore.isVisible" :modal="false"
         :dismissableMask="!documentFormStore.uploadStatus.uploading"
-        :closeOnEscape="!documentFormStore.uploadStatus.uploading" :draggable="!documentFormStore.isMinimized"
-        :style="dialogStyle" class="global-document-form-dialog" :closable="!documentFormStore.uploadStatus.uploading"
+        :closeOnEscape="!documentFormStore.uploadStatus.uploading" :draggable="false" :style="dialogStyle"
+        class="global-document-form-dialog" :closable="!documentFormStore.uploadStatus.uploading"
         @hide="handleDialogHide" :breakpoints="{ '960px': '75vw', '641px': '90vw' }">
         <!-- Custom Header -->
         <template #header>
@@ -185,12 +185,12 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue'
-import { useDocumentFormStore } from '@/stores/useDocumentFormStore'
-import http from '@/service/http'
 import CollectionService from '@/service/CollectionService'
+import http from '@/service/http'
+import { useDocumentFormStore } from '@/stores/useDocumentFormStore'
+import Calendar from 'primevue/calendar'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import Calendar from 'primevue/calendar';
 
 const router = useRouter()
 const documentFormStore = useDocumentFormStore()
@@ -256,16 +256,31 @@ defineExpose({
     closeDialog
 })
 
-const dialogStyle = computed(() => ({
-    width: documentFormStore.isMinimized ? '350px' : '50rem',
-    margin: documentFormStore.isMinimized ? '0' : 'auto',
-    position: 'fixed',
-    bottom: documentFormStore.isMinimized ? '20px' : 'auto',
-    right: documentFormStore.isMinimized ? '20px' : '50%',
-    transform: documentFormStore.isMinimized ? 'none' : 'translateX(50%)',
-    transition: 'all 0.3s ease-in-out',
-    zIndex: 9999
-}))
+const dialogStyle = computed(() => {
+    if (documentFormStore.isMinimized) {
+        return {
+            width: '350px',
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            margin: '0',
+            transform: 'none',
+            transition: 'all 0.3s ease-in-out',
+            zIndex: 9999
+        }
+    } else {
+        return {
+            width: '50rem',
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            margin: '0',
+            transition: 'all 0.3s ease-in-out',
+            zIndex: 9999
+        }
+    }
+})
 
 const fileType = computed(() => {
     if (!documentFormStore.formData.file) return ''
@@ -273,11 +288,11 @@ const fileType = computed(() => {
     const type = documentFormStore.formData.file.type
     const filename = documentFormStore.formData.file.name.toLowerCase()
 
-    if (type.includes('pdf') || filename.endsWith('.pdf')) return 'pdf'
-    if (type.includes('word') || type.includes('doc') || filename.endsWith('.doc') || filename.endsWith('.docx')) return 'doc'
-    if (type.includes('csv') || filename.endsWith('.csv')) return 'csv'
-    if (type.includes('text') || filename.endsWith('.txt')) return 'txt'
-    if (type.includes('excel') || type.includes('sheet') || filename.endsWith('.xlsx')) return 'xlsx'
+    if (type.includes('excel') || type.includes('spreadsheetml') || filename.endsWith('.xlsx')) { return 'xlsx'}
+    if (type.includes('csv') || filename.endsWith('.csv')) {return 'csv'}
+    if (type.includes('word') || filename.endsWith('.doc') || filename.endsWith('.docx')) {return 'doc'}
+    if (type.includes('pdf') || filename.endsWith('.pdf')) {return 'pdf'}
+    if (type.includes('text') || filename.endsWith('.txt')) {return 'txt'}
 
     return 'other'
 })
@@ -293,7 +308,7 @@ const fileIconClass = computed(() => {
         case 'pdf': return 'pi pi-file-pdf text-red-500'
         case 'doc': return 'pi pi-file-word text-blue-600'
         case 'csv': return 'pi pi-file-excel text-green-600'
-        case 'xlsx': return 'pi pi-file-excel text-emerald-600'
+        case 'xlsx': return 'pi pi-file-excel text-emerald-700'
         case 'txt': return 'pi pi-file text-gray-700'
         default: return 'pi pi-file text-gray-500'
     }
@@ -674,5 +689,22 @@ watch(() => router.currentRoute.value, () => {
     background-color: rgba(0, 0, 0, 0.1);
     pointer-events: none;
     z-index: 9998 !important;
+}
+
+/* Cấm drag dialog */
+:deep(.p-dialog-header) {
+    cursor: default !important;
+    user-select: none;
+    -webkit-user-drag: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+:deep(.p-dialog-draggable) {
+    cursor: default !important;
+}
+
+:deep(.p-dialog-content) {
+    user-select: text;
 }
 </style>
