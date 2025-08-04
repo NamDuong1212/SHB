@@ -143,7 +143,7 @@ const handleKeyPress = (event) => {
             <router-link to="/" class="text-primary text-base font-light hover:underline">Quên mật khẩu?</router-link>
           </div>
 
-          <div class="flex items-center gap-2">
+          <!-- <div class="flex items-center gap-2">
             <hr class="w-full" />
             <span class="text-zinc-400 text-lg">Hoặc</span>
             <hr class="w-full" />
@@ -152,7 +152,7 @@ const handleKeyPress = (event) => {
           <div class="text-zinc-600 text-base text-center">
             Bạn chưa có tài khoản?
             <router-link to="/auth/signup" class="text-primary font-medium hover:underline">Đăng ký ngay</router-link>
-          </div>
+          </div> -->
         </form>
       </div>
     </div>

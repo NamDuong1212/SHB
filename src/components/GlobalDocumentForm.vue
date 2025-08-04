@@ -74,8 +74,8 @@
                             <label for="effective_to" class="block text-sm font-medium text-gray-700 mb-2">
                                 Hiệu lực đến
                             </label>
-                            <Calendar id="effective_to" v-model="documentFormStore.formData.effective_to"
-                                class="w-full" placeholder="YYYY-MM-DD" dateFormat="yy-mm-dd" showIcon
+                            <Calendar id="effective_to" v-model="documentFormStore.formData.effective_to" class="w-full"
+                                placeholder="YYYY-MM-DD" dateFormat="yy-mm-dd" showIcon
                                 :minDate="documentFormStore.formData.effective_from"
                                 :class="{ 'p-invalid': documentFormStore.errors.date_error }" />
                         </div>
@@ -88,18 +88,22 @@
             </div>
 
             <!-- Upload Area -->
-            <div class="upload-area relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-all duration-300 cursor-pointer"
+            <div class="upload-area relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-all duration-300"
                 :class="{
-                    'border-primary-500 bg-primary-50': isDropping,
-                    'border-gray-300 hover:border-primary-500 hover:bg-gray-50': !isDropping
-                }" @dragenter.prevent="isDropping = true" @dragleave.prevent="isDropping = false"
-                @dragover.prevent="isDropping = true" @drop.prevent="handleFileDrop" @click="openFileDialog">
+                    'border-primary-500 bg-primary-50': isDropping && !isUploadAreaDisabled,
+                    'border-gray-300 hover:border-primary-500 hover:bg-gray-50': !isDropping && !isUploadAreaDisabled,
+                    'cursor-pointer': !isUploadAreaDisabled,
+                    'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60': isUploadAreaDisabled
+                }" @dragenter.prevent="!isUploadAreaDisabled && (isDropping = true)"
+                @dragleave.prevent="isDropping = false" @dragover.prevent="!isUploadAreaDisabled && (isDropping = true)"
+                @drop.prevent="handleFileDrop" @click="!isUploadAreaDisabled && openFileDialog()">
                 <!-- Upload Prompt -->
                 <div v-if="!documentFormStore.formData.imgPreview" class="text-center">
-                    <i class="pi pi-upload text-4xl mb-4" :class="{ 'upload-animation': isDropping }"></i>
+                    <i class="pi pi-upload text-4xl mb-4"
+                        :class="{ 'upload-animation': isDropping && !isUploadAreaDisabled }"></i>
                     <h3 class="font-medium text-gray-700 mb-1">Kéo thả file vào đây</h3>
                     <p class="text-sm text-gray-500 mb-3">hoặc click để chọn file</p>
-                    <div class="text-xs text-gray-400">PDF, DOCX, TXT, CSV, XLSX (tối đa 20MB)</div>
+                    <div class="text-xs text-gray-400">{{ allowedFileTypesDescription }}</div>
                 </div>
 
                 <!-- File Preview -->
@@ -108,7 +112,7 @@
                         <!-- Preview Content -->
                         <div class="file-preview-box p-6 bg-gray-50 flex items-center justify-center min-h-[200px]">
                             <div class="text-center">
-                                <i :class="[fileIconClass, 'text-4xl mb-3']"></i>
+                                <i :class="[fileIconClass]" style="font-size: 2.5rem"></i>
                                 <p class="text-lg font-bold file-extension">{{ fileExtension.toUpperCase() }}</p>
                             </div>
                         </div>
@@ -128,7 +132,7 @@
                 </div>
 
                 <input type="file" ref="fileInput" class="hidden" @change="handleFileSelect"
-                    accept=".pdf,.doc,.docx,.txt,.csv,.xlsx" />
+                    :accept="acceptedFileTypes" />
             </div>
 
             <div v-if="documentFormStore.errors.file" class="mt-2">
@@ -171,8 +175,7 @@
                     @click="handleCancel" outlined :disabled="documentFormStore.uploadStatus.uploading" />
                 <Button size="small" type="button"
                     :label="documentFormStore.uploadStatus.uploading ? 'Đang tạo...' : 'Tạo document'"
-                    icon="pi pi-check" @click="createDocument" :loading="documentFormStore.uploadStatus.uploading"
-                     />
+                    icon="pi pi-check" @click="createDocument" :loading="documentFormStore.uploadStatus.uploading" />
             </div>
         </template>
     </Dialog>
@@ -194,10 +197,48 @@ const isDropping = ref(false)
 const fileInput = ref(null)
 
 const processingTypeOptions = ref([
-    { label: 'Sentence Based', value: 'sentence_based' },
-    { label: 'Excel Tabular', value: 'excel_tabular' },
-    { label: 'Document Structured', value: 'document_structured' }
+    { label: 'Tài liệu không mục lục', value: 'sentence_based' },
+    { label: 'Bảng Excel/CSV', value: 'excel_tabular' },
+    { label: 'Tài liệu có cấu trúc', value: 'document_structured' }
 ]);
+
+const fileTypeMap = {
+    sentence_based: {
+        accept: '.pdf,.doc,.docx,.txt',
+        description: 'PDF, DOC, DOCX, TXT',
+        extensions: ['.pdf', '.doc', '.docx', '.txt'],
+        mimeTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
+    },
+    excel_tabular: {
+        accept: '.csv,.xlsx',
+        description: 'CSV, XLSX',
+        extensions: ['.csv', '.xlsx'],
+        mimeTypes: ['text/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']
+    },
+    document_structured: {
+        accept: '.pdf,.doc,.docx',
+        description: 'PDF, DOC, DOCX',
+        extensions: ['.pdf', '.doc', '.docx'],
+        mimeTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    },
+};
+
+const acceptedFileTypes = computed(() => {
+    const type = documentFormStore.formData.processing_type;
+    return type && fileTypeMap[type] ? fileTypeMap[type].accept : '';
+});
+
+const allowedFileTypesDescription = computed(() => {
+    const type = documentFormStore.formData.processing_type;
+    if (type && fileTypeMap[type]) {
+        return `${fileTypeMap[type].description} (tối đa 20MB)`;
+    }
+    return 'Vui lòng chọn loại xử lý trước (tối đa 20MB)';
+});
+
+const isUploadAreaDisabled = computed(() => {
+    return !documentFormStore.formData.processing_type;
+});
 
 const openDialog = () => {
     documentFormStore.openDialog()
@@ -245,13 +286,13 @@ const fileExtension = computed(() => {
 })
 
 const fileIconClass = computed(() => {
-    const baseClass = 'file-icon'
     switch (fileType.value) {
-        case 'pdf': return `${baseClass} text-red-500`
-        case 'doc': return `${baseClass} text-blue-600`
-        case 'csv': return `${baseClass} text-green-600`
-        case 'xlsx': return `${baseClass} text-emerald-600`
-        default: return `${baseClass} text-gray-500`
+        case 'pdf': return 'pi pi-file-pdf text-red-500'
+        case 'doc': return 'pi pi-file-word text-blue-600'
+        case 'csv': return 'pi pi-file-excel text-green-600'
+        case 'xlsx': return 'pi pi-file-excel text-emerald-600'
+        case 'txt': return 'pi pi-file text-gray-700'
+        default: return 'pi pi-file text-gray-500'
     }
 })
 
@@ -300,7 +341,7 @@ const validateForm = () => {
     if (!documentFormStore.formData.processing_type) {
         errors.processing_type = 'Vui lòng chọn loại xử lý'
     }
-    
+
     const { effective_from, effective_to } = documentFormStore.formData;
     if (effective_from && effective_to && effective_to < effective_from) {
         errors.date_error = 'Ngày kết thúc không được nhỏ hơn ngày bắt đầu.';
@@ -335,6 +376,7 @@ const handleFileSelect = (event) => {
 }
 
 const processFile = (file) => {
+    if (isUploadAreaDisabled.value) return;
     if (isValidFileType(file)) {
         if (file.size > 20 * 1024 * 1024) { // 20MB limit
             showUploadStatus('File vượt quá kích thước cho phép (20MB)', 'error')
@@ -351,7 +393,9 @@ const processFile = (file) => {
         delete currentErrors.file
         documentFormStore.setErrors(currentErrors)
     } else {
-        showUploadStatus('File không được hỗ trợ. Chỉ chấp nhận PDF, DOCX, TXT, CSV, XLSX', 'error')
+        const type = documentFormStore.formData.processing_type;
+        const desc = type && fileTypeMap[type] ? fileTypeMap[type].description : 'hợp lệ';
+        showUploadStatus(`File không được hỗ trợ. Chỉ chấp nhận ${desc}`, 'error');
     }
 }
 
@@ -366,21 +410,16 @@ const resetPreview = () => {
 }
 
 const isValidFileType = (file) => {
-    const validTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain',
-        'text/csv',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    ]
+    const selectedType = documentFormStore.formData.processing_type;
+    if (!selectedType || !fileTypeMap[selectedType]) {
+        return false;
+    }
 
-    const validExtensions = ['.pdf', '.doc', '.docx', '.txt', '.csv', '.xlsx']
-    const filename = file.name.toLowerCase()
+    const { mimeTypes, extensions } = fileTypeMap[selectedType];
+    const filename = file.name.toLowerCase();
 
-    return validTypes.includes(file.type) || validExtensions.some(ext => filename.endsWith(ext))
-}
+    return mimeTypes.includes(file.type) || extensions.some(ext => filename.endsWith(ext));
+};
 
 const checkIsImageFile = (file) => {
     return file && file.type.startsWith('image/')
@@ -432,12 +471,12 @@ const createDocument = async () => {
         formDataToSend.append('file', documentFormStore.formData.file)
         formDataToSend.append('collection_id', documentFormStore.formData.collection_id)
         formDataToSend.append('processing_type', documentFormStore.formData.processing_type)
-        
+
         const formattedFrom = formatDateToISO(documentFormStore.formData.effective_from);
         if (formattedFrom) {
             formDataToSend.append('effective_from', formattedFrom);
         }
-        
+
         const formattedTo = formatDateToISO(documentFormStore.formData.effective_to);
         if (formattedTo) {
             formDataToSend.append('effective_to', formattedTo);
@@ -525,6 +564,24 @@ const showUploadStatus = (message, severity = 'info') => {
         documentFormStore.setUploadStatus({ show: false })
     }, 3000)
 }
+
+watch(() => documentFormStore.formData.processing_type, (newType, oldType) => {
+    if (documentFormStore.formData.file && newType !== oldType) {
+        if (!isValidFileType(documentFormStore.formData.file)) {
+            const newTypeLabel = processingTypeOptions.value.find(o => o.value === newType)?.label || '';
+            showUploadStatus(`File hiện tại không hợp lệ cho loại "${newTypeLabel}". Vui lòng chọn file mới.`, 'warn');
+            resetPreview();
+            documentFormStore.setErrors({
+                ...documentFormStore.errors,
+                file: 'File không tương thích với loại xử lý đã chọn.'
+            });
+        } else {
+            const currentErrors = { ...documentFormStore.errors };
+            delete currentErrors.file;
+            documentFormStore.setErrors(currentErrors);
+        }
+    }
+});
 
 onMounted(() => {
     fetchCollections()
