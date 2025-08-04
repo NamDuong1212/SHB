@@ -2,10 +2,8 @@
 import DeleteComps from "@/components/DeleteComps.vue";
 import tableDoc from "@/components/table/tableBasic.vue";
 import CollectionService from "@/service/CollectionService";
-import { renderDropdownFilter } from "@/composables/renderFilter";
 import { FilterMatchMode } from "@primevue/core/api";
 import Button from "primevue/button";
-import Tag from "primevue/tag";
 import { h, onBeforeMount, ref } from "vue";
 import FormData from "../components/FormData.vue";
 import GlobalDocumentForm from "@/components/GlobalDocumentForm.vue";
@@ -16,7 +14,6 @@ import DocumentService from "@/service/DocumentService";
 import { useToast } from "primevue/usetoast";
 import { useRouter } from "vue-router";
 
-const router = useRouter();
 const toast = useToast();
 const dialogRef = ref();
 const documentDialogRef = ref();
@@ -133,7 +130,6 @@ const deleteDocument = (id) => {
       try {
         await DocumentService.delete(id);
 
-        // Cập nhật UI bằng cách xóa document khỏi mảng documents
         Object.keys(collectionDocuments.value).forEach(collectionId => {
           collectionDocuments.value[collectionId] = collectionDocuments.value[collectionId]
             .filter(doc => doc.id !== id);
@@ -208,7 +204,6 @@ const columns = ref([
                         h("div", { class: "flex items-center gap-2" }, [
                           h("i", { class: getFileIconClass(doc.storage_path) }),
                           h("span", { class: "font-semibold cursor-pointer hover:underline", onClick: () => downloadDocument(doc) }, doc.doc_name),
-                          h("span", { class: "text-sm text-500" }, `(${getFileName(doc.storage_path)})`)
                         ]),
 
                         h(Button, {

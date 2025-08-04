@@ -42,6 +42,49 @@
                         {{ documentFormStore.errors.collection_id }}
                     </small>
                 </div>
+
+                <!-- Processing Type -->
+                <div>
+                    <label for="processing_type" class="block text-sm font-medium text-gray-700 mb-2">
+                        Loại xử lý tài liệu *
+                    </label>
+                    <Dropdown id="processing_type" v-model="documentFormStore.formData.processing_type"
+                        :options="processingTypeOptions" optionLabel="label" optionValue="value"
+                        placeholder="Chọn loại xử lý" class="w-full"
+                        :class="{ 'p-invalid': documentFormStore.errors.processing_type }" />
+                    <small v-if="documentFormStore.errors.processing_type" class="p-error">
+                        {{ documentFormStore.errors.processing_type }}
+                    </small>
+                </div>
+
+                <div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Effective From -->
+                        <div>
+                            <label for="effective_from" class="block text-sm font-medium text-gray-700 mb-2">
+                                Hiệu lực từ
+                            </label>
+                            <Calendar id="effective_from" v-model="documentFormStore.formData.effective_from"
+                                class="w-full" placeholder="YYYY-MM-DD" dateFormat="yy-mm-dd" showIcon
+                                :maxDate="documentFormStore.formData.effective_to" />
+                        </div>
+
+                        <!-- Effective To -->
+                        <div>
+                            <label for="effective_to" class="block text-sm font-medium text-gray-700 mb-2">
+                                Hiệu lực đến
+                            </label>
+                            <Calendar id="effective_to" v-model="documentFormStore.formData.effective_to"
+                                class="w-full" placeholder="YYYY-MM-DD" dateFormat="yy-mm-dd" showIcon
+                                :minDate="documentFormStore.formData.effective_from"
+                                :class="{ 'p-invalid': documentFormStore.errors.date_error }" />
+                        </div>
+                    </div>
+                    <small v-if="documentFormStore.errors.date_error" class="p-error mt-1 block">
+                        {{ documentFormStore.errors.date_error }}
+                    </small>
+                </div>
+
             </div>
 
             <!-- Upload Area -->
@@ -141,6 +184,7 @@ import { useDocumentFormStore } from '@/stores/useDocumentFormStore'
 import http from '@/service/http'
 import CollectionService from '@/service/CollectionService'
 import { useRouter } from 'vue-router'
+import Calendar from 'primevue/calendar';
 
 const router = useRouter()
 const documentFormStore = useDocumentFormStore()
@@ -148,6 +192,12 @@ const emit = defineEmits(['refresh', 'created'])
 
 const isDropping = ref(false)
 const fileInput = ref(null)
+
+const processingTypeOptions = ref([
+    { label: 'Sentence Based', value: 'sentence_based' },
+    { label: 'Excel Tabular', value: 'excel_tabular' },
+    { label: 'Document Structured', value: 'document_structured' }
+]);
 
 const openDialog = () => {
     documentFormStore.openDialog()
@@ -247,6 +297,17 @@ const validateForm = () => {
         errors.collection_id = 'Vui lòng chọn collection'
     }
 
+    if (!documentFormStore.formData.processing_type) {
+        errors.processing_type = 'Vui lòng chọn loại xử lý'
+    }
+    
+    const { effective_from, effective_to } = documentFormStore.formData;
+    if (effective_from && effective_to && effective_to < effective_from) {
+        errors.date_error = 'Ngày kết thúc không được nhỏ hơn ngày bắt đầu.';
+    } else {
+        delete errors.date_error; 
+    }
+
     if (!documentFormStore.formData.file) {
         errors.file = 'Vui lòng chọn file'
     }
@@ -332,6 +393,16 @@ const formatFileSize = (bytes) => {
     else return (bytes / 1048576).toFixed(1) + ' MB'
 }
 
+const formatDateToISO = (date) => {
+    if (!date || !(date instanceof Date)) {
+        return null;
+    }
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const createDocument = async () => {
     if (!validateForm()) {
         return
@@ -360,7 +431,17 @@ const createDocument = async () => {
         const formDataToSend = new FormData()
         formDataToSend.append('file', documentFormStore.formData.file)
         formDataToSend.append('collection_id', documentFormStore.formData.collection_id)
-
+        formDataToSend.append('processing_type', documentFormStore.formData.processing_type)
+        
+        const formattedFrom = formatDateToISO(documentFormStore.formData.effective_from);
+        if (formattedFrom) {
+            formDataToSend.append('effective_from', formattedFrom);
+        }
+        
+        const formattedTo = formatDateToISO(documentFormStore.formData.effective_to);
+        if (formattedTo) {
+            formDataToSend.append('effective_to', formattedTo);
+        }
 
         const response = await http.post(
             `v1/collections/${documentFormStore.formData.collection_id}/documents`,
@@ -454,6 +535,7 @@ watch(() => router.currentRoute.value, () => {
 </script>
 
 <style scoped>
+/* All styles remain unchanged */
 .global-document-form-dialog {
     z-index: 9999 !important;
 }

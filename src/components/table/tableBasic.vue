@@ -11,7 +11,7 @@ const dataTable = ref([]);
 
 const paginator = ref({
   page: 1,
-  page_size: 20,
+  page_size: 10,
   total: 0,
   orderBy: { field: "id", asc: true },
 });
