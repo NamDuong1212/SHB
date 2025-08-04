@@ -213,9 +213,12 @@ const columns = ref([
                       h("div", { class: "mt-2 flex gap-3 text-sm" }, [
                         h("span", { class: "text-600" }, [
                           h("i", { class: "pi pi-calendar-times mr-2" }),
-                          new Date(doc.created_at).toLocaleDateString('vi-VN')
+                          new Date(doc.effective_from).toLocaleDateString('vi-VN')
                         ]),
-
+                        h("span", { class: "text-600" }, [
+                          h("i", { class: "pi pi-calendar-plus mr-2" }),
+                          new Date(doc.effective_to).toLocaleDateString('vi-VN')
+                        ]),
                       ])
                     ])
                 )

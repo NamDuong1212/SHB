@@ -37,6 +37,9 @@
                                 @click="fetchCollections" :loading="documentFormStore.collectionsLoading"
                                 v-tooltip.top="'Làm mới danh sách collection'" outlined />
                         </Select>
+                        <Button type="button" icon="pi pi-refresh" size="small" severity="secondary"
+                            @click="fetchCollections" :loading="documentFormStore.collectionsLoading"
+                            v-tooltip.top="'Làm mới danh sách collection'" outlined />
                     </div>
                     <small v-if="documentFormStore.errors.collection_id" class="p-error">
                         {{ documentFormStore.errors.collection_id }}
@@ -346,7 +349,7 @@ const validateForm = () => {
     if (effective_from && effective_to && effective_to < effective_from) {
         errors.date_error = 'Ngày kết thúc không được nhỏ hơn ngày bắt đầu.';
     } else {
-        delete errors.date_error; 
+        delete errors.date_error;
     }
 
     if (!documentFormStore.formData.file) {
