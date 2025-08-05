@@ -659,6 +659,79 @@ const handleClickOutside = (event) => {
 .markdown-content :deep(a:hover) {
   color: #2563eb;
 }
+.markdown-content :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.markdown-content :deep(thead) {
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+}
+
+.markdown-content :deep(th) {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #d1d5db;
+  border-right: 1px solid #d1d5db;
+}
+
+.markdown-content :deep(th:last-child) {
+  border-right: none;
+}
+
+.markdown-content :deep(td) {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.markdown-content :deep(td:last-child) {
+  border-right: none;
+}
+
+.markdown-content :deep(tbody tr:hover) {
+  background-color: #f9fafb;
+}
+
+.markdown-content :deep(tbody tr:last-child td) {
+  border-bottom: none;
+}
+
+/* Responsive table styling */
+@media (max-width: 768px) {
+  .markdown-content :deep(table) {
+    font-size: 0.875rem;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .markdown-content :deep(th),
+  .markdown-content :deep(td) {
+    padding: 0.5rem 0.75rem;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .markdown-content :deep(table) {
+    font-size: 0.8125rem;
+  }
+  
+  .markdown-content :deep(th),
+  .markdown-content :deep(td) {
+    padding: 0.375rem 0.5rem;
+    min-width: 100px;
+  }
+}
 
 /* Custom Carousel Styling (if re-enabled) */
 /*
