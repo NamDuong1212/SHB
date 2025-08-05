@@ -1,12 +1,12 @@
 <template>
   <Toast />
 
-  <div class="grid bg-gradient-to-br gap-2 lg:gap-4">
-    <div class="chat-container col-span-12 lg:col-span-10 relative flex flex-col h-screen ">
+  <div class="grid bg-gradient-to-br gap-2 lg:gap-4 min-w-0 overflow-hidden">
+    <div class="chat-container col-span-12 lg:col-span-10 relative flex flex-col h-screen min-w-0">
       <!-- Header -->
       <div
-        class="chat-header rounded-xl p-3 md:p-4 mx-2 md:mx-0 shadow-xl col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 max-w-6xl mx-auto">
+        class="chat-header rounded-xl p-3 md:p-4 mx-2 md:mx-0 col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden max-w-full min-w-0">
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 max-w-6xl mx-auto min-w-0">
           <div class="flex items-center gap-3">
             <div
               class="w-12 h-12 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] flex items-center justify-center shadow-md">
@@ -24,15 +24,15 @@
               <p class="text-sm">Trợ lý thông minh của bạn</p>
             </div>
           </div>
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-            <div class="relative flex-1 sm:flex-none min-w-[280px] collection-selector">
-              <div class="flex items-center gap-2 p-2 rounded-xl ">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto min-w-0">
+            <div class="relative flex-1 sm:flex-none min-w-[280px] collection-selector min-w-0">
+              <div class="flex items-center gap-2 p-2 rounded-xl min-w-0">
                 <i class="text-blue-500 text-sm"></i>
                 <span class="text-sm font-medium">Collection:</span>
-                <div class="flex-1 min-w-0">
+                <div class="flex-1 min-w-0 max-w-full overflow-hidden">
                   <Select v-model="selectedCollection" :options="Collections" optionLabel="collection_name"
                     optionValue="collection_name" placeholder="Chọn collection..." @change="onCollectionChange"
-                    class="w-full custom-select" :pt="{
+                    class="w-full custom-select min-w-0 max-w-full" :pt="{
                       root: {
                         class: 'bg-transparent border-none outline-none'
                       },
@@ -86,14 +86,14 @@
             </span>
           </div>
         </div>
-        <!-- Suggestion Cards -->
+        <!-- Messages -->
         <ScrollPanel style="height: calc(100vh - 180px); width: 100%; " :dt="{
           bar: {
             background: ''
           }
-        }" class="max-w-6xl mx-auto" ref="scrollPanel">
+        }" class="max-w-6xl mx-auto min-w-0 overflow-hidden" ref="scrollPanel">
           <!-- Messages -->
-          <div class="space-y-4 md:space-y-6 px-1 md:px-2 mb-60 lg:mb-40">
+          <div class="space-y-4 md:space-y-6 px-1 md:px-2 mb-60 lg:mb-40 min-w-0 overflow-hidden">
             <div v-for="(chat, index) in messages" :key="index">
               <!-- AI Message -->
               <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start" v-if="chat.role == 'assistant'">
@@ -108,8 +108,10 @@
                 </div>
                 <div class="flex-1">
                   <div
-                    class="rounded-2xl rounded-tl-none px-3 md:px-6 py-3 md:py-4 shadow-md border border-gray-100 max-w-[90%] md:max-w-[85%] col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div v-html="chat.content" class="markdown-content text-sm md:text-md leading-relaxed"></div>
+                    class="rounded-2xl rounded-tl-none px-3 md:px-6 py-3 md:py-4 shadow-md border border-gray-100 max-w-[90%] md:max-w-[85%] col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-0">
+                    <div v-html="chat.content"
+                      class="markdown-content text-sm md:text-md leading-relaxed break-words overflow-wrap-break-word">
+                    </div>
                   </div>
                   <div class="p-4">
                     <div class="text-xs mt-1 ml-2" v-if="chat.timestamp">
@@ -118,12 +120,11 @@
                   </div>
                 </div>
               </div>
-              <!-- User Message -->
-              <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start justify-end" v-if="chat.role == 'user'">
-                <div class="flex-1 flex flex-col items-end">
+              <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start justify-end min-w-0" v-if="chat.role == 'user'">
+                <div class="flex-1 flex flex-col items-end min-w-0">
                   <div
-                    class="bg-gradient-to-r from-[#28548c] to-[#04c0f4] text-white rounded-2xl rounded-tr-none px-3 md:px-6 py-3 md:py-4 shadow-md max-w-[90%] md:max-w-[85%]">
-                    <p class="text-sm md:text-md">{{ chat.content }}</p>
+                    class="bg-gradient-to-r from-[#28548c] to-[#04c0f4] text-white rounded-2xl rounded-tr-none px-3 md:px-6 py-3 md:py-4 shadow-md max-w-[90%] md:max-w-[85%] min-w-0">
+                    <p class="text-sm md:text-md break-words overflow-wrap-break-word">{{ chat.content }}</p>
                   </div>
                   <div class="p-4">
                     <div class="text-xs mt-1 mr-2" v-if="chat.timestamp">
@@ -153,18 +154,13 @@
 
 
       <!-- Input Area -->
-      <div class="chat-input fixed bottom-0 left-0 right-0  p-3 md:p-4 lg:p-5 z-40">
-        <form class="flex items-center gap-2 md:gap-3 w-full max-w-4xl mx-auto" @submit="submitChat">
-          <div class="relative flex-1">
+      <div class="chat-input fixed bottom-0 left-0 right-0 p-3 md:p-4 lg:p-5 z-40 max-w-full min-w-0 overflow-hidden">
+        <form class="flex items-center gap-2 md:gap-3 w-full max-w-4xl mx-auto min-w-0" @submit="submitChat">
+          <div class="relative flex-1 min-w-0">
             <input
-              class="w-full shadow-xl pl-4 md:pl-5 pr-10 md:pr-12 py-3 md:py-4 rounded-full border border-gray-200 col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
-              placeholder="Nhập câu hỏi..." v-model="user_question" @focus="handleInputFocus" @keydown="handleKeyDown"
+              class="w-full shadow-xl pl-4 md:pl-5 pr-4 md:pr-5 py-3 md:py-4 rounded-full border border-gray-200 col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-0"
+              placeholder="Nhập câu hỏi..." v-model="user_question" @keydown="handleKeyDown"
               :disabled="!selectedCollection" />
-            <button type="button" @click="showSuggestions = !showSuggestions"
-              class="absolute  right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors"
-              v-tooltip.top="'Hiển thị gợi ý câu hỏi'" :disabled="!selectedCollection">
-              <i class="pi pi-lightbulb text-base md:text-lg" :class="{ 'text-blue-500': showSuggestions }"></i>
-            </button>
           </div>
           <button type="submit"
             class="p-3 shadow-xl md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] hover:from-[#28548c] hover:to-[#04c0f4] text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
@@ -172,55 +168,6 @@
             :class="{ 'opacity-50': !user_question.length || !selectedCollection || isStreaming }">
             <i class="pi pi-send text-sm md:text-lg"></i>
           </button>
-          <!-- Suggestions Popup -->
-          <div v-if="showSuggestions && suggestedPrompts.length > 0 && selectedCollection"
-            class="suggestions-popup absolute bottom-full left-0 right-0 mb-2 mx-2 md:mx-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden backdrop-blur-lg bg-white/95 max-w-4xl md:mx-auto">
-            <div class="p-3 md:p-4 border-b border-gray-50 bg-gradient-to-r from-[#28548c] to-[#04c0f4]">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <i class="pi pi-lightbulb text-blue-500 text-base md:text-lg"></i>
-                  <h6 class="font-semibold text-gray-800 m-0 text-sm md:text-base">Gợi ý câu hỏi</h6>
-                </div>
-                <button @click="showSuggestions = false"
-                  class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-white/50">
-                  <i class="pi pi-times text-xs md:text-sm"></i>
-                </button>
-              </div>
-            </div>
-            <ScrollPanel style="width: 100%; height: clamp(200px, 40vh, 300px)" class="max-h-80 p-1 md:p-2">
-              <div class="grid grid-cols-1 gap-1">
-                <div v-for="(prompt, index) in suggestedPrompts" :key="index" @click="selectSuggestion(prompt)"
-                  class="suggestion-item flex items-center gap-2 md:gap-3 p-2 md:p-3 mx-1 md:mx-2 rounded-xl hover:bg-blue-50 cursor-pointer transition-all duration-200 group">
-                  <div
-                    class="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-r from-[#28548c] to-[#04c0f4] flex items-center justify-center flex-shrink-0 group-hover:from-[#28548c] group-hover:to-[#04c0f4] transition-all">
-                    <i
-                      class="pi pi-arrow-right text-blue-500 text-xs md:text-sm group-hover:translate-x-0.5 transition-transform"></i>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p
-                      class="text-gray-700 text-xs md:text-sm font-medium group-hover:text-blue-700 transition-colors truncate">
-                      {{
-                        prompt.title
-                      }}</p>
-                    <p class="text-gray-500 text-xs mt-0.5 group-hover:text-blue-500 transition-colors line-clamp-2">
-                      {{
-                        prompt.description
-                      }}</p>
-                  </div>
-                  <div class="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                    <i class="pi pi-chevron-right text-blue-400 text-xs"></i>
-                  </div>
-                </div>
-              </div>
-            </ScrollPanel>
-            <div class="p-2 md:p-3 bg-gray-50 border-t border-gray-100">
-              <p class="text-xs text-gray-500 text-center">
-                <i class="pi pi-info-circle mr-1"></i>
-                <span class="hidden md:inline">Nhấn ESC để đóng hoặc nhấp vào gợi ý để sử dụng</span>
-                <span class="md:hidden">Nhấp để sử dụng gợi ý</span>
-              </p>
-            </div>
-          </div>
         </form>
         <p class="text-center text-xs font-italic px-2 mt-2">
           <span class="hidden md:inline">Thông tin được tạo ra bằng AI. Hãy luôn cẩn trọng và sử dụng thông tin AI một
@@ -268,10 +215,10 @@
 import SkeletonLoading from "@/components/SkeletonLoading.vue";
 import CollectionService from "@/service/CollectionService";
 import http from "@/service/http";
+import { useAuthStore } from '@/stores/useAuth';
 import { marked } from 'marked';
 import { useToast } from "primevue";
 import { nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useAuthStore } from '@/stores/useAuth';
 // Cache constants
 const CACHE_KEY = 'selected_collection_cache';
 const CACHE_DURATION = 10 * 60 * 1000; // 10 phút tính bằng milliseconds
@@ -317,29 +264,6 @@ const Collections = ref([]);
 const messages = ref([]);
 const user_question = ref("");
 const showDeleteConfirmDialog = ref(false);
-const showSuggestions = ref(false);
-const suggestedPrompts = ref([
-  {
-    title: "/help",
-    description: "Tìm hiểu các quy trình và quy định công ty",
-  },
-  {
-    title: "Thông tin nhân sự",
-    description: "Câu hỏi về chính sách nhân sự, lương thưởng",
-  },
-  {
-    title: "Tài liệu kỹ thuật",
-    description: "Hướng dẫn kỹ thuật và tài liệu hệ thống",
-  },
-  {
-    title: "Báo cáo và thống kê",
-    description: "Cách tạo báo cáo và xem thống kê",
-  },
-  {
-    title: "Hỗ trợ kỹ thuật",
-    description: "Giải quyết các vấn đề kỹ thuật",
-  }
-]);
 
 // Carousel responsive options (if CardBox is re-enabled)
 const carouselResponsiveOptions = ref([
@@ -365,12 +289,10 @@ onBeforeMount(() => {
 });
 
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
   document.addEventListener('keydown', handleKeyDown);
 });
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside);
   document.removeEventListener('keydown', handleKeyDown);
 });
 
@@ -427,7 +349,7 @@ const sendChatMessage = async (messageContent) => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
-        'Accept': 'text/event-stream' 
+        'Accept': 'text/event-stream'
       },
       body: JSON.stringify({
         message: messageContent,
@@ -504,16 +426,6 @@ const submitChat = async (e) => {
   await sendChatMessage(question);
 };
 
-const getValueMessage = async (item) => {
-  user_question.value = item; // Set the input value to the suggested item
-  await sendChatMessage(item); // Send the message
-  showSuggestions.value = false; // Hide suggestions after selection
-  nextTick(() => {
-    const input = document.querySelector('input[placeholder*="Nhập câu hỏi"]');
-    if (input) input.focus();
-  });
-};
-
 const fetchCollections = async () => {
   try {
     const cachedCollection = cacheUtils.getCache();
@@ -581,48 +493,26 @@ const confirmDelete = async () => {
   }
 };
 
-const selectSuggestion = (prompt) => {
-  user_question.value = prompt.title;
-  showSuggestions.value = false;
-  // Focus on the input after selection
-  nextTick(() => {
-    const input = document.querySelector('input[placeholder*="Nhập câu hỏi"]');
-    if (input) input.focus();
-  });
-};
-
 const handleKeyDown = (event) => {
-  if (event.key === 'Escape') {
-    showSuggestions.value = false;
-  }
-  // Optional: Tab to open suggestions if input is empty
-  // if (event.key === 'Tab' && !showSuggestions.value && user_question.value.trim() === '') {
-  //   event.preventDefault();
-  //   showSuggestions.value = true;
-  // }
-};
-
-const handleInputFocus = () => {
-  if (user_question.value.trim() === '') {
-    showSuggestions.value = true;
-  }
-};
-
-const handleClickOutside = (event) => {
-  const popup = document.querySelector('.suggestions-popup');
-  const input = document.querySelector('input[placeholder*="Nhập câu hỏi"]');
-
-  if (popup && input && !popup.contains(event.target) && !input.contains(event.target)) {
-    showSuggestions.value = false;
-  }
+  // Handle any global key events if needed
 };
 </script>
 
 <style scoped>
 /* Markdown content styling */
+.markdown-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .markdown-content :deep(p) {
   margin-bottom: 1rem;
   line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .markdown-content :deep(ul),
@@ -659,6 +549,7 @@ const handleClickOutside = (event) => {
 .markdown-content :deep(a:hover) {
   color: #2563eb;
 }
+
 .markdown-content :deep(table) {
   width: 100%;
   border-collapse: collapse;
@@ -713,7 +604,7 @@ const handleClickOutside = (event) => {
     overflow-x: auto;
     white-space: nowrap;
   }
-  
+
   .markdown-content :deep(th),
   .markdown-content :deep(td) {
     padding: 0.5rem 0.75rem;
@@ -725,7 +616,7 @@ const handleClickOutside = (event) => {
   .markdown-content :deep(table) {
     font-size: 0.8125rem;
   }
-  
+
   .markdown-content :deep(th),
   .markdown-content :deep(td) {
     padding: 0.375rem 0.5rem;
@@ -800,55 +691,19 @@ const handleClickOutside = (event) => {
   /* Ensure trigger icon is not too wide */
 }
 
-/* Suggestions Popup Styles */
-.suggestions-popup {
-  animation: fadeInUp 0.3s ease-out;
-  transform-origin: bottom center;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.suggestion-item {
-  position: relative;
-  overflow: hidden;
-}
-
-.suggestion-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
-  transition: left 0.5s;
-}
-
-.suggestion-item:hover::before {
-  left: 100%;
-}
-
 /* Viewport constraints - Ensure no overflow */
 .chat-container {
   max-width: 100vw;
+  min-width: 0;
   overflow-x: hidden;
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.suggestions-popup {
-  max-width: calc(100vw - 2rem);
-  max-height: min(60vh, 400px);
-  overflow: hidden;
+/* Ensure all child elements respect container width */
+.chat-container * {
+  max-width: 100%;
   box-sizing: border-box;
 }
 
@@ -872,22 +727,13 @@ const handleClickOutside = (event) => {
   font-size: clamp(0.875rem, 1.5vw, 1rem) !important;
   padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.25rem) !important;
   padding-left: clamp(1rem, 3vw, 1.25rem) !important;
-  padding-right: clamp(2.5rem, 6vw, 3rem) !important;
+  padding-right: clamp(1rem, 3vw, 1.25rem) !important;
 }
 
 .chat-input button[type="submit"] {
   width: clamp(3rem, 8vw, 3.5rem) !important;
   height: clamp(3rem, 8vw, 3.5rem) !important;
   padding: clamp(0.75rem, 2vw, 1rem) !important;
-}
-
-.chat-input .absolute button {
-  padding: clamp(0.5rem, 1.5vw, 0.75rem) !important;
-  right: clamp(0.75rem, 2vw, 1rem) !important;
-}
-
-.chat-input .absolute button i {
-  font-size: clamp(0.875rem, 1.5vw, 1rem) !important;
 }
 
 .chat-input button i {
@@ -907,15 +753,6 @@ const handleClickOutside = (event) => {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .suggestions-popup {
-    left: 0.5rem;
-    right: 0.5rem;
-    margin-left: 0;
-    margin-right: 0;
-    border-radius: 1rem;
-    max-height: 50vh;
-  }
-
   .chat-container {
     height: 100vh;
     max-width: 100vw;
@@ -951,15 +788,6 @@ const handleClickOutside = (event) => {
     margin: 0.25rem;
   }
 
-  .suggestion-item {
-    padding: 0.5rem;
-  }
-
-  .suggestion-item .w-6 {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-
   .space-y-4>*+* {
     margin-top: 0.75rem;
   }
@@ -981,12 +809,6 @@ const handleClickOutside = (event) => {
 
   .markdown-content {
     font-size: 0.8125rem;
-  }
-
-  .suggestions-popup {
-    left: 0.25rem;
-    right: 0.25rem;
-    max-height: 40vh;
   }
 }
 
@@ -1033,18 +855,13 @@ const handleClickOutside = (event) => {
     font-size: 0.8rem !important;
     padding: 0.6rem 0.8rem !important;
     padding-left: 0.8rem !important;
-    padding-right: 2rem !important;
+    padding-right: 0.8rem !important;
   }
 
   .chat-input button[type="submit"] {
     width: 2.5rem !important;
     height: 2.5rem !important;
     padding: 0.5rem !important;
-  }
-
-  .chat-input .absolute button {
-    padding: 0.25rem !important;
-    right: 0.5rem !important;
   }
 
   .chat-input button i {
@@ -1061,7 +878,7 @@ const handleClickOutside = (event) => {
     font-size: 0.75rem !important;
     padding: 0.5rem 0.75rem !important;
     padding-left: 0.75rem !important;
-    padding-right: 1.75rem !important;
+    padding-right: 0.75rem !important;
   }
 
   .chat-input button[type="submit"] {
@@ -1071,24 +888,8 @@ const handleClickOutside = (event) => {
   }
 }
 
-@media (min-width: 1440px) {
-  .suggestions-popup {
-    max-width: 1200px;
-  }
-}
-
 @media (max-width: 320px),
 (max-height: 480px) {
-  .suggestions-popup {
-    position: fixed;
-    top: 10vh;
-    bottom: 120px;
-    left: 0.5rem;
-    right: 0.5rem;
-    height: auto;
-    max-height: none;
-  }
-
   .chat-input {
     padding: 0.5rem;
   }
