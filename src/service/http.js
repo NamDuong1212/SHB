@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/stores/useAuth';
 import axios from "axios";
+
 const url = import.meta.env.VITE_APP_API;
 
 const http = axios.create({
@@ -10,17 +11,25 @@ const http = axios.create({
 http.interceptors.request.use((config) => {
   try {
     const auth = useAuthStore();
-    const token = auth.getToken || localStorage.getItem('auth_token');
+    const token = auth.getToken(); 
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
   } catch (e) {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const authDataString = localStorage.getItem('auth_data');
+    if (authDataString) {
+      try {
+        const authData = JSON.parse(authDataString);
+        if (authData.access_token) {
+          config.headers.Authorization = `Bearer ${authData.access_token}`;
+        }
+      } catch (parseError) {
+        console.error('Error parsing auth data from localStorage:', parseError);
+      }
     }
   }
-
+  
   return config;
 });
 
@@ -30,8 +39,12 @@ http.interceptors.response.use(
     if (error.response) {
       const status = error.response.status;
       const currentPath = window.location.pathname;
-
+      
       if (status === 401) {
+        // Clear auth data on 401
+        const auth = useAuthStore();
+        auth.logout();
+        
         if (currentPath !== "/auth/login") {
           window.location.href = "/auth/login";
         }
@@ -46,6 +59,5 @@ http.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 
 export default http;

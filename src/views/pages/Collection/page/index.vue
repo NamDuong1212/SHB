@@ -230,7 +230,12 @@ const columns = ref([
     field: "description",
     header: "Mô tả",
     display: true,
-    renderValue: (rowData) => h("span", {}, rowData.description || ""),
+    renderValue: (rowData) => h("span", {
+      style: { 
+      whiteSpace: 'normal', 
+      wordBreak: 'break-word' 
+    } 
+    }, rowData.description || ""),
   },
   {
     field: "username",

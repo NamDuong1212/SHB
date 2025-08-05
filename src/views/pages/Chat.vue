@@ -20,14 +20,6 @@
             <div>
               <div class="flex items-center gap-2">
                 <h2 class="font-bold text-lg lg:text-2xl mb-0">FOXAI BOT</h2>
-                <!-- Status Indicator -->
-                <div class="flex items-center gap-1.5">
-                  <div class="w-2 h-2 rounded-full transition-all duration-300" :class="statusColor"
-                    v-tooltip.top="statusTooltip"></div>
-                  <span class="text-xs font-medium hidden sm:inline" :class="statusTextColor">
-                    {{ statusText }}
-                  </span>
-                </div>
               </div>
               <p class="text-sm">Trợ lý thông minh của bạn</p>
             </div>
@@ -38,8 +30,9 @@
                 <i class="text-blue-500 text-sm"></i>
                 <span class="text-sm font-medium">Collection:</span>
                 <div class="flex-1 min-w-0">
-                  <Select v-model="selectedCollection" :options="Collections" optionLabel="name" optionValue="name"
-                    placeholder="Chọn collection..." @change="onCollectionChange" class="w-full custom-select" :pt="{
+                  <Select v-model="selectedCollection" :options="Collections" optionLabel="collection_name"
+                    optionValue="collection_name" placeholder="Chọn collection..." @change="onCollectionChange"
+                    class="w-full custom-select" :pt="{
                       root: {
                         class: 'bg-transparent border-none outline-none'
                       },
@@ -60,7 +53,7 @@
                     <template #option="slotProps">
                       <div class="flex items-center gap-2 p-2">
                         <i class="pi pi-folder text-blue-500 text-sm"></i>
-                        <span class="text-sm">{{ slotProps.option.name }}</span>
+                        <span class="text-sm">{{ slotProps.option.collection_name }}</span>
                       </div>
                     </template>
                   </Select>
@@ -69,9 +62,6 @@
             </div>
 
             <div class="flex gap-2 justify-end sm:justify-start">
-              <!-- Refresh Status Button -->
-              <Button icon="pi pi-refresh" size="small" severity="info" text rounded @click="checkChatStatus"
-                :loading="statusLoading" v-tooltip.top="'Kiểm tra trạng thái hệ thống'" class="flex-shrink-0" />
               <Button icon="pi pi-trash" size="small" severity="danger" text rounded @click="showDeleteDialog"
                 v-tooltip.top="'Xóa cuộc trò chuyện'" class="flex-shrink-0" />
             </div>
@@ -80,15 +70,6 @@
       </div>
 
       <div class="flex-1 relative p-2 md:p-4 lg:p-6 overflow-hidden">
-        <!-- System Status Alert -->
-        <div v-if="systemStatus.status === 'unhealthy'" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <div class="flex items-center gap-2">
-            <i class="pi pi-exclamation-triangle text-red-500"></i>
-            <span class="text-sm text-red-700 font-medium">Hệ thống đang gặp sự cố</span>
-          </div>
-          <p class="text-xs text-red-600 mt-1">{{ systemStatus.message }}</p>
-        </div>
-
         <div v-if="!selectedCollection" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div class="flex items-center gap-2">
             <i class="pi pi-exclamation-triangle text-yellow-500"></i>
@@ -111,46 +92,6 @@
             background: ''
           }
         }" class="max-w-6xl mx-auto" ref="scrollPanel">
-          <!-- Suggestion Cards -->
-          <!-- <div class="mb-6 md:mb-8 mt-2" v-if="CardBox.length > 0">
-        <h3 class="text-base md:text-lg font-medium text-gray-700 mb-3 px-2 md:px-0">
-          <i class="pi pi-star text-yellow-500 mr-2"></i>
-          Gợi ý cho bạn
-        </h3>
-        <Carousel :value="CardBox" :numVisible="3" :numScroll="1" :responsiveOptions="carouselResponsiveOptions"
-          class="custom-carousel" :showIndicators="true" :autoplayInterval="5000" :circular="true">
-          <template #item="{ data }">
-            <div class="card-item p-2">
-              <Card class="suggestion-card h-full">
-                <template #header>
-                  <div class="relative overflow-hidden rounded-t-xl">
-                    <img :alt="data.title" :src="data.image_url"
-                      class="w-full h-40 object-cover transform hover:scale-110 transition-transform duration-300"
-                      @error="handleImageError" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                    <div class="absolute bottom-3 left-4 text-white">
-                      <h4 class="font-bold text-xl mb-1">{{ data.title }}</h4>
-                      <span class="text-sm opacity-80">{{ data.items.length }} câu hỏi</span>
-                    </div>
-                  </div>
-                </template>
-                <template #content>
-                  <div class="suggestion-items space-y-2">
-                    <div v-for="(item, index) in data.items" :key="index" @click="getValueMessage(item)"
-                      class="suggestion-item">
-                      <div
-                        class="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-blue-50 cursor-pointer transition-all duration-200">
-                        <i class="pi pi-angle-right text-blue-500"></i>
-                        <span class="text-sm text-gray-700 hover:text-blue-700 line-clamp-1">{{ item }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </template>
-              </Card>
-            </div>
-          </template>
-        </Carousel>
-      </div> -->
           <!-- Messages -->
           <div class="space-y-4 md:space-y-6 px-1 md:px-2 mb-60 lg:mb-40">
             <div v-for="(chat, index) in messages" :key="index">
@@ -218,23 +159,21 @@
             <input
               class="w-full shadow-xl pl-4 md:pl-5 pr-10 md:pr-12 py-3 md:py-4 rounded-full border border-gray-200 col-span-2 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
               placeholder="Nhập câu hỏi..." v-model="user_question" @focus="handleInputFocus" @keydown="handleKeyDown"
-              :disabled="!selectedCollection || systemStatus.status === 'unhealthy'" />
+              :disabled="!selectedCollection" />
             <button type="button" @click="showSuggestions = !showSuggestions"
               class="absolute  right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors"
-              v-tooltip.top="'Hiển thị gợi ý câu hỏi'"
-              :disabled="!selectedCollection || systemStatus.status === 'unhealthy'">
+              v-tooltip.top="'Hiển thị gợi ý câu hỏi'" :disabled="!selectedCollection">
               <i class="pi pi-lightbulb text-base md:text-lg" :class="{ 'text-blue-500': showSuggestions }"></i>
             </button>
           </div>
           <button type="submit"
             class="p-3 shadow-xl md:p-4 w-12 md:w-14 h-12 md:h-14 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] hover:from-[#28548c] hover:to-[#04c0f4] text-white shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
-            :disabled="!user_question.length || !selectedCollection || systemStatus.status === 'unhealthy' || isStreaming"
-            :class="{ 'opacity-50': !user_question.length || !selectedCollection || systemStatus.status === 'unhealthy' || isStreaming }">
+            :disabled="!user_question.length || !selectedCollection || isStreaming"
+            :class="{ 'opacity-50': !user_question.length || !selectedCollection || isStreaming }">
             <i class="pi pi-send text-sm md:text-lg"></i>
           </button>
           <!-- Suggestions Popup -->
-          <div
-            v-if="showSuggestions && suggestedPrompts.length > 0 && selectedCollection && systemStatus.status === 'healthy'"
+          <div v-if="showSuggestions && suggestedPrompts.length > 0 && selectedCollection"
             class="suggestions-popup absolute bottom-full left-0 right-0 mb-2 mx-2 md:mx-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden backdrop-blur-lg bg-white/95 max-w-4xl md:mx-auto">
             <div class="p-3 md:p-4 border-b border-gray-50 bg-gradient-to-r from-[#28548c] to-[#04c0f4]">
               <div class="flex items-center justify-between">
@@ -293,9 +232,6 @@
       </div>
 
     </div>
-    <!-- <div class="hidden lg:block lg:col-span-2">
-      <HistoryChat></HistoryChat>
-    </div> -->
   </div>
 
   <!-- Dialog xác nhận xóa -->
@@ -334,8 +270,8 @@ import CollectionService from "@/service/CollectionService";
 import http from "@/service/http";
 import { marked } from 'marked';
 import { useToast } from "primevue";
-import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from "vue";
-
+import { nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useAuthStore } from '@/stores/useAuth';
 // Cache constants
 const CACHE_KEY = 'selected_collection_cache';
 const CACHE_DURATION = 10 * 60 * 1000; // 10 phút tính bằng milliseconds
@@ -376,13 +312,6 @@ const toast = useToast();
 const isStreaming = ref(false);
 const scrollPanel = ref(null);
 const loading = ref(false);
-const systemStatus = ref({
-  status: 'unknown', // 'healthy', 'degraded', 'unhealthy', 'unknown'
-  message: 'Đang kiểm tra trạng thái hệ thống...',
-  lastChecked: null
-});
-const statusLoading = ref(false);
-const statusCheckInterval = ref(null);
 const selectedCollection = ref('');
 const Collections = ref([]);
 const messages = ref([]);
@@ -419,48 +348,13 @@ const carouselResponsiveOptions = ref([
   { breakpoint: '767px', numVisible: 1, numScroll: 1 }
 ]);
 
-// Computed properties for system status display
-const statusColor = computed(() => {
-  switch (systemStatus.value.status) {
-    case 'healthy': return 'bg-green-400 shadow-green-400/50 animate-pulse';
-    case 'degraded': return 'bg-orange-400 shadow-orange-400/50 animate-pulse';
-    case 'unhealthy': return 'bg-red-400 shadow-red-400/50 animate-pulse';
-    default: return 'bg-yellow-400 shadow-yellow-400/50 animate-pulse';
-  }
-});
-
-const statusTextColor = computed(() => {
-  switch (systemStatus.value.status) {
-    case 'healthy': return 'text-green-600';
-    case 'degraded': return 'text-orange-600';
-    case 'unhealthy': return 'text-red-600';
-    default: return 'text-yellow-600';
-  }
-});
-
-const statusText = computed(() => {
-  switch (systemStatus.value.status) {
-    case 'healthy': return 'Hoạt động';
-    case 'degraded': return 'Hạn chế';
-    case 'unhealthy': return 'Gặp sự cố';
-    default: return 'Đang kiểm tra';
-  }
-});
-
-const statusTooltip = computed(() => {
-  const lastChecked = systemStatus.value.lastChecked
-    ? new Date(systemStatus.value.lastChecked).toLocaleTimeString('vi-VN')
-    : 'Chưa kiểm tra';
-  return `${systemStatus.value.message} (Cập nhật: ${lastChecked})`;
-});
-
 // Watchers
 watch(selectedCollection, (newValue) => {
   if (newValue) {
     cacheUtils.setCache(newValue);
     console.log('Collection changed and cached:', newValue);
   } else {
-    cacheUtils.clearCache(); 
+    cacheUtils.clearCache();
     console.log('Selected collection cleared, cache cleared.');
   }
 });
@@ -473,16 +367,11 @@ onBeforeMount(() => {
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
   document.addEventListener('keydown', handleKeyDown);
-  checkChatStatus();
-  statusCheckInterval.value = setInterval(checkChatStatus, 30000);
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside);
   document.removeEventListener('keydown', handleKeyDown);
-  if (statusCheckInterval.value) {
-    clearInterval(statusCheckInterval.value);
-  }
 });
 
 // Methods
@@ -501,124 +390,119 @@ function scrollToBottom() {
   });
 }
 
-const checkChatStatus = async () => {
-  statusLoading.value = true;
-  try {
-    const { message, status } = (await http.get('/chat/status')).data;
-
-    const severityMap = { healthy: 'success', degraded: 'warn', unhealthy: 'error' };
-    const statusLabelMap = { healthy: 'Bình thường', degraded: 'Hạn chế', unhealthy: 'Lỗi' };
-
-    systemStatus.value = { status, message, lastChecked: new Date().toISOString() };
-
-    toast.add({
-      severity: severityMap[status] || 'info',
-      summary: `Trạng thái hệ thống: ${statusLabelMap[status] || 'Không xác định'}`,
-      detail: message,
-      life: 2000
-    });
-  } catch (error) {
-    console.error('Lỗi khi kiểm tra trạng thái chat:', error);
-    systemStatus.value = {
-      status: 'unhealthy',
-      message: 'Không thể kết nối đến hệ thống chat',
-      lastChecked: new Date().toISOString()
-    };
-    toast.add({
-      severity: 'error',
-      summary: 'Trạng thái hệ thống: Lỗi',
-      detail: 'Không thể kết nối đến hệ thống chat. Vui lòng kiểm tra lại kết nối.',
-      life: 3000
-    });
-  } finally {
-    statusLoading.value = false;
-  }
-};
-
 const sendChatMessage = async (messageContent) => {
   if (!selectedCollection.value || isStreaming.value) {
     toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng đợi câu trả lời hiện tại hoàn thành hoặc chọn một Collection.', life: 3000 });
     return;
   }
-  if (systemStatus.value.status === 'unhealthy') {
-    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Hệ thống đang gặp sự cố, vui lòng thử lại sau.', life: 3000 });
-    return;
-  }
-  if (systemStatus.value.status === 'degraded') {
-    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Hệ thống đang hoạt động hạn chế, phản hồi có thể chậm hơn.', life: 3000 });
-  }
 
   loading.value = true;
   isStreaming.value = true;
+  user_question.value = "";
 
   messages.value.push({
     role: "user",
     content: messageContent,
     timestamp: new Date().toISOString()
   });
+
+  const assistantMessagePlaceholder = {
+    role: "assistant",
+    content: "",
+    timestamp: new Date().toISOString()
+  };
+  messages.value.push(assistantMessagePlaceholder);
+  const assistantMessageIndex = messages.value.length - 1;
+
   scrollToBottom();
 
-  const requestData = {
-    message: messageContent,
-    collection: selectedCollection.value
-  };
+  const authStore = useAuthStore();
+  const token = authStore.getToken;
+  console.log("Token for chat API:", token);
+  const apiUrl = import.meta.env.VITE_APP_API + "v1/agents/chat/stream";
 
   try {
-    const response = await http.post("/chat/internal", requestData);
-    
-    loading.value = false; 
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'text/event-stream' 
+      },
+      body: JSON.stringify({
+        message: messageContent,
+        collection_name: selectedCollection.value
+      })
+    });
 
-    const botResponse = response.data;
-    const answerRaw = botResponse.content || "Xin lỗi, tôi không hiểu câu hỏi của bạn.";
-
-    const assistantMessage = {
-      role: "assistant",
-      content: "",
-      timestamp: botResponse.timestamp || new Date().toISOString()
-    };
-    messages.value.push(assistantMessage);
-
-    const typingSpeed = systemStatus.value.status === 'degraded' ? 20 : 10;
-    let currentText = "";
-    for (let i = 0; i < answerRaw.length; i++) {
-      await new Promise((resolve) => setTimeout(resolve, typingSpeed));
-      currentText += answerRaw[i];
-      messages.value[messages.value.length - 1].content = marked.parse(currentText);
-      scrollToBottom();
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Lỗi server: ${response.status}`);
     }
+
+    loading.value = false;
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let accumulatedRawContent = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) {
+        break;
+      }
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          const jsonString = line.substring(5).trim();
+          if (jsonString) {
+            try {
+              const parsedData = JSON.parse(jsonString);
+
+              if (parsedData.type === 'message_chunk' && parsedData.content) {
+
+                accumulatedRawContent += parsedData.content;
+
+                messages.value[assistantMessageIndex].content = marked.parse(accumulatedRawContent);
+
+                scrollToBottom();
+              }
+
+              if (parsedData.type === 'message_complete') {
+                console.log('Streaming completed.', parsedData);
+              }
+
+            } catch (e) {
+              console.error('Error parsing stream data chunk:', jsonString, e);
+            }
+          }
+        }
+      }
+    }
+
   } catch (error) {
     console.error("Chat API Error:", error);
-    loading.value = false; 
-    messages.value.push({
-      role: "assistant",
-      content: marked.parse("❌ Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng thử lại."),
-      timestamp: new Date().toISOString()
-    });
-    toast.add({ severity: 'error', summary: 'Lỗi Chatbot', detail: error.response?.data?.message || 'Không thể gửi yêu cầu đến Chatbot. Vui lòng thử lại.', life: 3000 });
+    loading.value = false;
+    const errorMessage = "❌ Đã xảy ra lỗi khi gửi yêu cầu. Vui lòng thử lại. " + error.message;
+    messages.value[assistantMessageIndex].content = marked.parse(errorMessage);
+    toast.add({ severity: 'error', summary: 'Lỗi Chatbot', detail: error.message || 'Không thể gửi yêu cầu đến Chatbot.', life: 3000 });
   } finally {
     isStreaming.value = false;
+    messages.value[assistantMessageIndex].timestamp = new Date().toISOString();
     scrollToBottom();
   }
 };
 
 const submitChat = async (e) => {
   e.preventDefault();
-  if (!user_question.value.trim()) return; // Don't send empty messages
+  if (!user_question.value.trim()) return;
 
   const question = user_question.value;
-  user_question.value = ""; // Clear input immediately
   await sendChatMessage(question);
 };
-
-// Re-enable if CardBox carousel is used
-// const getCard = async () => {
-//   try {
-//     const res = await http.get('cards/');
-//     CardBox.value = res.data.items;
-//   } catch (error) {
-//     console.error("Không thể tải cards:", error);
-//   }
-// };
 
 const getValueMessage = async (item) => {
   user_question.value = item; // Set the input value to the suggested item
@@ -633,13 +517,13 @@ const getValueMessage = async (item) => {
 const fetchCollections = async () => {
   try {
     const cachedCollection = cacheUtils.getCache();
-    const response = await CollectionService.getAll();
-    Collections.value = response.data.data;
+    const response = await CollectionService.getAllForDropdown();
+    Collections.value = response.data.info.data.collections;
 
-    if (cachedCollection && Collections.value.some(c => c.name === cachedCollection)) {
+    if (cachedCollection && Collections.value.some(c => c.collection_name === cachedCollection)) {
       selectedCollection.value = cachedCollection;
     } else if (Collections.value.length > 0) {
-      selectedCollection.value = Collections.value[0].name;
+      selectedCollection.value = Collections.value[0].collection_name;
     }
   } catch (error) {
     console.error("Không thể tải collections:", error);
