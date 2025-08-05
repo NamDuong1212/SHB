@@ -452,7 +452,7 @@ const onCollectionChange = () => {
 const fetchChatHistory = async () => {
   loading.value = true;
   try {
-    const res = await http.get(`history/`);
+    const res = await http.get(`v1/messages`);
     const historyMessages = res.data.messages || [];
 
     // 1. Map và xử lý dữ liệu như cũ
@@ -515,13 +515,27 @@ const handleKeyDown = (event) => {
   overflow-wrap: break-word;
 }
 
-.markdown-content :deep(ul),
+.markdown-content :deep(ul) {
+  list-style-type: disc;
+  padding-left: 1.75rem;
+  margin-bottom: 1rem;
+}
+
 .markdown-content :deep(ol) {
+  list-style-type: decimal;
   padding-left: 1.75rem;
   margin-bottom: 1rem;
 }
 
 .markdown-content :deep(li) {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content :deep(ul ul),
+.markdown-content :deep(ol ol),
+.markdown-content :deep(ul ol),
+.markdown-content :deep(ol ul) {
+  margin-top: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
@@ -548,6 +562,12 @@ const handleKeyDown = (event) => {
 
 .markdown-content :deep(a:hover) {
   color: #2563eb;
+}
+
+.markdown-content :deep(hr) {
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.5rem 0;
 }
 
 .markdown-content :deep(table) {
