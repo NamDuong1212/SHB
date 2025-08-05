@@ -62,8 +62,9 @@
             </div>
 
             <div class="flex gap-2 justify-end sm:justify-start">
-              <Button icon="pi pi-trash" size="small" severity="danger" text rounded @click="showDeleteDialog"
-                v-tooltip.top="'Xóa cuộc trò chuyện'" class="flex-shrink-0" />
+              <Button icon="pi pi-refresh" size="small" severity="info" rounded @click="showDeleteDialog"
+                v-tooltip.top="'Xóa cuộc trò chuyện'" class="flex-shrink-0"
+                style="background-color: #28548c; color: white;" />
             </div>
           </div>
         </div>
@@ -119,9 +120,9 @@
                     </div>
                   </div>
                   <div class="p-4">
-                    <div class="text-xs mt-1 ml-2" v-if="chat.timestamp">
+                    <!-- <div class="text-xs mt-1 ml-2" v-if="chat.timestamp">
                       {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
-                    </div>
+                    </div> -->
                   </div>
                 </div>
               </div>
@@ -131,12 +132,12 @@
                   <div
                     class="bg-gradient-to-r from-[#28548c] to-[#04c0f4] text-white rounded-2xl rounded-tr-none px-3 md:px-6 py-3 md:py-4 shadow-md max-w-[90%] md:max-w-[85%] min-w-0">
                     <p class="text-sm md:text-md break-words overflow-wrap-break-word">{{ chat.content || chat.contents
-                      }}</p>
+                    }}</p>
                   </div>
                   <div class="p-4">
-                    <div class="text-xs mt-1 mr-2" v-if="chat.timestamp">
+                    <!-- <div class="text-xs mt-1 mr-2" v-if="chat.timestamp">
                       {{ new Date(chat.timestamp).toLocaleString('vi-VN') }}
-                    </div>
+                    </div> -->
                   </div>
                 </div>
                 <div
@@ -161,7 +162,8 @@
 
       <!-- Scroll to bottom button -->
       <div class="scroll-to-bottom fixed bottom-20 md:bottom-24 right-4 md:right-6 z-50" v-show="showScrollButton">
-        <button @click="scrollToBottom" class="p-2 md:p-3 rounded-full bg-[#28548c] hover:bg-blue-600 text-white shadow-lg transition-all duration-200 flex items-center justify-center">
+        <button @click="scrollToBottom"
+          class="p-2 md:p-3 rounded-full bg-[#28548c] hover:bg-blue-600 text-white shadow-lg transition-all duration-200 flex items-center justify-center">
           <i class="pi pi-chevron-down"></i>
         </button>
       </div>
@@ -368,7 +370,7 @@ const handleScroll = () => {
   if (scrollableContent.scrollTop < 50 && pagination.value.hasMoreMessages && !loadingMore.value) {
     loadMoreMessages();
   }
-  
+
   // Show scroll button when not at bottom
   const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop - scrollableContent.clientHeight < 100;
   showScrollButton.value = !isAtBottom;
@@ -588,11 +590,11 @@ const fetchChatHistory = async (page = 1, isLoadMore = false) => {
 
   } catch (error) {
     console.error('Error fetching chat history:', error);
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Lỗi', 
-      detail: 'Không thể tải lịch sử chat.', 
-      life: 3000 
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải lịch sử chat.',
+      life: 3000
     });
   } finally {
     loading.value = false;
@@ -1234,6 +1236,4 @@ const handleKeyDown = (event) => {
     opacity: 0.5;
   }
 }
-
-
 </style>
