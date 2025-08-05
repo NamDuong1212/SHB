@@ -87,16 +87,21 @@
           </div>
         </div>
         <!-- Messages -->
-        <ScrollPanel style="height: calc(100vh - 180px); width: 100%; " :dt="{
+        <ScrollPanel style="height: calc(100vh - 180px); width: 100%; " :pt="{
           bar: {
-            background: ''
+            class: 'bg-gray-200 dark:bg-gray-700 rounded-lg opacity-70 hover:opacity-100'
           }
-        }" class="max-w-6xl mx-auto min-w-0 overflow-hidden" ref="scrollPanel">
+        }" class="max-w-6xl mx-auto min-w-0 custom-scrollbar" ref="scrollPanel">
           <!-- Messages -->
           <div class="space-y-4 md:space-y-6 px-1 md:px-2 mb-60 lg:mb-40 min-w-0 overflow-hidden">
+            <!-- Loading indicator for older messages -->
+            <div class="flex justify-center py-4" v-if="loadingMore">
+              <SkeletonLoading></SkeletonLoading>
+            </div>
             <div v-for="(chat, index) in messages" :key="index">
               <!-- AI Message -->
-              <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start" v-if="chat.role == 'assistant'">
+              <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start"
+                v-if="chat.role == 'assistant' || chat.type == 'ai'">
                 <div
                   class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] flex-shrink-0 flex items-center justify-center shadow-md">
                   <svg stroke="white" fill="white" stroke-width="0" viewBox="0 0 24 24" height="14" width="14"
@@ -120,11 +125,13 @@
                   </div>
                 </div>
               </div>
-              <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start justify-end min-w-0" v-if="chat.role == 'user'">
+              <div class="flex gap-2 md:gap-4 mb-4 md:mb-6 items-start justify-end min-w-0"
+                v-if="chat.role == 'user' || chat.type == 'human'">
                 <div class="flex-1 flex flex-col items-end min-w-0">
                   <div
                     class="bg-gradient-to-r from-[#28548c] to-[#04c0f4] text-white rounded-2xl rounded-tr-none px-3 md:px-6 py-3 md:py-4 shadow-md max-w-[90%] md:max-w-[85%] min-w-0">
-                    <p class="text-sm md:text-md break-words overflow-wrap-break-word">{{ chat.content }}</p>
+                    <p class="text-sm md:text-md break-words overflow-wrap-break-word">{{ chat.content || chat.contents
+                      }}</p>
                   </div>
                   <div class="p-4">
                     <div class="text-xs mt-1 mr-2" v-if="chat.timestamp">
@@ -152,6 +159,12 @@
         </ScrollPanel>
       </div>
 
+      <!-- Scroll to bottom button -->
+      <div class="scroll-to-bottom fixed bottom-20 md:bottom-24 right-4 md:right-6 z-50" v-show="showScrollButton">
+        <button @click="scrollToBottom" class="p-2 md:p-3 rounded-full bg-[#28548c] hover:bg-blue-600 text-white shadow-lg transition-all duration-200 flex items-center justify-center">
+          <i class="pi pi-chevron-down"></i>
+        </button>
+      </div>
 
       <!-- Input Area -->
       <div class="chat-input fixed bottom-0 left-0 right-0 p-3 md:p-4 lg:p-5 z-40 max-w-full min-w-0 overflow-hidden">
@@ -259,11 +272,19 @@ const toast = useToast();
 const isStreaming = ref(false);
 const scrollPanel = ref(null);
 const loading = ref(false);
+const loadingMore = ref(false);
 const selectedCollection = ref('');
 const Collections = ref([]);
 const messages = ref([]);
 const user_question = ref("");
 const showDeleteConfirmDialog = ref(false);
+const showScrollButton = ref(false);
+const pagination = ref({
+  currentPage: 1,
+  totalPages: 1,
+  totalMessages: 0,
+  hasMoreMessages: false
+});
 
 // Carousel responsive options (if CardBox is re-enabled)
 const carouselResponsiveOptions = ref([
@@ -290,23 +311,86 @@ onBeforeMount(() => {
 
 onMounted(() => {
   document.addEventListener('keydown', handleKeyDown);
+  setupScrollListener();
 });
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeyDown);
+  removeScrollListener();
 });
 
-// Methods
-const handleImageError = (event) => {
-  event.target.src = '/path/to/fallback-image.png'; // Fallback image for carousel
-};
+const loadMoreMessages = async () => {
+  if (loadingMore.value || !pagination.value.hasMoreMessages) return;
 
-function scrollToBottom() {
+  loadingMore.value = true;
+
+  try {
+    const scrollableContent = scrollPanel.value.$el.querySelector('.p-scrollpanel-content');
+    const oldScrollHeight = scrollableContent.scrollHeight;
+    const oldScrollTop = scrollableContent.scrollTop;
+    const nextPage = pagination.value.currentPage + 1;
+    await fetchChatHistory(nextPage, true);
+    nextTick(() => {
+      const newScrollHeight = scrollableContent.scrollHeight;
+      const heightDifference = newScrollHeight - oldScrollHeight;
+      scrollableContent.scrollTop = oldScrollTop + heightDifference;
+    });
+  } catch (error) {
+    console.error("Failed to load more messages:", error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải thêm tin nhắn cũ.', life: 3000 });
+  } finally {
+    loadingMore.value = false;
+  }
+};
+const setupScrollListener = () => {
   nextTick(() => {
     if (scrollPanel.value) {
       const scrollableContent = scrollPanel.value.$el.querySelector('.p-scrollpanel-content');
       if (scrollableContent) {
-        scrollableContent.scrollTop = scrollableContent.scrollHeight;
+        scrollableContent.addEventListener('scroll', handleScroll);
+      }
+    }
+  });
+};
+
+const removeScrollListener = () => {
+  if (scrollPanel.value) {
+    const scrollableContent = scrollPanel.value.$el.querySelector('.p-scrollpanel-content');
+    if (scrollableContent) {
+      scrollableContent.removeEventListener('scroll', handleScroll);
+    }
+  }
+};
+
+const handleScroll = () => {
+  const scrollableContent = scrollPanel.value.$el.querySelector('.p-scrollpanel-content');
+  // Load more when user scrolls near the top (within 50px of top)
+  if (scrollableContent.scrollTop < 50 && pagination.value.hasMoreMessages && !loadingMore.value) {
+    loadMoreMessages();
+  }
+  
+  // Show scroll button when not at bottom
+  const isAtBottom = scrollableContent.scrollHeight - scrollableContent.scrollTop - scrollableContent.clientHeight < 100;
+  showScrollButton.value = !isAtBottom;
+};
+
+const handleImageError = (event) => {
+  event.target.src = '/path/to/fallback-image.png'; // Fallback image for carousel
+};
+
+function scrollToBottom(smooth = true) {
+  nextTick(() => {
+    if (scrollPanel.value) {
+      const scrollableContent = scrollPanel.value.$el.querySelector('.p-scrollpanel-content');
+      if (scrollableContent) {
+        if (smooth) {
+          scrollableContent.scrollTo({
+            top: scrollableContent.scrollHeight,
+            behavior: 'smooth'
+          });
+        } else {
+          scrollableContent.scrollTop = scrollableContent.scrollHeight;
+        }
       }
     }
   });
@@ -322,16 +406,21 @@ const sendChatMessage = async (messageContent) => {
   isStreaming.value = true;
   user_question.value = "";
 
-  messages.value.push({
+  const userMessage = {
     role: "user",
     content: messageContent,
-    timestamp: new Date().toISOString()
-  });
+    timestamp: new Date().toISOString(),
+    type: "human",
+    contents: messageContent
+  };
+  messages.value.push(userMessage);
 
   const assistantMessagePlaceholder = {
     role: "assistant",
     content: "",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    type: "ai",
+    contents: ""
   };
   messages.value.push(assistantMessagePlaceholder);
   const assistantMessageIndex = messages.value.length - 1;
@@ -449,31 +538,64 @@ const onCollectionChange = () => {
   console.log('Collection changed to:', selectedCollection.value);
 };
 
-const fetchChatHistory = async () => {
+const fetchChatHistory = async (page = 1, isLoadMore = false) => {
   loading.value = true;
   try {
-    const res = await http.get(`v1/messages`);
-    const historyMessages = res.data.messages || [];
+    const res = await http.get(`v1/messages`, {
+      params: {
+        page: page,
+        page_size: 10
+      }
+    });
+    const responseData = res.data?.info?.data;
+    if (!responseData) {
+      console.error('Invalid response structure:', res.data);
+      return;
+    }
 
-    // 1. Map và xử lý dữ liệu như cũ
+    const historyMessages = responseData.messages || [];
+    const paginationInfo = {
+      currentPage: responseData.page || page,
+      totalPages: responseData.total_pages || 1,
+      totalMessages: responseData.total || 0,
+      hasMoreMessages: (responseData.page || page) < (responseData.total_pages || 1)
+    };
+
+    pagination.value = paginationInfo;
+
     const mappedMessages = historyMessages.map(el => ({
       ...el,
-      content: el.role === 'assistant' ? marked.parse(el.content) : el.content,
-      timestamp: el.timestamp || new Date().toISOString()
+      content: el.type === 'ai' ? marked.parse(el.contents || '') : (el.contents || ''),
+      timestamp: el.created_at || new Date().toISOString(),
+      role: el.type === 'ai' ? 'assistant' : 'user'
     }));
 
     mappedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-    messages.value = mappedMessages;
+    if (isLoadMore) {
+      messages.value = [...mappedMessages, ...messages.value];
+      console.log('Older messages loaded and prepended:', mappedMessages.length);
+    } else {
+      messages.value = mappedMessages;
+      console.log('Chat history loaded and sorted:', messages.value);
+      nextTick(() => {
+        scrollToBottom(false);
+      });
+    }
 
-    console.log('Chat history loaded and sorted:', messages.value);
+    console.log('Pagination info:', paginationInfo);
+    console.log('Mapped messages:', mappedMessages);
 
   } catch (error) {
     console.error('Error fetching chat history:', error);
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải lịch sử chat.', life: 3000 });
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Lỗi', 
+      detail: 'Không thể tải lịch sử chat.', 
+      life: 3000 
+    });
   } finally {
     loading.value = false;
-    scrollToBottom();
   }
 };
 
@@ -486,6 +608,12 @@ const confirmDelete = async () => {
   messages.value = []; // Clear UI immediately
   try {
     await http.delete(`/history/`);
+    pagination.value = {
+      currentPage: 1,
+      totalPages: 1,
+      totalMessages: 0,
+      hasMoreMessages: false
+    };
     toast.add({ severity: 'success', summary: 'Thành công', detail: 'Xóa cuộc trò chuyện thành công!', life: 3000 });
   } catch (error) {
     console.error('Error clearing chat history:', error);
@@ -1079,4 +1207,33 @@ const handleKeyDown = (event) => {
     overflow: hidden !important;
   }
 }
+
+/* Custom scrollbar styling */
+.custom-scrollbar :deep(.p-scrollpanel-wrapper) {
+  border-right: 10px solid transparent;
+}
+
+.custom-scrollbar :deep(.p-scrollpanel-bar) {
+  width: 10px !important;
+  opacity: 0.6;
+  transition: opacity 0.3s, background-color 0.3s;
+}
+
+.custom-scrollbar :deep(.p-scrollpanel-bar:hover) {
+  opacity: 0.9;
+  background-color: #3b82f6 !important;
+}
+
+.custom-scrollbar :deep(.p-scrollpanel-content) {
+  padding-right: 10px;
+}
+
+/* Make scrollbar always visible on desktop */
+@media (min-width: 1024px) {
+  .custom-scrollbar :deep(.p-scrollpanel-bar) {
+    opacity: 0.5;
+  }
+}
+
+
 </style>
