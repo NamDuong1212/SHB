@@ -2,7 +2,7 @@
 import buildGridifyQueryFromPrimeVueFilters from "@/composables/buildGridifyQueryFromPrimeVueFilters";
 import http from "@/service/http";
 import debounce from "lodash/debounce";
-import { onBeforeMount, ref, watchEffect } from "vue";
+import { onBeforeMount, ref, watchEffect, computed } from "vue";
 import { useToast } from "primevue";
 const toast = useToast();
 const filters1 = ref(null);
@@ -19,6 +19,14 @@ const paginator = ref({
 const modelSelect = defineModel("selection");
 const modelExpandedRows = defineModel("expandedRows", {
   default: {},
+});
+
+// Mobile check
+const isMobile = computed(() => {
+  if (typeof window !== 'undefined') {
+    return window.innerWidth < 640;
+  }
+  return false;
 });
 
 const emits = defineEmits(["resetFilter"]);
@@ -140,22 +148,22 @@ defineExpose({
     :rowHover="true" v-model:filters="filters1" :loading="loading" :filters="props.filters" scrollable
     filterDisplay="menu" resizableColumns columnResizeMode="fit"
     paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-    currentPageReportTemplate="{first} đến {last} của {totalRecords} bản ghi" :rowsPerPageOptions="[10, 20, 30, 50]" lazy
-    v-model:selection="modelSelect" v-model:expandedRows="modelExpandedRows">
+    currentPageReportTemplate="{first} đến {last} của {totalRecords} bản ghi" :rowsPerPageOptions="[10, 20, 30, 50]"
+    lazy v-model:selection="modelSelect" v-model:expandedRows="modelExpandedRows">
     <template #header>
-      <div class="flex justify-between p-3">
-        <div class="flex gap-4">
-          <IconField>
+      <div class="flex flex-col lg:flex-row justify-between gap-3 p-2 lg:p-3">
+        <div class="flex flex-col sm:flex-row gap-2 lg:gap-4 flex-1">
+          <IconField class="w-full sm:max-w-md">
             <InputIcon>
               <i class="pi pi-search" />
             </InputIcon>
-            <InputText class="w-[30rem]" v-model="filters1['Search'].value" @input="searchGlobal" placeholder="Tìm kiếm"
-              size="small" />
+            <InputText class="w-full text-sm" v-model="filters1['Search'].value" @input="searchGlobal"
+              placeholder="Tìm kiếm" size="small" />
           </IconField>
-          <Button type="button" icon="pi pi-filter-slash" severity="danger" label="Xóa bộ lọc" size="small" outlined
-            @click="clearFilter()" />
+          <Button type="button" icon="pi pi-filter-slash" severity="danger" :label="!isMobile ? 'Xóa bộ lọc' : ''"
+            size="small" outlined @click="clearFilter()" class="flex-shrink-0" :title="isMobile ? 'Xóa bộ lọc' : ''" />
         </div>
-        <div class="flex gap-3">
+        <div class="flex gap-2 lg:gap-3 flex-wrap">
           <slot name="header"></slot>
           <customColumns :columns="columns" :idTable="props.apiEndpoint || 'IDTEST'"></customColumns>
         </div>

@@ -32,10 +32,6 @@ body[data-primary="gradient-blue-indigo"] {
     /* Sử dụng màu primary là màu bắt đầu của gradient */
     --primary-color: var(--gradient-start);
 
-    /* Gradient cho topbar */
-    .layout-topbar {
-        background: linear-gradient(to right, var(--gradient-start), var(--gradient-end));
-    }
 
     /* Reset transform và các thuộc tính gây hiệu ứng to ra */
     .p-button,

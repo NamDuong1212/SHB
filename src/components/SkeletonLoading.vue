@@ -1,7 +1,7 @@
 <template>
   <div class="flex gap-4 w-full items-start">
     <div
-      class="w-10 h-10 rounded-full bg-gradient-to-r from-[#28548c] to-[#04c0f4] flex-shrink-0 flex items-center justify-center shadow-md">
+      class="w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 to-amber-200 flex-shrink-0 flex items-center justify-center shadow-md">
       <svg stroke="white" fill="white" stroke-width="0" viewBox="0 0 24 24" height="18" width="18"
         xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round"

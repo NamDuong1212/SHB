@@ -96,12 +96,11 @@ const funSignOut = async () => {
 </script>
 
 <template>
-  <div class="layout-topbar bg-gradient-to-r from-[#28548c] to-[#04c0f4]">
+  <div class="layout-topbar bg-gradient-to-r from-amber-200 to-amber-500">
     <div class="layout-topbar-logo-container">
       <router-link to="/" class="layout-topbar-logo">
         <div class="flex items-center gap-2 w-full">
-          <img class="w-20 lg:w-28 h-auto" src="https://fox.ai.vn/wp-content/uploads/2016/08/logowhite-1536x645.png"
-            alt="" />
+          <img class="w-20 lg:w-28 h-auto" src="/img/logo-shb-vn-sl.png" alt="Logo SHB" />
         </div>
       </router-link>
     </div>

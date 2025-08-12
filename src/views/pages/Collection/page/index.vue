@@ -1,18 +1,17 @@
 <script setup>
 import DeleteComps from "@/components/DeleteComps.vue";
+import GlobalDocumentForm from "@/components/GlobalDocumentForm.vue";
 import tableDoc from "@/components/table/tableBasic.vue";
 import CollectionService from "@/service/CollectionService";
+import DocumentService from "@/service/DocumentService";
 import { FilterMatchMode } from "@primevue/core/api";
 import Button from "primevue/button";
-import { h, onBeforeMount, ref } from "vue";
-import FormData from "../components/FormData.vue";
-import GlobalDocumentForm from "@/components/GlobalDocumentForm.vue";
-import { useConfirm } from "primevue/useconfirm";
 import ConfirmDialog from "primevue/confirmdialog";
 import ProgressSpinner from 'primevue/progressspinner';
-import DocumentService from "@/service/DocumentService";
+import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
-import { useRouter } from "vue-router";
+import { computed, h, onBeforeMount, ref } from "vue";
+import FormData from "../components/FormData.vue";
 
 const toast = useToast();
 const dialogRef = ref();
@@ -26,6 +25,21 @@ const confirm = useConfirm();
 const collectionDocuments = ref({});
 const expandedRows = ref({});
 const loadingDocuments = ref({});
+
+// Responsive breakpoint check
+const isMobile = computed(() => {
+  if (typeof window !== 'undefined') {
+    return window.innerWidth < 640;
+  }
+  return false;
+});
+
+const isTablet = computed(() => {
+  if (typeof window !== 'undefined') {
+    return window.innerWidth >= 640 && window.innerWidth < 768;
+  }
+  return false;
+});
 
 
 const getAllCollection = async (params = {}) => {
@@ -160,64 +174,69 @@ const columns = ref([
         h(
           "div",
           {
-            class: "collection-header flex items-center gap-2 p-2 border-round cursor-pointer hover:surface-100",
+            class: "collection-header flex items-center gap-1 sm:gap-2 p-1 sm:p-2 border-round cursor-pointer hover:surface-100",
             onClick: () => getDocumentsByCollection(rowData.id),
           },
           [
             h("i", {
-              class: `pi ${expandedRows.value[rowData.id] ? "pi-chevron-down" : "pi-chevron-right"} transition-transform transition-duration-300`,
+              class: `pi ${expandedRows.value[rowData.id] ? "pi-chevron-down" : "pi-chevron-right"} transition-transform transition-duration-300 text-xs sm:text-sm`,
             }),
             h(
               "span",
-              { class: "text-blue-600 font-semibold" },
+              { class: "text-blue-600 font-semibold text-xs sm:text-sm truncate" },
               rowData.collection_name
             ),
             loadingDocuments.value[rowData.id] &&
-            h(ProgressSpinner, { style: { width: '20px', height: '20px' } })
+            h(ProgressSpinner, { style: { width: '16px', height: '16px' }, class: 'sm:w-5 sm:h-5' })
           ]
         ),
         expandedRows.value[rowData.id] &&
         h(
           "div",
           {
-            class: "documents-container pl-4 mt-2 transition-all transition-duration-300"
+            class: "documents-container pl-2 sm:pl-4 mt-2 transition-all transition-duration-300"
           },
           [
             h(
               "div",
               {
-                class: "documents-scroll-container"
+                class: "documents-scroll-container max-h-60 sm:max-h-80 overflow-y-auto"
               },
               [
                 collectionDocuments.value[rowData.id]?.map((doc) =>
                   h(
                     "div",
                     {
-                      class: "document-card p-3 mb-2 surface-50 border-round-lg shadow-1"
+                      class: "document-card p-2 sm:p-3 mb-2 surface-50 border-round-lg shadow-1"
                     },
                     [
-                      h("div", { class: "flex justify-between items-center" }, [
-                        h("div", { class: "flex items-center gap-2" }, [
-                          h("i", { class: getFileIconClass(doc.storage_path) }),
-                          h("span", { class: "font-semibold cursor-pointer hover:underline", onClick: () => downloadDocument(doc) }, doc.doc_name),
+                      h("div", { class: "flex justify-between items-start gap-2" }, [
+                        h("div", { class: "flex items-center gap-1 sm:gap-2 flex-1 min-w-0" }, [
+                          h("i", { class: `${getFileIconClass(doc.storage_path)} text-sm sm:text-base flex-shrink-0` }),
+                          h("span", {
+                            class: "font-semibold cursor-pointer hover:underline text-xs sm:text-sm truncate",
+                            onClick: () => downloadDocument(doc),
+                            title: doc.doc_name
+                          }, doc.doc_name),
                         ]),
 
                         h(Button, {
                           icon: "pi pi-trash",
-                          class: "p-button-sm",
+                          class: "p-button-sm flex-shrink-0",
                           severity: "danger",
                           outlined: true,
+                          size: "small",
                           onClick: () => deleteDocument(doc.id)
                         })
                       ]),
-                      h("div", { class: "mt-2 flex gap-3 text-sm" }, [
-                        h("span", { class: "text-600" }, [
-                          h("i", { class: "pi pi-calendar-times mr-2" }),
-                          new Date(doc.effective_from).toLocaleDateString('vi-VN')
+                      h("div", { class: "mt-2 flex flex-col sm:flex-row gap-1 sm:gap-3 text-xs sm:text-sm" }, [
+                        h("span", { class: "text-600 flex items-center gap-1" }, [
+                          h("i", { class: "pi pi-calendar-times text-xs" }),
+                          h("span", { class: "truncate" }, new Date(doc.effective_from).toLocaleDateString('vi-VN'))
                         ]),
-                        h("span", { class: "text-600" }, [
-                          h("i", { class: "pi pi-calendar-plus mr-2" }),
-                          new Date(doc.effective_to).toLocaleDateString('vi-VN')
+                        h("span", { class: "text-600 flex items-center gap-1" }, [
+                          h("i", { class: "pi pi-calendar-plus text-xs" }),
+                          h("span", { class: "truncate" }, new Date(doc.effective_to).toLocaleDateString('vi-VN'))
                         ]),
                       ])
                     ])
@@ -230,35 +249,40 @@ const columns = ref([
     field: "description",
     header: "Mô tả",
     display: true,
+    style: { minWidth: '200px' },
     renderValue: (rowData) => h("span", {
-      style: { 
-      whiteSpace: 'normal', 
-      wordBreak: 'break-word' 
-    } 
+      style: {
+        whiteSpace: 'normal',
+        wordBreak: 'break-word'
+      },
+      class: "text-xs sm:text-sm"
     }, rowData.description || ""),
   },
   {
     field: "username",
     header: "Người tạo",
     display: true,
-    renderValue: (rowData) => h("span", {}, rowData.username || "Không xác định"),
+    style: { minWidth: '120px' },
+    renderValue: (rowData) => h("span", { class: "text-xs sm:text-sm" }, rowData.username || "Không xác định"),
   },
   {
     field: "created_at",
     header: "Ngày tạo",
     display: true,
-    renderValue: (rowData) => h("span", {}, new Date(rowData.created_at).toLocaleDateString('vi-VN')),
+    style: { minWidth: '120px' },
+    renderValue: (rowData) => h("span", { class: "text-xs sm:text-sm" }, new Date(rowData.created_at).toLocaleDateString('vi-VN')),
   },
   {
     field: "actions",
     header: "Thao tác",
     display: true,
+    style: { minWidth: '100px' },
     renderValue: (rowData) =>
       h(
         "div",
-        { class: "flex gap-2" },
+        { class: "flex gap-1 sm:gap-2 justify-center" },
         [
-          rowData.collection_name !== "foxai" && h(
+          rowData.collection_name && h(
             Button,
             {
               icon: "pi pi-trash",
@@ -404,11 +428,13 @@ const handleBatchDelete = async (ids) => {
     <tableDoc ref="TableBasic" v-model:selection="dataSelection" header="Danh sách collection" :columns="columns"
       :filters="filters" :apiFunction="getAllCollection" :paginator="true" @resetFilter="initFilters">
       <template #header>
-        <div class="flex gap-2">
-          <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary" label="Tạo collection"
-            size="small" />
-          <Button @click="openDocumentDialog" type="button" icon="pi pi-file" severity="success" label="Thêm document"
-            size="small" />
+        <div class="flex flex-wrap gap-2 sm:gap-3">
+          <Button @click="openAddDialog" type="button" icon="pi pi-plus" severity="primary"
+            class="bg-gradient-to-r from-amber-500 to-amber-200 text-xs sm:text-sm"
+            :label="!isMobile ? 'Tạo collection' : ''" size="small" :title="isMobile ? 'Tạo collection' : ''" />
+          <Button @click="openDocumentDialog" type="button" icon="pi pi-file" severity="success"
+            :label="!isMobile ? 'Thêm document' : ''" class="text-xs sm:text-sm" size="small"
+            :title="isMobile ? 'Thêm document' : ''" />
         </div>
       </template>
     </tableDoc>
@@ -437,6 +463,13 @@ const handleBatchDelete = async (ids) => {
 .collection-container {
   height: 100vh;
   overflow: auto;
+  padding: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .collection-container {
+    padding: 1rem;
+  }
 }
 
 .collection-wrapper {
@@ -453,12 +486,24 @@ const handleBatchDelete = async (ids) => {
 
 .documents-container {
   border-left: 2px solid var(--primary-color);
-  margin-left: 10px;
+  margin-left: 5px;
+}
+
+@media (min-width: 640px) {
+  .documents-container {
+    margin-left: 10px;
+  }
 }
 
 /* Custom scrollbar */
 .documents-scroll-container::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
+}
+
+@media (min-width: 640px) {
+  .documents-scroll-container::-webkit-scrollbar {
+    width: 6px;
+  }
 }
 
 .documents-scroll-container::-webkit-scrollbar-track {
@@ -479,13 +524,18 @@ const handleBatchDelete = async (ids) => {
   transition: all 0.2s ease;
   border: 1px solid var(--surface-200);
   flex-shrink: 0;
-  /* Ngăn card bị co lại */
 }
 
 .document-card:hover {
-  transform: translateX(4px);
+  transform: translateX(2px);
   background: var(--surface-100) !important;
   border-color: var(--primary-200);
+}
+
+@media (min-width: 640px) {
+  .document-card:hover {
+    transform: translateX(4px);
+  }
 }
 
 .pi-chevron-down,
@@ -503,11 +553,18 @@ const handleBatchDelete = async (ids) => {
 
 /* Spinner styles */
 .p-progress-spinner {
-  width: 20px !important;
-  height: 20px !important;
+  width: 16px !important;
+  height: 16px !important;
 }
 
-/* Đảm bảo table có thể scroll */
+@media (min-width: 640px) {
+  .p-progress-spinner {
+    width: 20px !important;
+    height: 20px !important;
+  }
+}
+
+/* Table responsive */
 :deep(.p-datatable-wrapper) {
   overflow: visible;
 }
@@ -522,5 +579,136 @@ const handleBatchDelete = async (ids) => {
 
 :deep(.p-datatable-tbody td) {
   overflow: visible;
+  padding: 0.5rem !important;
+}
+
+@media (min-width: 768px) {
+  :deep(.p-datatable-tbody td) {
+    padding: 0.75rem !important;
+  }
+}
+
+/* Mobile responsive for table */
+@media (max-width: 767px) {
+  :deep(.p-datatable) {
+    font-size: 0.75rem;
+  }
+
+  :deep(.p-datatable .p-datatable-thead > tr > th) {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  :deep(.p-datatable .p-datatable-tbody > tr > td) {
+    padding: 0.5rem 0.25rem;
+  }
+
+  :deep(.p-paginator) {
+    padding: 0.5rem;
+  }
+
+  :deep(.p-paginator .p-paginator-pages) {
+    display: none;
+  }
+
+  :deep(.p-inputtext) {
+    font-size: 0.875rem;
+    padding: 0.5rem;
+  }
+}
+
+/* Hide some columns on mobile */
+@media (max-width: 640px) {
+
+  :deep(.p-datatable th:nth-child(4)),
+  :deep(.p-datatable td:nth-child(4)) {
+    display: none;
+  }
+
+  :deep(.p-datatable th:nth-child(5)),
+  :deep(.p-datatable td:nth-child(5)) {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+
+  :deep(.p-datatable th:nth-child(3)),
+  :deep(.p-datatable td:nth-child(3)) {
+    display: none;
+  }
+}
+
+/* Button responsive */
+@media (max-width: 640px) {
+  :deep(.p-button-label) {
+    display: none;
+  }
+
+  :deep(.p-button) {
+    padding: 0.5rem;
+    min-width: auto;
+  }
+}
+
+/* Header responsive */
+:deep(.p-datatable-header) {
+  padding: 0.5rem !important;
+}
+
+@media (min-width: 768px) {
+  :deep(.p-datatable-header) {
+    padding: 1rem !important;
+  }
+}
+
+/* Search input responsive */
+:deep(.p-input-icon-field) {
+  width: 100% !important;
+  max-width: 300px;
+}
+
+@media (min-width: 640px) {
+  :deep(.p-input-icon-field) {
+    max-width: 400px;
+  }
+}
+
+@media (min-width: 768px) {
+  :deep(.p-input-icon-field) {
+    max-width: 30rem;
+  }
+}
+
+/* Flex layout responsive */
+:deep(.p-datatable-header .flex) {
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+@media (min-width: 768px) {
+  :deep(.p-datatable-header .flex) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* Text truncation for mobile */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .collection-header span {
+    max-width: 150px;
+  }
+
+  .document-card span {
+    max-width: 120px;
+  }
 }
 </style>

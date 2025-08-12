@@ -70,7 +70,7 @@ const saveData = async () => {
     if (error.isValidate) {
       messages.value = error;
     } else {
-      proxy.$notify("E", error?.response.data?.Message, toast);
+      proxy.$notify("E", error?.response.data?.detail, toast);
     }
   }
 };
