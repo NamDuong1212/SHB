@@ -249,6 +249,7 @@
 </template>
 
 <script setup>
+// ===== IMPORTS =====
 import SkeletonLoading from "@/components/SkeletonLoading.vue";
 import CollectionService from "@/service/CollectionService";
 import http from "@/service/http";
@@ -259,6 +260,74 @@ import { marked } from 'marked';
 import { useToast } from "primevue/usetoast";
 import { nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
+// ===== REACTIVE REFS & STATE =====
+const toast = useToast();
+const isStreaming = ref(false);
+const scrollPanel = ref(null);
+const loading = ref(false);
+const loadingMore = ref(false);
+const selectedCollection = ref('');
+const Collections = ref([]);
+const messages = ref([]);
+const user_question = ref("");
+const showDeleteConfirmDialog = ref(false);
+const showScrollButton = ref(false);
+const showInputSuggestions = ref(false);
+const pagination = ref({ currentPage: 1, totalPages: 1, totalMessages: 0, hasMoreMessages: false });
+
+// ===== CONSTANTS & CONFIGURATIONS =====
+const inputSuggestions = ref([
+  { id: 1, title: "Mở khoá thẻ", description: "Hỗ trợ mở khoá thẻ tín dụng/ghi nợ", text: "/mo-khoa-the", icon: "pi pi-unlock", command: "mo-khoa-the", message: "Tôi muốn mở khoá thẻ" },
+  { id: 2, title: "So sánh tài liệu", description: "So sánh và phân tích các tài liệu", text: "/so-sanh-tai-lieu", icon: "pi pi-file-import", command: "so-sanh-tai-lieu", message: "Tôi muốn so sánh tài liệu" },
+  { id: 3, title: "Trò chuyện thông thường", description: "Tìm hiểu thông tin tài liệu", text: "/tro-chuyen-thong-thuong", icon: "pi pi-refresh", command: "reset", message: "" },
+]);
+
+const cacheUtils = {
+  setCache(value) {
+    localStorage.setItem('selected_collection_cache', JSON.stringify({ value, timestamp: Date.now() }));
+  },
+  getCache() {
+    const cache = localStorage.getItem('selected_collection_cache');
+    if (!cache) return null;
+    const { value, timestamp } = JSON.parse(cache);
+    if (Date.now() - timestamp > 600000) {
+      localStorage.removeItem('selected_collection_cache');
+      return null;
+    }
+    return value;
+  },
+  clearCache() {
+    localStorage.removeItem('selected_collection_cache');
+  }
+};
+
+// ===== WATCHERS =====
+watch(selectedCollection, (newValue) => {
+  if (newValue) {
+    cacheUtils.setCache(newValue);
+  } else {
+    cacheUtils.clearCache();
+  }
+});
+
+// ===== LIFECYCLE HOOKS =====
+onBeforeMount(() => {
+  fetchCollections();
+  fetchChatHistory();
+});
+
+onMounted(() => {
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') showInputSuggestions.value = false; });
+  document.addEventListener('click', handleClickOutside);
+  setupScrollListener();
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside);
+  removeScrollListener();
+});
+
+// ===== UTILITY FUNCTIONS =====
 const renderContent = (rawText) => {
   if (!rawText) return "";
   const katexRegex = /(\\\[.*?\\]|\\\(.*?\\\)|(?:\$\$[\s\S]*?\$\$)|(?:\$[\s\S]*?\$))/gs;
@@ -296,69 +365,6 @@ const renderContent = (rawText) => {
   return renderedParts.join('');
 };
 
-const cacheUtils = {
-  setCache(value) {
-    localStorage.setItem('selected_collection_cache', JSON.stringify({ value, timestamp: Date.now() }));
-  },
-  getCache() {
-    const cache = localStorage.getItem('selected_collection_cache');
-    if (!cache) return null;
-    const { value, timestamp } = JSON.parse(cache);
-    if (Date.now() - timestamp > 600000) {
-      localStorage.removeItem('selected_collection_cache');
-      return null;
-    }
-    return value;
-  },
-  clearCache() {
-    localStorage.removeItem('selected_collection_cache');
-  }
-};
-
-const toast = useToast();
-const isStreaming = ref(false);
-const scrollPanel = ref(null);
-const loading = ref(false);
-const loadingMore = ref(false);
-const selectedCollection = ref('');
-const Collections = ref([]);
-const messages = ref([]);
-const user_question = ref("");
-const showDeleteConfirmDialog = ref(false);
-const showScrollButton = ref(false);
-const showInputSuggestions = ref(false);
-const pagination = ref({ currentPage: 1, totalPages: 1, totalMessages: 0, hasMoreMessages: false });
-
-const inputSuggestions = ref([
-  { id: 1, title: "Mở khoá thẻ", description: "Hỗ trợ mở khoá thẻ tín dụng/ghi nợ", text: "/mo-khoa-the", icon: "pi pi-unlock", command: "mo-khoa-the", message: "Tôi muốn mở khoá thẻ" },
-  { id: 2, title: "So sánh tài liệu", description: "So sánh và phân tích các tài liệu", text: "/so-sanh-tai-lieu", icon: "pi pi-file-import", command: "so-sanh-tai-lieu", message: "Tôi muốn so sánh tài liệu" },
-  { id: 3, title: "Trò chuyện thông thường", description: "Tìm hiểu thông tin tài liệu", text: "/tro-chuyen-thong-thuong", icon: "pi pi-refresh", command: "reset", message: "" },
-]);
-
-watch(selectedCollection, (newValue) => {
-  if (newValue) {
-    cacheUtils.setCache(newValue);
-  } else {
-    cacheUtils.clearCache();
-  }
-});
-
-onBeforeMount(() => {
-  fetchCollections();
-  fetchChatHistory();
-});
-
-onMounted(() => {
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') showInputSuggestions.value = false; });
-  document.addEventListener('click', handleClickOutside);
-  setupScrollListener();
-});
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside);
-  removeScrollListener();
-});
-
 function scrollToBottom(smooth = true) {
   nextTick(() => {
     if (scrollPanel.value) {
@@ -368,6 +374,7 @@ function scrollToBottom(smooth = true) {
   });
 }
 
+// ===== UI/UX FUNCTIONS =====
 const setupScrollListener = () => {
   nextTick(() => {
     const el = scrollPanel.value?.$el.querySelector('.p-scrollpanel-content');
@@ -390,6 +397,153 @@ const handleScroll = () => {
   showScrollButton.value = el.scrollHeight - el.scrollTop - el.clientHeight > 100;
 };
 
+const handleInputFocus = () => {
+  if (selectedCollection.value) {
+    showInputSuggestions.value = true;
+  }
+};
+
+const handleClickOutside = (event) => {
+  const inputContainer = event.target.closest('.chat-input');
+  const suggestionContainer = event.target.closest('.input-suggestions');
+  if (!inputContainer && !suggestionContainer) {
+    showInputSuggestions.value = false;
+  }
+};
+
+const handleInputChange = () => {
+  if (user_question.value && user_question.value.trim().length > 0) {
+    showInputSuggestions.value = false;
+  }
+};
+
+const handleInputSuggestionClick = (suggestion) => {
+  if (!selectedCollection.value) {
+    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn một collection.', life: 3000 });
+    return;
+  }
+  user_question.value = suggestion.text;
+  showInputSuggestions.value = false;
+  submitChat(new Event('submit'));
+};
+
+// ===== API FUNCTIONS =====
+const fetchCollections = async () => {
+  try {
+    const cachedCollection = cacheUtils.getCache();
+    const response = await CollectionService.getAllForDropdown();
+    Collections.value = response.data.info.data.collections;
+    if (cachedCollection && Collections.value.some(c => c.collection_name === cachedCollection)) {
+      selectedCollection.value = cachedCollection;
+    } else if (Collections.value.length > 0) {
+      selectedCollection.value = Collections.value[0].collection_name;
+    }
+  } catch (error) {
+    console.error("Không thể tải collections:", error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải danh sách collection.', life: 3000 });
+    cacheUtils.clearCache();
+  }
+};
+
+const onCollectionChange = () => { };
+
+const fetchChatHistory = async (page = 1, isLoadMore = false) => {
+  (isLoadMore ? loadingMore : loading).value = true;
+  try {
+    const res = await http.get(`v1/messages`, { params: { page: page, page_size: 10 } });
+    const responseData = res.data?.info?.data;
+    if (!responseData) return;
+
+    const { messages: historyMessages, page: currentPage, total_pages, total } = responseData;
+    pagination.value = { currentPage, totalPages: total_pages, totalMessages: total, hasMoreMessages: currentPage < total_pages };
+
+    const mappedMessages = (historyMessages || []).map(el => ({
+      ...el,
+      content: el.type === 'ai' ? renderContent(el.contents || '') : (el.contents || ''),
+      timestamp: el.created_at || new Date().toISOString(),
+      role: el.type === 'ai' ? 'assistant' : 'user'
+    })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    if (isLoadMore) {
+      messages.value.unshift(...mappedMessages);
+    } else {
+      messages.value = mappedMessages;
+      scrollToBottom(false);
+    }
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải lịch sử chat.', life: 3000 });
+  } finally {
+    (isLoadMore ? loadingMore : loading).value = false;
+  }
+};
+
+const loadMoreMessages = async () => {
+  if (loadingMore.value || !pagination.value.hasMoreMessages) {
+    return;
+  }
+
+  loadingMore.value = true;
+  const nextPage = pagination.value.currentPage + 1;
+
+  try {
+    const res = await http.get(`v1/messages`, {
+      params: {
+        page: nextPage,
+        page_size: 10
+      }
+    });
+
+    const responseData = res.data?.info?.data;
+    if (!responseData || !responseData.messages || responseData.messages.length === 0) {
+      pagination.value.hasMoreMessages = false;
+      return;
+    }
+
+    const { messages: historyMessages, page: currentPage, total_pages, total } = responseData;
+
+    pagination.value = {
+      currentPage,
+      totalPages: total_pages,
+      totalMessages: total,
+      hasMoreMessages: currentPage < total_pages
+    };
+
+    const mappedMessages = historyMessages.map(el => ({
+      ...el,
+      content: el.type === 'ai' ? renderContent(el.contents || '') : (el.contents || ''),
+      timestamp: el.created_at || new Date().toISOString(),
+      role: el.type === 'ai' ? 'assistant' : 'user'
+    })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    const scrollElement = scrollPanel.value?.$el.querySelector('.p-scrollpanel-content');
+    const previousScrollHeight = scrollElement?.scrollHeight || 0;
+    const previousScrollTop = scrollElement?.scrollTop || 0;
+
+    messages.value.unshift(...mappedMessages);
+
+    nextTick(() => {
+      if (scrollElement) {
+        const newScrollHeight = scrollElement.scrollHeight;
+        const scrollDiff = newScrollHeight - previousScrollHeight;
+        scrollElement.scrollTop = previousScrollTop + scrollDiff;
+      }
+    });
+
+  } catch (error) {
+    console.error('Error loading more messages:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Lỗi',
+      detail: 'Không thể tải thêm tin nhắn',
+      life: 3000
+    });
+  } finally {
+    loadingMore.value = false;
+  }
+};
+
+// ===== CHAT MESSAGING FUNCTIONS =====
 const processStream = async (response, assistantMessageIndex) => {
   loading.value = false;
   const reader = response.body.getReader();
@@ -499,6 +653,7 @@ const sendChatMessage = async (messageContent) => {
   }
 };
 
+// ===== COMMAND HANDLING FUNCTIONS =====
 const handleResetCommand = async () => {
   const userMessage = { role: "user", content: "/tro-chuyen-thong-thuong", timestamp: new Date().toISOString(), type: "human", contents: "/tro-chuyen-thong-thuong" };
   messages.value.push(userMessage);
@@ -563,145 +718,7 @@ const handleSpecialCommand = async (command, actualMessage) => {
   }
 };
 
-const handleInputSuggestionClick = (suggestion) => {
-  if (!selectedCollection.value) {
-    toast.add({ severity: 'warn', summary: 'Cảnh báo', detail: 'Vui lòng chọn một collection.', life: 3000 });
-    return;
-  }
-  user_question.value = suggestion.text;
-  showInputSuggestions.value = false;
-  submitChat(new Event('submit'));
-};
-
-const handleInputFocus = () => {
-  if (selectedCollection.value) {
-    showInputSuggestions.value = true;
-  }
-};
-
-const handleClickOutside = (event) => {
-  const inputContainer = event.target.closest('.chat-input');
-  const suggestionContainer = event.target.closest('.input-suggestions');
-  if (!inputContainer && !suggestionContainer) {
-    showInputSuggestions.value = false;
-  }
-};
-
-const fetchCollections = async () => {
-  try {
-    const cachedCollection = cacheUtils.getCache();
-    const response = await CollectionService.getAllForDropdown();
-    Collections.value = response.data.info.data.collections;
-    if (cachedCollection && Collections.value.some(c => c.collection_name === cachedCollection)) {
-      selectedCollection.value = cachedCollection;
-    } else if (Collections.value.length > 0) {
-      selectedCollection.value = Collections.value[0].collection_name;
-    }
-  } catch (error) {
-    console.error("Không thể tải collections:", error);
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải danh sách collection.', life: 3000 });
-    cacheUtils.clearCache();
-  }
-};
-
-const onCollectionChange = () => {};
-
-const fetchChatHistory = async (page = 1, isLoadMore = false) => {
-  (isLoadMore ? loadingMore : loading).value = true;
-  try {
-    const res = await http.get(`v1/messages`, { params: { page: page, page_size: 10 } });
-    const responseData = res.data?.info?.data;
-    if (!responseData) return;
-
-    const { messages: historyMessages, page: currentPage, total_pages, total } = responseData;
-    pagination.value = { currentPage, totalPages: total_pages, totalMessages: total, hasMoreMessages: currentPage < total_pages };
-
-    const mappedMessages = (historyMessages || []).map(el => ({
-      ...el,
-      content: el.type === 'ai' ? renderContent(el.contents || '') : (el.contents || ''),
-      timestamp: el.created_at || new Date().toISOString(),
-      role: el.type === 'ai' ? 'assistant' : 'user'
-    })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-    if (isLoadMore) {
-      messages.value.unshift(...mappedMessages);
-    } else {
-      messages.value = mappedMessages;
-      scrollToBottom(false);
-    }
-  } catch (error) {
-    console.error('Error fetching chat history:', error);
-    toast.add({ severity: 'error', summary: 'Lỗi', detail: 'Không thể tải lịch sử chat.', life: 3000 });
-  } finally {
-    (isLoadMore ? loadingMore : loading).value = false;
-  }
-};
-
-const loadMoreMessages = async () => {
-  if (loadingMore.value || !pagination.value.hasMoreMessages) {
-    return;
-  }
-
-  loadingMore.value = true;
-  const nextPage = pagination.value.currentPage + 1;
-
-  try {
-    const res = await http.get(`v1/messages`, {
-      params: {
-        page: nextPage,
-        page_size: 10
-      }
-    });
-
-    const responseData = res.data?.info?.data;
-    if (!responseData || !responseData.messages || responseData.messages.length === 0) {
-      pagination.value.hasMoreMessages = false;
-      return;
-    }
-
-    const { messages: historyMessages, page: currentPage, total_pages, total } = responseData;
-
-    pagination.value = {
-      currentPage,
-      totalPages: total_pages,
-      totalMessages: total,
-      hasMoreMessages: currentPage < total_pages
-    };
-
-    const mappedMessages = historyMessages.map(el => ({
-      ...el,
-      content: el.type === 'ai' ? renderContent(el.contents || '') : (el.contents || ''),
-      timestamp: el.created_at || new Date().toISOString(),
-      role: el.type === 'ai' ? 'assistant' : 'user'
-    })).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-    const scrollElement = scrollPanel.value?.$el.querySelector('.p-scrollpanel-content');
-    const previousScrollHeight = scrollElement?.scrollHeight || 0;
-    const previousScrollTop = scrollElement?.scrollTop || 0;
-
-    messages.value.unshift(...mappedMessages);
-
-    nextTick(() => {
-      if (scrollElement) {
-        const newScrollHeight = scrollElement.scrollHeight;
-        const scrollDiff = newScrollHeight - previousScrollHeight;
-        scrollElement.scrollTop = previousScrollTop + scrollDiff;
-      }
-    });
-
-  } catch (error) {
-    console.error('Error loading more messages:', error);
-    toast.add({
-      severity: 'error',
-      summary: 'Lỗi',
-      detail: 'Không thể tải thêm tin nhắn',
-      life: 3000
-    });
-  } finally {
-    loadingMore.value = false;
-  }
-};
-
+// ===== DIALOG & ACTION FUNCTIONS =====
 const showDeleteDialog = () => { showDeleteConfirmDialog.value = true; };
 
 const confirmDelete = async () => {
@@ -714,12 +731,6 @@ const confirmDelete = async () => {
   } catch (error) {
     console.error('Error clearing chat history:', error);
     toast.add({ severity: 'error', summary: 'Lỗi', detail: error.response?.data?.message || 'Không thể xóa lịch sử chat.', life: 3000 });
-  }
-};
-
-const handleInputChange = () => {
-  if (user_question.value && user_question.value.trim().length > 0) {
-    showInputSuggestions.value = false;
   }
 };
 </script>
