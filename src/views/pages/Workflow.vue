@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-gray-50 p-6 overflow-auto min-h-screen">
+  <div class="p-6 overflow-auto min-h-screen">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-800 mb-2">Quản lý Workflow Mở khóa thẻ</h1>
-      <p class="text-gray-600">Quản lý và cấu hình quy trình mở khóa thẻ ghi nợ nội địa.</p>
+      <h1 class="text-3xl font-bold mb-2">Quản lý Workflow Mở khóa thẻ</h1>
+      <p>Quản lý và cấu hình quy trình mở khóa thẻ ghi nợ nội địa.</p>
     </div>
 
     <!-- Workflow Controls -->
@@ -41,32 +41,35 @@
     <Card v-if="workflow && configurableNodes.length > 0" class="shadow-sm mb-10">
       <template #header>
         <div class="flex items-center gap-2 p-4">
-          <i class="pi pi-sliders-h text-xl text-gray-600"></i>
-          <span class="text-xl font-bold text-gray-700">Cấu hình các bước xác thực</span>
+          <i class="pi pi-sliders-h text-xl"></i>
+          <span class="text-xl font-bold">Cấu hình các bước xác thực</span>
         </div>
       </template>
       <template #content>
         <div class="space-y-8">
           <!-- Dynamic Node Rendering -->
           <div v-for="node in configurableNodes" :key="node.id"
-            class="bg-white rounded-xl p-6 border border-gray-200 shadow-md">
-            <h3 class="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-3">
+            class="rounded-xl p-6 border border-gray-200 shadow-md">
+            <h3 class="text-xl font-semibold mb-6 flex items-center gap-3">
               <i :class="getNodeIcon(node.id)" class="text-2xl text-blue-500"></i>
               <span>{{ getNodeDisplayName(node.id) }}</span>
             </h3>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Cột: Trường không bắt buộc -->
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3">
-                <h4 class="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <i class="pi pi-circle-off text-gray-500"></i>
+              <div class="rounded-lg p-4 border border-gray-200 space-y-3">
+                <h4 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <i class="pi pi-circle-off"></i>
                   Trường không bắt buộc
                 </h4>
                 <!-- Clickable Field Card -->
                 <div v-for="([key, field]) in getOptionalFields(node.id)" :key="key"
                   @click="updateNodeField(node.id, key, true)"
                   class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border cursor-pointer hover:bg-green-50 hover:border-green-300 transition-all duration-200 transform hover:scale-[1.02]">
-                  <span class="font-medium text-gray-800">{{ field.description }}</span>
+                  <span class="font-medium text-gray-800">
+                    {{ field.description }}
+                    <span v-if="shouldShowRedStar(field.description)" class="text-red-500 ml-1">(*)</span>
+                  </span>
                   <i class="pi pi-arrow-right text-green-500 opacity-60"></i>
                 </div>
                 <div v-if="getOptionalFields(node.id).length === 0" class="text-center py-8 text-gray-500">
@@ -89,7 +92,10 @@
                     <span
                       class="bg-green-600 text-white text-sm font-bold px-2 py-1 rounded-full min-w-[24px] text-center">{{
                         index + 1 }}</span>
-                    <span class="font-medium text-gray-800">{{ field.description }}</span>
+                    <span class="font-medium text-gray-800">
+                      {{ field.description }}
+                      <span v-if="shouldShowRedStar(field.description)" class="text-red-500 ml-1">(*)</span>
+                    </span>
                   </div>
                   <i class="pi pi-arrow-left text-gray-500 opacity-60"></i>
                 </div>
@@ -170,6 +176,19 @@ const getNodeDisplayName = (nodeId) => {
 
 const getLoadingState = (nodeId) => {
   return loading.value[`update_${nodeId}`] || false
+}
+
+// Kiểm tra xem có nên hiển thị dấu sao đỏ không
+const shouldShowRedStar = (description) => {
+  if (!description) return false
+
+  const keywords = [
+    '6 chữ số ',
+    '4 chữ số'
+  ]
+
+  const lowerDescription = description.toLowerCase()
+  return keywords.some(keyword => lowerDescription.includes(keyword))
 }
 
 // === NEW HELPER FUNCTIONS FOR UI ===
@@ -420,5 +439,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Bạn có thể thêm các style tùy chỉnh nếu cần, nhưng Tailwind và PrimeFlex đã xử lý hầu hết */
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
 </style>
