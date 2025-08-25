@@ -39,6 +39,11 @@ const model = ref([
         to: "/danh-sach-collection",
       },
       {
+        label: "Quản lý workflow",
+        icon: "pi pi-fw pi-briefcase",
+        to: "/workflow",
+      },
+      {
         label: "Thiết lập hệ thống",
         icon: "pi pi-sliders-h",
         items: [

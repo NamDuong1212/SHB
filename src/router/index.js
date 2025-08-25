@@ -48,6 +48,11 @@ const router = createRouter({
                     name: 'chat',
                     component: () => import('@/views/pages/Chat.vue')
                 },
+                {
+                    path: '/workflow',
+                    name: 'workflow',
+                    component: () => import('@/views/pages/Workflow.vue')
+                },
             ]
         },
 
