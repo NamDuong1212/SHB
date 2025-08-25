@@ -423,7 +423,7 @@ const handleBatchDelete = async (ids) => {
 
 <template>
   <Toast />
-  <div class="collection-container">
+  <div class="collection-container p-6">
     <tableDoc ref="TableBasic" v-model:selection="dataSelection" header="Danh sách collection" :columns="columns"
       :filters="filters" :apiFunction="getAllCollection" :paginator="true" @resetFilter="initFilters">
       <template #header>
@@ -462,7 +462,6 @@ const handleBatchDelete = async (ids) => {
 .collection-container {
   height: 100vh;
   overflow: auto;
-  padding: 0.5rem;
 }
 
 @media (min-width: 768px) {

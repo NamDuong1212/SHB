@@ -1,6 +1,5 @@
 <template>
-  <div
-    class="p-6 overflow-auto min-h-screen ">
+  <div class="p-6 overflow-auto min-h-screen ">
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold mb-2">Quản lý Workflow Mở khóa thẻ</h1>
@@ -20,26 +19,28 @@
     </Card>
 
     <!-- Workflow Display -->
-    <Card v-if="workflow" class="mb-6 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+    <Card v-if="workflow"
+      class="mb-6 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
       <template #content>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div class="font-semibold text-blue-800 flex items-center gap-2">
+          <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-600">
+            <div class="font-semibold text-blue-800 dark:text-blue-400 flex items-center gap-2">
               <i class="pi pi-sitemap"></i> Tên Workflow
             </div>
-            <div class="text-blue-700 mt-1">{{ workflow.name }}</div>
+            <div class="text-blue-700 dark:text-blue-300 mt-1">{{ workflow.name }}</div>
           </div>
-          <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-            <div class="font-semibold text-green-800 flex items-center gap-2">
+          <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-600">
+            <div class="font-semibold text-green-800 dark:text-green-400 flex items-center gap-2">
               <i class="pi pi-tag"></i> Phiên bản
             </div>
-            <div class="text-green-700 mt-1">{{ workflow.version }}</div>
+            <div class="text-green-700 dark:text-green-300 mt-1">{{ workflow.version }}</div>
           </div>
         </div>
       </template>
     </Card>
 
-    <Card v-if="workflow && configurableNodes.length > 0" class="shadow-sm mb-10 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+    <Card v-if="workflow && configurableNodes.length > 0"
+      class="shadow-sm mb-10 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
       <template #header>
         <div class="flex items-center gap-2 p-4">
           <i class="pi pi-sliders-h text-xl"></i>
@@ -49,15 +50,16 @@
       <template #content>
         <div class="space-y-8">
           <!-- Dynamic Node Rendering -->
-          <div v-for="node in configurableNodes" :key="node.id" class="rounded-xl p-6 border border-gray-200 shadow-md ">
-            <h3 class="text-xl font-semibold mb-6 flex items-center gap-3">
+          <div v-for="node in configurableNodes" :key="node.id"
+            class="rounded-xl p-6 border border-gray-200 dark:border-gray-600 shadow-md bg-white dark:bg-gray-800/50">
+            <h3 class="text-xl font-semibold mb-6 flex items-center gap-3 text-gray-900 dark:text-gray-100">
               <i :class="getNodeIcon(node.id)" class="text-2xl text-blue-500"></i>
               <span>{{ getNodeDisplayName(node.id) }}</span>
             </h3>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Cột: Trường không bắt buộc -->
-              <div class="rounded-lg p-4 border border-gray-200 space-y-3">
+              <div class="rounded-lg p-4 border border-gray-200 dark:border-gray-600 space-y-3">
                 <h4 class="text-lg font-semibold mb-3 flex items-center gap-2">
                   <i class="pi pi-circle-off"></i>
                   Trường không bắt buộc
@@ -65,8 +67,8 @@
                 <!-- Clickable Field Card -->
                 <div v-for="([key, field]) in getOptionalFields(node.id)" :key="key"
                   @click="updateNodeField(node.id, key, true)"
-                  class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border cursor-pointer hover:bg-green-50 hover:border-green-300 transition-all duration-200 transform hover:scale-[1.02]">
-                  <span class="font-medium text-gray-800">
+                  class="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300 dark:hover:border-green-600 transition-all duration-200 transform hover:scale-[1.02]">
+                  <span class="font-medium text-gray-800 dark:text-gray-200">
                     {{ field.description }}
                     <span v-if="shouldShowRedStar(field.description)" class="text-red-500 ml-1">(*)</span>
                   </span>
@@ -79,20 +81,21 @@
               </div>
 
               <!-- Cột: Trường bắt buộc -->
-              <div class="bg-green-50 rounded-lg p-4 border border-green-200 space-y-3 min-h-[150px]">
-                <h4 class="text-lg font-semibold text-green-800 mb-3 flex items-center gap-2">
-                  <i class="pi pi-check-circle text-green-600"></i>
+              <div
+                class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-600 space-y-3 min-h-[150px]">
+                <h4 class="text-lg font-semibold text-green-800 dark:text-green-400 mb-3 flex items-center gap-2">
+                  <i class="pi pi-check-circle text-green-600 dark:text-green-400"></i>
                   Trường bắt buộc
                 </h4>
                 <!-- Clickable Field Card với số thứ tự -->
                 <div v-for="([key, field], index) in getRequiredFields(node.id)" :key="key"
                   @click="updateNodeField(node.id, key, false)"
-                  class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-all duration-200 transform hover:scale-[1.02]">
+                  class="flex items-center justify-between p-3 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200 transform hover:scale-[1.02]">
                   <div class="flex items-center gap-3">
                     <span
                       class="bg-green-600 text-white text-sm font-bold px-2 py-1 rounded-full min-w-[24px] text-center">{{
                         index + 1 }}</span>
-                    <span class="font-medium text-gray-800">
+                    <span class="font-medium text-gray-800 dark:text-gray-200">
                       {{ field.description }}
                       <span v-if="shouldShowRedStar(field.description)" class="text-red-500 ml-1">(*)</span>
                     </span>
@@ -107,7 +110,7 @@
             </div>
 
             <!-- Nút Cập nhật cho Node -->
-            <div class="flex justify-end mt-6 pt-4 border-t border-gray-200">
+            <div class="flex justify-end mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
               <Button label="Lưu thay đổi cho bước này" icon="pi pi-save" @click="updateNode(node.id)"
                 :loading="getLoadingState(node.id)" severity="success" />
             </div>

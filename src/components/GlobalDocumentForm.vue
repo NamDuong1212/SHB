@@ -24,8 +24,8 @@
 
                 <!-- Collection -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Collection *
+                    <label class="block text-sm font-medium mb-2">
+                        Collection <span class="text-red-500">*</span>
                     </label>
                     <div class="flex gap-2">
                         <Select v-model="documentFormStore.formData.collection_id"
@@ -48,8 +48,8 @@
 
                 <!-- Processing Type -->
                 <div>
-                    <label for="processing_type" class="block text-sm font-medium text-gray-700 mb-2">
-                        Loại xử lý tài liệu *
+                    <label for="processing_type" class="block text-sm font-medium mb-2">
+                        Loại xử lý tài liệu <span class="text-red-500">*</span>
                     </label>
                     <Dropdown id="processing_type" v-model="documentFormStore.formData.processing_type"
                         :options="processingTypeOptions" optionLabel="label" optionValue="value"
@@ -64,7 +64,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <!-- Effective From -->
                         <div>
-                            <label for="effective_from" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="effective_from" class="block text-sm font-medium mb-2">
                                 Hiệu lực từ
                             </label>
                             <Calendar id="effective_from" v-model="documentFormStore.formData.effective_from"
@@ -74,7 +74,7 @@
 
                         <!-- Effective To -->
                         <div>
-                            <label for="effective_to" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="effective_to" class="block text-sm font-medium mb-2">
                                 Hiệu lực đến
                             </label>
                             <Calendar id="effective_to" v-model="documentFormStore.formData.effective_to" class="w-full"
@@ -94,7 +94,7 @@
             <div class="upload-area relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-xl transition-all duration-300"
                 :class="{
                     'border-primary-500 bg-primary-50': isDropping && !isUploadAreaDisabled,
-                    'border-gray-300 hover:border-primary-500 hover:bg-gray-50': !isDropping && !isUploadAreaDisabled,
+                    'border-gray-300 hover:border-primary-500 hover:bg-gray-50 dark:hover:bg-gray-800': !isDropping && !isUploadAreaDisabled,
                     'cursor-pointer': !isUploadAreaDisabled,
                     'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60': isUploadAreaDisabled
                 }" @dragenter.prevent="!isUploadAreaDisabled && (isDropping = true)"

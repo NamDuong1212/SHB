@@ -4,6 +4,7 @@ import http from "@/service/http";
 import debounce from "lodash/debounce";
 import { onBeforeMount, ref, watchEffect, computed } from "vue";
 import { useToast } from "primevue";
+import Card from "primevue/card";
 const toast = useToast();
 const filters1 = ref(null);
 const loading = ref(false);
@@ -140,64 +141,112 @@ defineExpose({
 
 <template>
   <Toast />
-  <div class="header mb-3 flex justify-between">
-    <div class="font-semibold text-xl">{{ header }}</div>
+  <div class="p-6 overflow-auto min-h-screen">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold mb-2">{{ header }}</h1>
+    </div>
+
+    <!-- Table Card -->
+    <Card class="shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+      <template #content>
+        <DataTable :value="dataTable" :paginator="true" :rows="paginator.page_size" :page="paginator.page"
+          :totalRecords="paginator.total" @page="changePaginator" @filter="changeFilter" @rowClick="onRowClick"
+          dataKey="id" :rowHover="true" v-model:filters="filters1" :loading="loading" :filters="props.filters"
+          scrollable filterDisplay="menu" resizableColumns columnResizeMode="fit"
+          paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+          currentPageReportTemplate="{first} đến {last} của {totalRecords} bản ghi"
+          :rowsPerPageOptions="[10, 20, 30, 50]" lazy v-model:selection="modelSelect"
+          v-model:expandedRows="modelExpandedRows" class="rounded-xl overflow-hidden shadow-sm">
+          <template #header>
+            <div class="flex flex-col lg:flex-row justify-between gap-3 p-2 lg:p-3">
+              <div class="flex flex-col sm:flex-row gap-2 lg:gap-4 flex-1">
+                <IconField class="w-full sm:max-w-md">
+                  <InputIcon>
+                    <i class="pi pi-search" />
+                  </InputIcon>
+                  <InputText class="w-full text-sm" v-model="filters1['Search'].value" @input="searchGlobal"
+                    placeholder="Tìm kiếm" size="small" />
+                </IconField>
+                <Button type="button" icon="pi pi-filter-slash" severity="danger" :label="!isMobile ? 'Xóa bộ lọc' : ''"
+                  size="small" outlined @click="clearFilter()" class="flex-shrink-0"
+                  :title="isMobile ? 'Xóa bộ lọc' : ''" />
+              </div>
+              <div class="flex gap-2 lg:gap-3 flex-wrap">
+                <slot name="header"></slot>
+                <customColumns :columns="columns" :idTable="props.apiEndpoint || 'IDTEST'"></customColumns>
+              </div>
+            </div>
+          </template>
+          <template #empty>
+            <div class="text-center">Không có bản ghi nào.</div>
+          </template>
+          <template #loading> Đang lấy dữ liệu. </template>
+          <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
+          <Column header="#" class="w-[3rem]">
+            <template #body="{ index }">
+              <span class="text-center">{{ index + 1 }}</span>
+            </template>
+          </Column>
+          <Column v-for="col in props.columns.filter((e) => e.display)" :key="col.field" :field="col.field"
+            :header="col.header" :showFilterMenu="true" :sortable="col.sortable" :frozen="col.frozen" alignFrozen="left"
+            :style="col.style" :filterField="col.field" :dataType="col?.dataType"
+            :showFilterMatchModes="col?.showFilterMatchModes">
+            <template #filter="slotProps" v-if="col?.renderFilter">
+              <component :is="col?.renderFilter(slotProps)" />
+            </template>
+            <template #filterclear="{ filterCallback }">
+              <Button type="button" icon="pi pi-times" @click="filterCallback()" severity="secondary"></Button>
+            </template>
+            <template #filterapply="{ filterCallback }">
+              <Button type="button" icon="pi pi-save" @click="filterCallback()" severity="success"></Button>
+            </template>
+            <template #body="{ data }">
+              <component :is="col?.renderValue(data)" />
+            </template>
+          </Column>
+          <template #expansion="slotProps">
+            <slot name="expansion" v-bind="slotProps" />
+          </template>
+        </DataTable>
+      </template>
+    </Card>
   </div>
-  <DataTable :value="dataTable" :paginator="true" :rows="paginator.page_size" :page="paginator.page"
-    :totalRecords="paginator.total" @page="changePaginator" @filter="changeFilter" @rowClick="onRowClick" dataKey="id"
-    :rowHover="true" v-model:filters="filters1" :loading="loading" :filters="props.filters" scrollable
-    filterDisplay="menu" resizableColumns columnResizeMode="fit"
-    paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-    currentPageReportTemplate="{first} đến {last} của {totalRecords} bản ghi" :rowsPerPageOptions="[10, 20, 30, 50]"
-    lazy v-model:selection="modelSelect" v-model:expandedRows="modelExpandedRows">
-    <template #header>
-      <div class="flex flex-col lg:flex-row justify-between gap-3 p-2 lg:p-3">
-        <div class="flex flex-col sm:flex-row gap-2 lg:gap-4 flex-1">
-          <IconField class="w-full sm:max-w-md">
-            <InputIcon>
-              <i class="pi pi-search" />
-            </InputIcon>
-            <InputText class="w-full text-sm" v-model="filters1['Search'].value" @input="searchGlobal"
-              placeholder="Tìm kiếm" size="small" />
-          </IconField>
-          <Button type="button" icon="pi pi-filter-slash" severity="danger" :label="!isMobile ? 'Xóa bộ lọc' : ''"
-            size="small" outlined @click="clearFilter()" class="flex-shrink-0" :title="isMobile ? 'Xóa bộ lọc' : ''" />
-        </div>
-        <div class="flex gap-2 lg:gap-3 flex-wrap">
-          <slot name="header"></slot>
-          <customColumns :columns="columns" :idTable="props.apiEndpoint || 'IDTEST'"></customColumns>
-        </div>
-      </div>
-    </template>
-    <template #empty>
-      <div class="text-center">Không có bản ghi nào.</div>
-    </template>
-    <template #loading> Đang lấy dữ liệu. </template>
-    <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
-    <Column header="#" class="w-[3rem]">
-      <template #body="{ index }">
-        <span class="text-center">{{ index + 1 }}</span>
-      </template>
-    </Column>
-    <Column v-for="col in props.columns.filter((e) => e.display)" :key="col.field" :field="col.field"
-      :header="col.header" :showFilterMenu="true" :sortable="col.sortable" :frozen="col.frozen" alignFrozen="left"
-      :style="col.style" :filterField="col.field" :dataType="col?.dataType"
-      :showFilterMatchModes="col?.showFilterMatchModes">
-      <template #filter="slotProps" v-if="col?.renderFilter">
-        <component :is="col?.renderFilter(slotProps)" />
-      </template>
-      <template #filterclear="{ filterCallback }">
-        <Button type="button" icon="pi pi-times" @click="filterCallback()" severity="secondary"></Button>
-      </template>
-      <template #filterapply="{ filterCallback }">
-        <Button type="button" icon="pi pi-save" @click="filterCallback()" severity="success"></Button>
-      </template>
-      <template #body="{ data }">
-        <component :is="col?.renderValue(data)" />
-      </template>
-    </Column>
-    <template #expansion="slotProps">
-      <slot name="expansion" v-bind="slotProps" />
-    </template>
-  </DataTable>
 </template>
+
+<style scoped>
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+/* Custom styling for better table appearance */
+:deep(.p-datatable) {
+  background: transparent;
+  border: none;
+}
+
+:deep(.p-datatable .p-datatable-header) {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr) {
+  background: transparent;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr:hover) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+:deep(.dark .p-datatable .p-datatable-tbody > tr:hover) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr.p-highlight) {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+:deep(.dark .p-datatable .p-datatable-tbody > tr.p-highlight) {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+</style>
