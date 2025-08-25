@@ -1,5 +1,6 @@
 <template>
-  <div class="p-6 overflow-auto min-h-screen">
+  <div
+    class="p-6 overflow-auto min-h-screen ">
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold mb-2">Quản lý Workflow Mở khóa thẻ</h1>
@@ -7,7 +8,7 @@
     </div>
 
     <!-- Workflow Controls -->
-    <Card class="mb-6 shadow-sm">
+    <Card class="mb-6 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
       <template #content>
         <div class="flex flex-wrap gap-4">
           <Button label="Tạo Workflow" icon="pi pi-plus" @click="createWorkflow" :loading="loading.create"
@@ -19,7 +20,7 @@
     </Card>
 
     <!-- Workflow Display -->
-    <Card v-if="workflow" class="mb-6 shadow-sm">
+    <Card v-if="workflow" class="mb-6 shadow-sm bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
       <template #content>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -38,7 +39,7 @@
       </template>
     </Card>
 
-    <Card v-if="workflow && configurableNodes.length > 0" class="shadow-sm mb-10">
+    <Card v-if="workflow && configurableNodes.length > 0" class="shadow-sm mb-10 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
       <template #header>
         <div class="flex items-center gap-2 p-4">
           <i class="pi pi-sliders-h text-xl"></i>
@@ -48,8 +49,7 @@
       <template #content>
         <div class="space-y-8">
           <!-- Dynamic Node Rendering -->
-          <div v-for="node in configurableNodes" :key="node.id"
-            class="rounded-xl p-6 border border-gray-200 shadow-md">
+          <div v-for="node in configurableNodes" :key="node.id" class="rounded-xl p-6 border border-gray-200 shadow-md ">
             <h3 class="text-xl font-semibold mb-6 flex items-center gap-3">
               <i :class="getNodeIcon(node.id)" class="text-2xl text-blue-500"></i>
               <span>{{ getNodeDisplayName(node.id) }}</span>
