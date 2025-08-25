@@ -12,6 +12,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { useToast } from "primevue/usetoast";
 import { computed, h, onBeforeMount, ref } from "vue";
 import FormData from "../components/FormData.vue";
+import TruncatedText from "@/components/TruncatedText.vue";
 
 const toast = useToast();
 const dialogRef = ref();
@@ -250,13 +251,11 @@ const columns = ref([
     header: "Mô tả",
     display: true,
     style: { minWidth: '200px' },
-    renderValue: (rowData) => h("span", {
-      style: {
-        whiteSpace: 'normal',
-        wordBreak: 'break-word'
-      },
-      class: "text-xs sm:text-sm"
-    }, rowData.description || ""),
+    renderValue: (rowData) => h(TruncatedText, {
+      text: rowData.description || "",
+      maxLength: 290,
+      textClass: "text-xs sm:text-sm"
+    }), 
   },
   {
     field: "username",

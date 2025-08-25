@@ -38,7 +38,7 @@
       </template>
     </Card>
 
-    <Card v-if="workflow && configurableNodes.length > 0" class="shadow-sm">
+    <Card v-if="workflow && configurableNodes.length > 0" class="shadow-sm mb-10">
       <template #header>
         <div class="flex items-center gap-2 p-4">
           <i class="pi pi-sliders-h text-xl text-gray-600"></i>
@@ -57,7 +57,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Cột: Trường không bắt buộc -->
-              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3 min-h-[150px]">
+              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-3">
                 <h4 class="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
                   <i class="pi pi-circle-off text-gray-500"></i>
                   Trường không bắt buộc
@@ -79,7 +79,7 @@
               <div class="bg-green-50 rounded-lg p-4 border border-green-200 space-y-3 min-h-[150px]">
                 <h4 class="text-lg font-semibold text-green-800 mb-3 flex items-center gap-2">
                   <i class="pi pi-check-circle text-green-600"></i>
-                  Trường bắt buộc (theo thứ tự gửi API)
+                  Trường bắt buộc
                 </h4>
                 <!-- Clickable Field Card với số thứ tự -->
                 <div v-for="([key, field], index) in getRequiredFields(node.id)" :key="key"
